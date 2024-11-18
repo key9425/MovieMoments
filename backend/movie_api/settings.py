@@ -34,6 +34,14 @@ INSTALLED_APPS = [
     'accounts',
     'group_movies',
     'rest_framework',
+    'rest_framework.authtoken',  # 인증
+    'dj_rest_auth',  # 인증 라이브러리
+    'corsheaders',  # CORS 정책 (pip install django-cors-headers)
+    'django.contrib.sites', # 인증 라이브러리(회원가입)
+    'allauth', # 인증 라이브러리(회원가입)
+    'allauth.account', # 인증 라이브러리(회원가입)
+    'allauth.socialaccount', # 인증 라이브러리(회원가입)
+    'dj_rest_auth.registration', # 인증 라이브러리(회원가입)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,15 +50,36 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+SITE_ID = 1
+
+REST_FRAMEWORK = {
+    # Authentication 인증
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    # permission 권한
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+        # 'rest_framework.permissions.IsAuthenticated',  # 모든 요청에 대해 인증을 요구
+    ],
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',   # CORS 정책
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # 인증 라이브러리(회원가입)
+]
+
+# CORS 정책 : 도메인 허용
+CORS_ALLOWED_ORIGINS = [
+    'http://127.0.0.1:5173',
+    'http://localhost:5173',
 ]
 
 ROOT_URLCONF = 'movie_api.urls'
@@ -125,3 +154,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'accounts.User'
