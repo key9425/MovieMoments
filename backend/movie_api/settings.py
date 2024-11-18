@@ -64,6 +64,13 @@ REST_FRAMEWORK = {
     ],
 }
 
+REST_AUTH = {
+    'REGISTER_SERIALIZER': 'accounts.serializers.CustomRegisterSerializer',
+}
+
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # 이메일 인증 비활성화
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

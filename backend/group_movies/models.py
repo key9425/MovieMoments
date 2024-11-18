@@ -10,7 +10,7 @@ class Movie(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Group(models.Model):
-    include_mambers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='include_groups')
+    include_members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='include_groups')
     group_name = models.CharField(max_length=20)
     description = models.CharField(max_length=150)
     category = models.CharField(max_length=10)
