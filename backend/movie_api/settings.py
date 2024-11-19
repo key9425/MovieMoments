@@ -66,10 +66,14 @@ REST_FRAMEWORK = {
 
 REST_AUTH = {
     'REGISTER_SERIALIZER': 'accounts.serializers.CustomRegisterSerializer',
+    'USER_DETAILS_SERIALIZER': 'accounts.serializers.CustomUserDetailsSerializer',
 }
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # 이메일 인증 비활성화
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email' # 로그인시 인증할 수 있는 정보
+ACCOUNT_EMAIL_REQUIRED = True        # 이메일은 필수 입력
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_AUTHENTICATION_METHOD = 'username'  # username으로 로그인
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -155,6 +159,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [ 
+    BASE_DIR / 'static',
+]
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
