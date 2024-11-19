@@ -1,16 +1,15 @@
 from django.shortcuts import render
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 
-from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.contrib.auth import get_user_model
 
 from .serializers import GroupSerializer, MovieSerializer, GroupMovieSerializer, ArticleSerializer, CommentSerializer
-from .models import Movie, GroupMovie, Group
+from .models import Movie, GroupMovie, Group, Article, Comment
 
 User = get_user_model
 
@@ -61,3 +60,33 @@ def movie_list(request):
         movies =  get_list_or_404(Movie)
         serializer = MovieSerializer(movies, many=True)
         return Response(serializer.data)
+    
+
+@api_view(['GET', 'POST'])
+# @permission_classes([IsAuthenticated])
+def article_list(request, group_movie_id):
+    group_movie = get_object_or_404(GroupMovie, pk=group_movie_id)
+    if request.method == 'GET':
+        articles = Article.objects.filter(group_movie=group_movie).order_by('-created_at')
+        serializer = ArticleSerializer(articles, many=True)
+        return Response(serializer.data)
+    elif request.method == 'POST':
+        serializer = ArticleSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save(user=request.user, group_movie=group_movie)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+@api_view(['GET', 'POST'])
+# @permission_classes([IsAuthenticated])
+def article_detail(request, group_movie_id, article_id):
+    article = get_object_or_404(Article, pk=article_id)
+    if request.method == 'GET':
+        serializer = ArticleSerializer(article)
+        return Response(serializer.data)
+    elif request.method == 'POST':
+        serializer = CommentSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save(user=request.user, article=article)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -30,6 +30,12 @@ class GroupMovieSerializer(serializers.ModelSerializer):
 
 
 class ArticleSerializer(serializers.ModelSerializer):
+    class CommentListSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Comment
+            fields = '__all__'
+    comments = CommentListSerializer(many=True, read_only=True)
+
     class Meta:
         model = Article
         fields = '__all__'
