@@ -69,8 +69,7 @@ REST_AUTH = {
 }
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # 이메일 인증 비활성화
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email' # 로그인시 인증할 수 있는 정보
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

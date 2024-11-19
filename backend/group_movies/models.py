@@ -14,7 +14,7 @@ class Group(models.Model):
     group_name = models.CharField(max_length=20)
     description = models.CharField(max_length=150)
     category = models.CharField(max_length=10)
-    group_img = models.ImageField(blank=True)
+    # group_img = models.ImageField(blank=True, upload_to='profile_images/')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
