@@ -1,0 +1,53 @@
+<template>
+  <div>
+    <h1>회원가입</h1>
+    <form @submit.prevent="signUp">
+      <label for="name">이름 :</label>
+      <input type="text" id="name" v-model.trim="name" />
+      <br />
+
+      <label for="email">이메일 :</label>
+      <input type="text" id="email" v-model.trim="email" />
+      <br />
+
+      <label for="username">아이디 :</label>
+      <input type="text" id="username" v-model.trim="username" />
+      <br />
+
+      <label for="password1">비밀번호 :</label>
+      <input type="password" id="password1" v-model.trim="password1" />
+      <br />
+
+      <label for="password2">비밀번호 확인 :</label>
+      <input type="password" id="password2" v-model.trim="password2" />
+
+      <input type="submit" value="다음" />
+    </form>
+  </div>
+</template>
+
+<script setup>
+import { ref } from "vue";
+import { useCounterStore } from "@/stores/counter";
+
+const name = ref(null);
+const email = ref(null);
+const username = ref(null);
+const password1 = ref(null);
+const password2 = ref(null);
+
+const store = useCounterStore();
+
+const signUp = function () {
+  const payload = {
+    name: name.value,
+    email: email.value,
+    username: username.value,
+    password1: password1.value,
+    password2: password2.value,
+  };
+  store.signUp(payload);
+};
+</script>
+
+<style></style>

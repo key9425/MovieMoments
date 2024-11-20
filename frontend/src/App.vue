@@ -1,9 +1,11 @@
 <template>
-  <div>
-    <h1>test</h1>
-  </div>
+  <AppNavBar />
+  <RouterView />
 </template>
 
-<script setup></script>
+<script setup>
+import { RouterView } from "vue-router";
+import AppNavBar from "./components/common/AppNavBar.vue";
+</script>
 
 <style scoped></style>
