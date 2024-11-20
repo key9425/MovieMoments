@@ -7,12 +7,23 @@
     |
     <!-- 사용자 프로필 이미지로 사용 (지금은 임의로) -->
     <img src="../../assets/test-profile.png" alt="profile-img" width="50" />
-    <button>로그아웃</button>
+    |
+    <RouterLink :to="{ name: 'ProfileView' }">Profile</RouterLink>
+    |
+    <div v-if="store.token">
+      <button @click="logOut">로그아웃</button>
+    </div>
   </nav>
 </template>
 
 <script setup>
 import { RouterLink } from "vue-router";
+import { useCounterStore } from "@/stores/counter";
+const store = useCounterStore();
+
+const logOut = function () {
+  store.logOut();
+};
 </script>
 
 <style scoped></style>

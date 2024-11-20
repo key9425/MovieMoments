@@ -5,7 +5,9 @@ import { useRouter } from "vue-router";
 
 export const useCounterStore = defineStore("counter", () => {
   const API_URL = "http://127.0.0.1:8000";
-  const token = ref(null);
+  // localstorage에서 토큰을 가져와 초기값으로 설정
+  // const token = ref(null);
+  const token = ref(localStorage.getItem("token"));
   const isLogin = computed(() => {
     if (token.value === null) {
       return false;
@@ -32,12 +34,15 @@ export const useCounterStore = defineStore("counter", () => {
       },
     })
       .then((response) => {
-        // console.log(reponse);
+        console.log(response.data);
+        console.log("회원가입 성공");
         const password = password1;
-        logIn({ username, password });
+        router.push({ name: "LogInView" });
       })
       .catch((error) => {
         console.log(error);
+        console.log("Error response:", error.response?.data);
+        console.log("Error status:", error.response?.status);
       });
   };
 
@@ -53,7 +58,11 @@ export const useCounterStore = defineStore("counter", () => {
       },
     })
       .then((response) => {
+        console.log(response.data);
+        console.log("로그인 성공");
         token.value = response.data.key;
+        // 로그인 성공하면 localstorage에 토큰 저장
+        localStorage.setItem("token", response.data.key);
         router.push({ name: "HomeView" });
       })
       .catch((error) => {
@@ -68,7 +77,11 @@ export const useCounterStore = defineStore("counter", () => {
       url: `${API_URL}/accounts/logout/`,
     })
       .then((response) => {
+        console.log(response.data);
+        console.log("로그아웃 성공");
         token.value = null;
+        // 로그아웃하면 localstorage에서 토큰 제거
+        localStorage.removeItem("token");
         router.push({ name: "LogInView" });
       })
       .catch((error) => {
