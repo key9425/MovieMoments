@@ -9,10 +9,10 @@ class CustomRegisterSerializer(RegisterSerializer):
     profile_img = serializers.ImageField(required=False)
 
     def custom_signup(self, request, user):
-        user.name = self.validated_data.get('name', '')
-        user.profile_img = self.validated_data.get('profile_img', None)
-        # if 'profile_img' in self.validated_data:
-        #     user.profile_img = self.validated_data['profile_img']
+        user.name = self.validated_data['name']
+        # profile_img가 제공되지 않으면 모델의 default 값이 자동으로 사용됨
+        if 'profile_img' in self.validated_data:
+            user.profile_img = self.validated_data['profile_img']
         user.save()
 
 

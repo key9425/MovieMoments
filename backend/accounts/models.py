@@ -9,8 +9,7 @@ class User(AbstractUser):
     
     name = models.CharField(max_length=100, blank=False, null=False)
     email = models.EmailField(unique=True, blank=False, null=False)
-    profile_img = models.ImageField(upload_to='profile_images/', default='static/profile_img.png', null=True, blank=True)
-    # profile_img = models.ImageField(upload_to='profile_images/', default=get_default_profile_image(), null=True, blank=True)
+    profile_img = models.ImageField(upload_to='profile_images/', default='profile_images/default_profile.png', null=True, blank=True)
 
     # createsuperuser 명령어를 사용할 때 필요한 필드를 지정 (username field는 기본으로 유지)
     # serializers.py의 required=True는 API를 통한 일반 사용자 등록 시 필요한 필드를 지정
