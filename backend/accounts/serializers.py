@@ -14,10 +14,27 @@ class CustomRegisterSerializer(RegisterSerializer):
         if 'profile_img' in self.validated_data:
             user.profile_img = self.validated_data['profile_img']
         user.save()
+        return user
 
 
 class CustomUserDetailsSerializer(UserDetailsSerializer):
+    followers_count = serializers.SerializerMethodField()
+    followings_count = serializers.SerializerMethodField()
+    # is_following = serializers.SerializerMethodField()  # 추가
+
+
     class Meta(UserDetailsSerializer.Meta):
         model = User
-        fields = ('username', 'email', 'name', 'profile_img')
-        read_only_fields = ('email', 'username') # 이메일은 수정 불가능하도록 설정
+        fields = ('username', 'email', 'name', 'profile_img', 'followers_count','followings_count')
+        read_only_fields = ('email', 'username', 'followers_count','followings_count')
+
+    def get_followers_count(self, obj):
+        return obj.followers.count()
+
+    def get_followings_count(self, obj):
+        return obj.followings.count()
+    
+    # def get_is_following(self, obj):
+    #     request = self.context.get('request')
+    #     return obj.followers.filter(pk=request.user.pk).exists()
+    

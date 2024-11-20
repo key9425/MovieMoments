@@ -18,12 +18,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from accounts import views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('group_movies.urls')),
-    path('accounts/', include('dj_rest_auth.urls')),
-    path('accounts/signup/', include('dj_rest_auth.registration.urls')),  
+    path('api/v2/',  include('accounts.urls')),    
+    path('accounts/signup/', include('dj_rest_auth.registration.urls')), # 회원가입
+    path('accounts/', include('dj_rest_auth.urls')), # 로그인
 ] 
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

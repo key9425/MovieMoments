@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from .serializers import GroupSerializer, MovieSerializer, GroupMovieSerializer, ArticleSerializer, CommentSerializer
 from .models import Movie, GroupMovie, Group, Article, Comment
 
-User = get_user_model
+User = get_user_model()
 
 #  Create your views here.
 @api_view(['GET', 'POST'])
