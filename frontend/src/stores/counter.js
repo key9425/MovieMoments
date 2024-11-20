@@ -22,7 +22,7 @@ export const useCounterStore = defineStore("counter", () => {
 
     axios({
       method: "post",
-      url: `${API_URL}/accounts/signup1/`,
+      url: `${API_URL}/accounts/signup/`,
       data: {
         name,
         email,
@@ -34,7 +34,7 @@ export const useCounterStore = defineStore("counter", () => {
       .then((response) => {
         // console.log(reponse);
         const password = password1;
-        LoginView({ username, password });
+        logIn({ username, password });
       })
       .catch((error) => {
         console.log(error);
