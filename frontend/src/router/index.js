@@ -54,7 +54,7 @@ const router = createRouter({
       component: GroupDetailView,
     },
     {
-      path: "/group-movie/create",
+      path: "/group-movie/create/:group_id",
       name: "GroupMovieCreateView",
       component: GroupMovieCreateView,
     },

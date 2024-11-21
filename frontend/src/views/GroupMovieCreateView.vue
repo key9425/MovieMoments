@@ -88,11 +88,8 @@ const watchedDate = ref("");
 const isSearching = ref(false);
 const isSaving = ref(false);
 
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-
-const goGroupMovieCreate = () => {
-  router.push({ name: "GroupDetail" });
-};
+const API_KEY =
+  "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2YjI0YzA4NjJkNTQwODFmYjE0Y2VhZGMwMWZkODI4MCIsIm5iZiI6MTczMTY0NzQ1Ni42NDg5MzUzLCJzdWIiOiI2NzM2ZDc0MWZmZTM4NzhlOWU5ZmFmYjkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.eYQu1H6KBYqKX0e-WvHcWIH3AT1ioH1j-4OmFLxxUxk";
 
 // 실시간 영화 검색 (디바운스 적용)
 watch(
@@ -133,36 +130,31 @@ const selectMovie = (movie) => {
 };
 
 // 그룹 영화 저장
-const saveGroupMovie = () => {
+const saveGroupMovie = async () => {
   if (!selectedMovie.value || !watchedDate.value) return;
 
   isSaving.value = true;
-
-  axios({
-    method: "post",
-    url: `${store.API_URL}/api/v1/groups/${route.params.groupId}/`,
-    data: {
-      movie_id: selectedMovie.value.id,
-      watched_date: watchedDate.value,
-    },
-    headers: {
-      Authorization: `Token ${store.token}`,
-    },
-  })
-    .then((response) => {
-      console.log("영화 등록 성공:", response.data);
-      router.push({
-        name: "GroupDetail",
-        params: { groupId: route.params.groupId },
-      });
-    })
-    .catch((error) => {
-      console.error("영화 등록 실패:", error);
-      alert("영화 등록에 실패했습니다. 다시 시도해주세요.");
-    })
-    .finally(() => {
-      isSaving.value = false;
+  try {
+    const response = await axios({
+      method: "post",
+      url: `${store.API_URL}/api/v1/groups/${route.params.group_id}/movies/`,
+      data: {
+        movie_data: selectedMovie.value, // 영화 전체 정보 전송
+        watched_date: watchedDate.value,
+      },
+      headers: {
+        Authorization: `Token ${store.token}`,
+      },
     });
+
+    console.log("영화 등록 성공:", response.data);
+    // router.push({ name: "GroupDetail", params: { groupId: route.params.groupId } });
+  } catch (error) {
+    console.error("영화 등록 실패:", error);
+    alert("영화 등록에 실패했습니다. 다시 시도해주세요.");
+  } finally {
+    isSaving.value = false;
+  }
 };
 </script>
 
