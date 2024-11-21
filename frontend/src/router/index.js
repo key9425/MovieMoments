@@ -9,7 +9,7 @@ import GroupCreateView from "@/views/GroupCreateView.vue";
 import GroupDetailView from "@/views/GroupDetailView.vue";
 import GroupMovieCreateView from "@/views/GroupMovieCreateView.vue";
 import GroupWatchedMovie from "@/views/GroupWatchedMovie.vue";
-import ArticleCreate from "@/components/ArticleCreate.vue";
+import ArticleCreate from "@/components/ArticleModal.vue";
 // import { useCounterStore } from "@/stores/counter";
 
 const router = createRouter({

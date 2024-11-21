@@ -2,7 +2,7 @@
   <div>
     <h1>GroupWatchedMovie</h1>
     <button @click="goArticleCreate">게시글 생성</button>
-
+    <ArticleModal ref="articleModal" @submit="handleSubmit" :id="route.params.group_movie_id" />
     <div v-if="movie">
       <!-- 백드롭 이미지 섹션 (전체 폭) -->
       <div class="position-relative movie-backdrop mb-4">
@@ -27,15 +27,30 @@
 </template>
 
 <script setup>
-import axios from "axios";
-import { useCounterStore } from "@/stores/counter";
 import { onMounted, ref } from "vue";
+import { useCounterStore } from "@/stores/counter";
 import { useRoute, useRouter } from "vue-router";
+import axios from "axios";
+import ArticleModal from "@/components/ArticleModal.vue";
 
+const articleModal = ref(null);
 const store = useCounterStore();
 const route = useRoute();
 const router = useRouter();
 const movie = ref(null);
+
+const goArticleCreate = () => {
+  if (articleModal.value) {
+    articleModal.value.open();
+  }
+};
+
+const handleSubmit = (formData) => {
+  console.log(formData);
+  if (articleModal.value) {
+    articleModal.value.close();
+  }
+};
 
 const getGroupWatchedMovie = () => {
   axios({
@@ -52,10 +67,6 @@ const getGroupWatchedMovie = () => {
     .catch((error) => {
       console.log(error.response.data);
     });
-};
-
-const goArticleCreate = () => {
-  router.push({ name: "ArticleCreate" });
 };
 
 onMounted(() => {
