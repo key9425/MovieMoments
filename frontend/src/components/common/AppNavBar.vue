@@ -5,16 +5,15 @@
         <h1 class="site-title">영화처럼, 순간처럼</h1>
       </div>
     </div>
-      <div v-if="store.token" class="nav-right">
-        <!-- 네비게이션 아이템 -->
-        <RouterLink :to="{ name: 'HomeView' }" class="nav-link">홈</RouterLink>
-        <RouterLink :to="{ name: 'MovieView' }" class="nav-link">영화</RouterLink>
-        <div class="profile-button">
-          <img src="https://via.placeholder.com/32" alt="프로필" class="profile-img" />
-          <RouterLink v-if="store.currentUser" :to="{ name: 'ProfileView', params: { user_id: store.currentUser.id } }">프로필</RouterLink>
-          <!-- 로그아웃 버튼 -->
-          <button class="nav-link logout-btn" @click="logOut">로그아웃</button>
-        </div>
+    <div v-if="store.token" class="nav-right">
+      <!-- 네비게이션 아이템 -->
+      <RouterLink :to="{ name: 'HomeView' }" class="nav-link">홈</RouterLink>
+      <RouterLink :to="{ name: 'MovieView' }" class="nav-link">영화</RouterLink>
+      <div class="profile-button">
+        <img src="https://via.placeholder.com/32" alt="프로필" class="profile-img" />
+        <RouterLink v-if="store.currentUser" :to="{ name: 'ProfileView', params: { user_id: store.currentUser.id } }">프로필</RouterLink>
+        <!-- 로그아웃 버튼 -->
+        <button class="nav-link logout-btn" @click="logOut">로그아웃</button>
       </div>
     </div>
   </nav>
