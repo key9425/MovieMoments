@@ -9,9 +9,13 @@
       <!-- 네비게이션 아이템 -->
       <RouterLink :to="{ name: 'HomeView' }" class="nav-link">홈</RouterLink>
       <RouterLink :to="{ name: 'MovieView' }" class="nav-link">영화</RouterLink>
+
       <div class="profile-button">
-        <img src="https://via.placeholder.com/32" alt="프로필" class="profile-img" />
-        <RouterLink v-if="store.currentUser" :to="{ name: 'ProfileView', params: { user_id: store.currentUser.id } }">프로필</RouterLink>
+        <!-- 프로필 이미지를 RouterLink로 감싸서 클릭 시 프로필 페이지로 이동 -->
+        <RouterLink v-if="store.currentUser" :to="{ name: 'ProfileView', params: { user_id: store.currentUser.id } }" class="profile-link">
+          <img :src="store.currentUser?.profile_img || 'https://via.placeholder.com/32'" alt="프로필" class="profile-img" />
+        </RouterLink>
+
         <!-- 로그아웃 버튼 -->
         <button class="nav-link logout-btn" @click="logOut">로그아웃</button>
       </div>
