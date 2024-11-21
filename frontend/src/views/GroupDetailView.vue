@@ -13,11 +13,18 @@
         <h4>이름 : {{ member.name }}</h4>
         <p>이메일 : {{ member.email }}</p>
       </div>
+
+      <!-- 그룹 영화 카드  -->
+      <div class="groups-grid">
+        <!-- <MovieWatchCard v-for="group_movie in groupData.watched_movies" :key="group_movie.id" :watched_movie="group_movie" class="group-card" /> -->
+        <MovieWatchCard v-for="group_movie in groupData.watched_movies" :key="group_movie.id" :watchedMovie="group_movie" :groupId="route.params.group_id" class="group-card" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import MovieWatchCard from "@/components/MovieWatchCard.vue";
 import { ref, onMounted } from "vue";
 import axios from "axios";
 import { useRoute, useRouter, RouterLink } from "vue-router";
@@ -47,6 +54,7 @@ const getGroupData = () => {
   })
     .then((response) => {
       console.log("response = ", response);
+      // console.log("Group data structure:", JSON.stringify(response.data, null, 2));
       groupData.value = response.data;
     })
     .catch((error) => {
@@ -59,4 +67,11 @@ onMounted(() => {
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+</style>
