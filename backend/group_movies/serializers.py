@@ -58,7 +58,7 @@ class MovieSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class GroupMovieSerializer(serializers.ModelSerializer):
+class GroupWhatMovieSerializer(serializers.ModelSerializer):
     movie = MovieSerializer(read_only=True)
     group = GroupSerializer(read_only=True)
     class Meta:

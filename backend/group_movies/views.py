@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.contrib.auth import get_user_model
 
-from .serializers import GroupSerializer, MovieSerializer, GroupMovieSerializer, ArticleSerializer, CommentSerializer, GroupDetailSerializer
+from .serializers import GroupSerializer, MovieSerializer, GroupMovieSerializer, ArticleSerializer, CommentSerializer, GroupDetailSerializer, GroupWhatMovieSerializer
 from .models import Movie, GroupMovie, Group, Article, Comment
 
 User = get_user_model()
@@ -119,3 +119,46 @@ def article_detail(request, group_movie_id, article_id):
         if serializer.is_valid(raise_exception=True):
             serializer.save(user=request.user, article=article)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+
+@api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+def group_movie_create(request, group_id):
+   print('abc')
+   group = get_object_or_404(Group, pk=group_id)
+   
+   # TMDB API에서 받은 영화 정보로 Movie 모델 생성 또는 조회
+   movie_data = request.data.get('movie_data')  # 선택된 영화 정보 전체
+   movie_id = movie_data.get('id')
+   
+   try:
+       movie = Movie.objects.get(id=movie_id)
+   except Movie.DoesNotExist:
+       # Movie 모델에 새로 저장
+       movie = Movie.objects.create(
+           id=movie_id,
+           title=movie_data.get('title'),
+           original_title=movie_data.get('original_title'),
+           release_date=movie_data.get('release_date'),
+           overview=movie_data.get('overview'),
+           poster_path=movie_data.get('poster_path'),
+           backdrop_path=movie_data.get('backdrop_path'),
+           vote_average=movie_data.get('vote_average'),
+           vote_count=movie_data.get('vote_count'),
+           runtime=movie_data.get('runtime', 0),  # 기본값 설정
+           genres=movie_data.get('genres', {}),
+           production_countries=movie_data.get('production_countries', {}),
+           director=movie_data.get('director'),
+           cast=movie_data.get('cast', {}),
+           trailer=movie_data.get('trailer')
+       )
+   
+   # GroupMovie 생성
+   group_movie = GroupMovie.objects.create(
+       group=group,
+       movie=movie,
+       watched_date=request.data.get('watched_date')
+   )
+   
+   serializer = GroupWhatMovieSerializer(group_movie)
+   return Response(serializer.data, status=status.HTTP_201_CREATED)
