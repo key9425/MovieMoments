@@ -1,3 +1,4 @@
+<!-- HomeView -->
 <template>
   <div>
     <h1>Home page</h1>
@@ -7,6 +8,7 @@
     </form>
 
     <button @click="goGroupCreate">그룹생성</button>
+
     <main class="main-content">
       <!-- 그룹 필터 -->
       <div class="filter-section">
@@ -50,10 +52,17 @@
 </template>
 <script setup>
 import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
 
 // 상태 관리
 const selectedCategory = ref("전체");
 const categories = ["전체", "취미", "문화", "독서", "예술", "일상"];
+
+// 그룹 생성 버튼 후 그룹 생성 페이지로 이동
+const router = useRouter();
+const goGroupCreate = () => {
+  router.push({ name: "GroupCreateView" });
+};
 
 // 그룹 데이터
 const allGroups = ref([
@@ -127,6 +136,7 @@ const filteredGroups = computed(() => {
   return allGroups.value.filter((group) => group.type === selectedCategory.value);
 });
 </script>
+
 <style scoped>
 .app-container {
   /* background-color: #f8f7f6; 따뜻한 베이지 배경 */

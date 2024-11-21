@@ -60,7 +60,6 @@ const searchMovies = (word) => {
     searchResults.value = [];
     return;
   }
-
   axios({
     method: "get",
     url: `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(word)}&language=ko-KR&page=1`,
