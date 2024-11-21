@@ -1,6 +1,6 @@
 <template>
   <div v-if="movie">
-    백드롭 이미지 섹션 (전체 폭)
+    <!-- 백드롭 이미지 섹션 (전체 폭) -->
     <div class="position-relative movie-backdrop mb-4">
       <img :src="`https://image.tmdb.org/t/p/original/${movie.backdrop_path}`" :alt="movie.title" class="w-100" />
       <!-- 영화 정보 오버레이 -->
