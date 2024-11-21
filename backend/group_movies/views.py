@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.contrib.auth import get_user_model
 
-from .serializers import GroupSerializer, MovieSerializer, GroupMovieSerializer, ArticleSerializer, CommentSerializer, GroupDetailSerializer, GroupWhatMovieSerializer
+from .serializers import GroupSerializer, MovieSerializer, GroupMovieSerializer, ArticleSerializer, CommentSerializer, GroupDetailSerializer, GroupWhatMovieSerializer, ArticleCreateSerializer
 from .models import Movie, GroupMovie, Group, Article, Comment
 
 User = get_user_model()
@@ -102,11 +102,11 @@ def article_list(request, group_movie_id):
             'articles': ArticleSerializer(articles, many=True).data
         }
         return Response(response_data)
-    # elif request.method == 'POST':
-    #     serializer = ArticleSerializer(data=request.data)
-    #     if serializer.is_valid(raise_exception=True):
-    #         serializer.save(user=request.user, group_movie=group_movie)
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    elif request.method == 'POST':
+        serializer = ArticleCreateSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save(user=request.user, group_movie=group_movie)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 

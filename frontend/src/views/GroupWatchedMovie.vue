@@ -30,10 +30,11 @@
 import axios from "axios";
 import { useCounterStore } from "@/stores/counter";
 import { onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const store = useCounterStore();
 const route = useRoute();
+const router = useRouter();
 const movie = ref(null);
 
 const getGroupWatchedMovie = () => {
@@ -53,7 +54,9 @@ const getGroupWatchedMovie = () => {
     });
 };
 
-const goArticleCreate = () => {};
+const goArticleCreate = () => {
+  router.push({ name: "ArticleCreate" });
+};
 
 onMounted(() => {
   getGroupWatchedMovie();

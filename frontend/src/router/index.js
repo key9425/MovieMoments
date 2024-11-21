@@ -9,6 +9,7 @@ import GroupCreateView from "@/views/GroupCreateView.vue";
 import GroupDetailView from "@/views/GroupDetailView.vue";
 import GroupMovieCreateView from "@/views/GroupMovieCreateView.vue";
 import GroupWatchedMovie from "@/views/GroupWatchedMovie.vue";
+import ArticleCreate from "@/components/ArticleCreate.vue";
 // import { useCounterStore } from "@/stores/counter";
 
 const router = createRouter({
@@ -63,6 +64,11 @@ const router = createRouter({
       path: "/group/:group_id/:group_movie_id",
       name: "GroupWatchedMovie",
       component: GroupWatchedMovie,
+    },
+    {
+      path: "/article/create/:group_movie_id",
+      name: "ArticleCreate",
+      component: ArticleCreate,
     },
   ],
 });
