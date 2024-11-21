@@ -4,8 +4,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from django.contrib.auth import get_user_model
-from .serializers import CustomUserDetailsSerializer
+from django.contrib.auth import get_user_model	
+from .serializers import CustomUserDetailsSerializer, UserLoginSerializer
+from django.db.models import Q
 
 User = get_user_model()
 
@@ -49,3 +50,22 @@ def user_delete(request):
         user = request.user
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def search_users(request):
+#     email_query = request.GET.get('email', '')
+#     users = User.objects.filter(email__icontains=email_query)[:5]  # 최대 5명까지만
+#     serializer = UserLoginSerializer(users, many=True)
+#     return Response(serializer.data)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_users(request):
+    query = request.GET.get('query', '')  # 'email' 대신 'query'로 변경
+    users = User.objects.filter(
+        Q(email__icontains=query) |  # email 포함
+        Q(name__icontains=query)     # name 포함
+    )[:5]  # 최대 5개 결과
+    serializer = UserLoginSerializer(users, many=True)
+    return Response(serializer.data)

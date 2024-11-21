@@ -8,42 +8,70 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.contrib.auth import get_user_model
 
-from .serializers import GroupSerializer, MovieSerializer, GroupMovieSerializer, ArticleSerializer, CommentSerializer
+from .serializers import GroupSerializer, MovieSerializer, GroupMovieSerializer, ArticleSerializer, CommentSerializer, GroupDetailSerializer
 from .models import Movie, GroupMovie, Group, Article, Comment
 
 User = get_user_model()
 
 #  Create your views here.
+# @api_view(['GET', 'POST'])
+# # @permission_classes([IsAuthenticated])
+# def group_list(request):
+#     # GET 요청: 로그인한 유저가 속한 그룹 (메인페이지)
+#     if request.method == 'GET':
+#         groups = request.user.include_groups.all()
+#         serializer = GroupSerializer(groups, many=True)
+#         return Response(serializer.data)
+#     # POST 요청: 새 그룹 생성
+#     elif request.method == 'POST':
+#         serializer = GroupSerializer(data=request.data)
+#         if serializer.is_valid(raise_exception=True):
+#             group = serializer.save()  # 새 그룹 생성
+#             # 'members'는 사용자가 그룹에 추가될 사용자들의 ID 목록
+#             members = request.data.get('members')
+#             group.include_members.add(*members)
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#             # 동일한 멤버로 구성된 그룹에 대한 처리가 필요한가?
+
+# 241121 이송희 group_list view 수정
 @api_view(['GET', 'POST'])
-# @permission_classes([IsAuthenticated])
 def group_list(request):
-    # GET 요청: 로그인한 유저가 속한 그룹 (메인페이지)
     if request.method == 'GET':
         groups = request.user.include_groups.all()
         serializer = GroupSerializer(groups, many=True)
         return Response(serializer.data)
 
-    # POST 요청: 새 그룹 생성
     elif request.method == 'POST':
         serializer = GroupSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            group = serializer.save()  # 새 그룹 생성
-            # 'members'는 사용자가 그룹에 추가될 사용자들의 ID 목록
-            members = request.data.get('members')
-            group.include_members.add(*members)
+            # 그룹 먼저 생성
+            group = serializer.save()
+            
+            # members 데이터 처리
+            members = request.data.getlist('members', [])
+            if members:
+                # 문자열을 정수로 변환
+                member_ids = [int(m) for m in members if m.isdigit()]
+                # 현재 사용자도 포함
+                if request.user.id not in member_ids:
+                    member_ids.append(request.user.id)
+                # 멤버 추가
+                group.include_members.add(*member_ids)
+            else:
+                # 최소한 현재 사용자는 포함
+                group.include_members.add(request.user.id)
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-            # 동일한 멤버로 구성된 그룹에 대한 처리가 필요한가?
+
 
 
 @api_view(['GET', 'POST'])
 # @permission_classes([IsAuthenticated])
 def group_detail(request, group_id):
     group = Group.objects.get(pk=group_id)
-    print(group)
-    # GET 요청: 선택한 그룹에서 본 영화들
     if request.method == 'GET':
-        group_movies = GroupMovie.objects.filter(group=group)
-        serializer = GroupMovieSerializer(group_movies, many=True)
+        # 선택한 그룹에서 본 영화들
+        serializer = GroupDetailSerializer(group)
         return Response(serializer.data)
     
     elif request.method == 'POST':
