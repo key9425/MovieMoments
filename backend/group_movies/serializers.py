@@ -49,15 +49,6 @@ class GroupDetailSerializer(serializers.ModelSerializer):
 
 
 
-
-
-
-class MovieSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Movie
-        fields = '__all__'
-
-
 class GroupWhatMovieSerializer(serializers.ModelSerializer):
     movie = MovieSerializer(read_only=True)
     group = GroupSerializer(read_only=True)
@@ -67,16 +58,12 @@ class GroupWhatMovieSerializer(serializers.ModelSerializer):
 
 
 class ArticleSerializer(serializers.ModelSerializer):
-    class CommentListSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Comment
-            fields = '__all__'
-    comments = CommentListSerializer(many=True, read_only=True)
-
+    user = UserSerializer(read_only=True)
+    like_count = serializers.IntegerField(source='like_users.count', read_only=True)
+    comment_count = serializers.IntegerField(source='comments.count', read_only=True)
     class Meta:
         model = Article
-        fields = '__all__'
-        read_only_fields = ('user', 'like_users', 'group_movie')
+        fields = ('id', 'user', 'title', 'content', 'like_count')        
 
 
 class CommentSerializer(serializers.ModelSerializer):

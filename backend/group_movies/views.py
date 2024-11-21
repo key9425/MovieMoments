@@ -97,13 +97,16 @@ def article_list(request, group_movie_id):
     group_movie = get_object_or_404(GroupMovie, pk=group_movie_id)
     if request.method == 'GET':
         articles = Article.objects.filter(group_movie=group_movie).order_by('-created_at')
-        serializer = ArticleSerializer(articles, many=True)
-        return Response(serializer.data)
-    elif request.method == 'POST':
-        serializer = ArticleSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(user=request.user, group_movie=group_movie)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        response_data = {
+            'group_movie': GroupMovieSerializer(group_movie).data,
+            'articles': ArticleSerializer(articles, many=True).data
+        }
+        return Response(response_data)
+    # elif request.method == 'POST':
+    #     serializer = ArticleSerializer(data=request.data)
+    #     if serializer.is_valid(raise_exception=True):
+    #         serializer.save(user=request.user, group_movie=group_movie)
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 

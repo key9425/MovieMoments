@@ -177,7 +177,7 @@
     });
 
     console.log("영화 등록 성공:", response.data);
-    // router.push({ name: "GroupDetail", params: { groupId: route.params.groupId } });
+    router.push({ name: "GroupDetailView", params: { group_id: route.params.group_id } });
   } catch (error) {
     console.error("영화 등록 실패:", error);
     alert("영화 등록에 실패했습니다. 다시 시도해주세요.");
