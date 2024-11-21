@@ -25,8 +25,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('group_movies.urls')),
     path('api/v2/',  include('accounts.urls')),    
-    path('accounts/signup/', include('dj_rest_auth.registration.urls')), # 회원가입
     path('accounts/', include('dj_rest_auth.urls')), # 로그인
+    path('accounts/signup/', include('dj_rest_auth.registration.urls')), # 회원가입
 ] 
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

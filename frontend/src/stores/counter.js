@@ -4,10 +4,11 @@ import axios from "axios";
 import { useRouter } from "vue-router";
 
 export const useCounterStore = defineStore("counter", () => {
-  const API_URL = "http://127.0.0.1:8000";
-  // localstorage에서 토큰을 가져와 초기값으로 설정
-  // const token = ref(null);
-  const token = ref(localStorage.getItem("token"));
+  const API_URL = "http://127.0.0.1:8000"; 
+  const router = useRouter();
+
+  const token = ref(null);
+  const currentUser = ref(null);
   const isLogin = computed(() => {
     if (token.value === null) {
       return false;
@@ -15,7 +16,6 @@ export const useCounterStore = defineStore("counter", () => {
       return true;
     }
   });
-  const router = useRouter();
 
   // 회원가입 요청 액션
   // form이랑 survey 둘 다 받아서 처리해야 하는데 ,,,
@@ -36,7 +36,6 @@ export const useCounterStore = defineStore("counter", () => {
       .then((response) => {
         console.log(response.data);
         console.log("회원가입 성공");
-        const password = password1;
         router.push({ name: "LogInView" });
       })
       .catch((error) => {
@@ -45,6 +44,7 @@ export const useCounterStore = defineStore("counter", () => {
         console.log("Error status:", error.response?.status);
       });
   };
+
 
   // 로그인 요청 액션
   const logIn = function (payload) {
@@ -61,8 +61,8 @@ export const useCounterStore = defineStore("counter", () => {
         console.log(response.data);
         console.log("로그인 성공");
         token.value = response.data.key;
-        // 로그인 성공하면 localstorage에 토큰 저장
-        localStorage.setItem("token", response.data.key);
+        currentUser.value = response.data.user;
+        console.log(currentUser)
         router.push({ name: "HomeView" });
       })
       .catch((error) => {
@@ -70,18 +70,21 @@ export const useCounterStore = defineStore("counter", () => {
       });
   };
 
+
   // 로그아웃
   const logOut = function () {
     axios({
       method: "post",
       url: `${API_URL}/accounts/logout/`,
+      // headers: {
+      //   Authorization: `Token ${token.value}`
+      // }
     })
       .then((response) => {
         console.log(response.data);
         console.log("로그아웃 성공");
         token.value = null;
-        // 로그아웃하면 localstorage에서 토큰 제거
-        localStorage.removeItem("token");
+        currentUser.value = null;
         router.push({ name: "LogInView" });
       })
       .catch((error) => {
@@ -89,5 +92,29 @@ export const useCounterStore = defineStore("counter", () => {
       });
   };
 
-  return { API_URL, token, isLogin, signUp, logIn, logOut };
-});
+  // 회원탈퇴
+  const deleteAccount = function () {
+    if (confirm('정말 탈퇴하시겠습니까?')) {
+      router.push({ name: "LogInView" });
+      axios({
+        method: 'delete',
+        url: `${API_URL}/api/v2/delete/`,
+        headers: {
+          Authorization: `Token ${token.value}`
+        }
+      })
+      .then((response) => {
+        console.log(response.data);
+        router.push({ name: "LogInView" });
+        token.value = null;
+        currentUser.value = null;
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    }
+  }
+  
+
+  return { API_URL, token, isLogin, signUp, logIn, logOut, currentUser, deleteAccount };
+}, { persist: true });

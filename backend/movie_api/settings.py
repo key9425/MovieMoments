@@ -67,6 +67,7 @@ REST_FRAMEWORK = {
 REST_AUTH = {
     'REGISTER_SERIALIZER': 'accounts.serializers.CustomRegisterSerializer',
     'USER_DETAILS_SERIALIZER': 'accounts.serializers.CustomUserDetailsSerializer',
+    'TOKEN_SERIALIZER': 'accounts.serializers.CustomTokenSerializer',
 }
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # 이메일 인증 비활성화

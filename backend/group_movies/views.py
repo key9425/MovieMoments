@@ -17,13 +17,13 @@ User = get_user_model()
 @api_view(['GET', 'POST'])
 # @permission_classes([IsAuthenticated])
 def group_list(request):
-    # GET 요청: 현재 로그인 유저가 가입된 그룹 (메인페이지)
+    # GET 요청: 로그인한 유저가 속한 그룹 (메인페이지)
     if request.method == 'GET':
         groups = request.user.include_groups.all()
         serializer = GroupSerializer(groups, many=True)
         return Response(serializer.data)
 
-# POST 요청: 새 그룹 생성
+    # POST 요청: 새 그룹 생성
     elif request.method == 'POST':
         serializer = GroupSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -32,7 +32,8 @@ def group_list(request):
             members = request.data.get('members')
             group.include_members.add(*members)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+            # 동일한 멤버로 구성된 그룹에 대한 처리가 필요한가?
+
 
 @api_view(['GET', 'POST'])
 # @permission_classes([IsAuthenticated])

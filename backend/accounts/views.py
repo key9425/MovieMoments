@@ -15,7 +15,7 @@ User = get_user_model()
 def profile(request, user_pk):
     if request.method == 'GET':
         person = User.objects.get(pk=user_pk)
-        serializer = CustomUserDetailsSerializer(person)
+        serializer = CustomUserDetailsSerializer(person, context={'request': request})
         return Response(serializer.data)
 
 
@@ -29,10 +29,23 @@ def follow(request, user_pk):
             if person.followers.filter(pk=request.user.pk).exists():
                 # 이미 팔로우한 경우 -> 언팔로우
                 person.followers.remove(request.user)
-                is_followed = False
+                is_following = False
             else:
                 # 팔로우하지 않은 경우 -> 팔로우
                 person.followers.add(request.user)
-                is_followed = True
-            return Response({'is_followed': is_followed})
+                is_following = True
+            return Response({
+                'is_following': is_following,
+                'followers_count': person.followers.count(),
+                'followings_count': person.followings.count()
+            })
         return Response({'error': '자신을 팔로우할 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def user_delete(request):
+    if request.method == "DELETE":
+        user = request.user
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
