@@ -7,7 +7,7 @@
     |
     <!-- 사용자 프로필 이미지로 사용 (지금은 임의로) -->
     <img src="../../assets/test-profile.png" alt="profile-img" width="50" />
-    <RouterLink :to="{ name: 'ProfileView', params: { user_id: store.currentUser.id } }">프로필</RouterLink>
+    <RouterLink v-if="store.currentUser" :to="{ name: 'ProfileView', params: { user_id: store.currentUser.id } }">프로필</RouterLink>
     |
     <div>
       <button @click="logOut">로그아웃</button>
