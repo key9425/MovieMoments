@@ -6,6 +6,7 @@ import MovieView from "@/views/MovieView.vue";
 import MovieDetailView from "@/views/MovieDetailView.vue";
 import ProfileView from "@/views/ProfileView.vue";
 import GroupCreateView from "@/views/GroupCreateView.vue";
+import GroupDetailView from "@/views/GroupDetailView.vue";
 import { useCounterStore } from "@/stores/counter";
 
 const router = createRouter({
@@ -45,6 +46,11 @@ const router = createRouter({
       path: "/home/group-create",
       name: "GroupCreateView",
       component: GroupCreateView,
+    },
+    {
+      path: "/home/group-detail/:group_id",
+      name: "GroupDetailView",
+      component: GroupDetailView,
     },
   ],
 });

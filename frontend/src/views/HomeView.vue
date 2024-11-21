@@ -21,119 +21,104 @@
 
       <!-- 그룹 그리드 -->
       <div class="groups-grid">
-        <div v-for="group in filteredGroups" :key="group.id" class="group-card">
-          <div class="group-image-container">
-            <img :src="group.image" :alt="group.name" class="group-image" />
-            <div class="group-type">{{ group.type }}</div>
-          </div>
-          <div class="group-info">
-            <div class="group-header">
-              <h3 class="group-name">{{ group.name }}</h3>
-              <div class="activity-badge" :class="group.activityLevel">
-                {{ group.activityLevel }}
+        <div v-for="group in filteredGroups" :key="group.id" :id="group.id" class="group-card">
+          <RouterLink :to="{ name: 'GroupDetailView', params: { group_id: group.id } }">
+            <div class="group-image-container">
+              <img :src="'http://127.0.0.1:8000' + group.group_img" :alt="group.group_name" class="group-image" />
+              <div class="group-type">{{ group.category }}</div>
+            </div>
+            <div class="group-info">
+              <div class="group-header">
+                <h3 class="group-name">{{ group.group_name }}</h3>
+                <div class="activity-badge" :class="group.activityLevel">
+                  {{ group.activityLevel }}
+                </div>
+              </div>
+              <p class="group-description">{{ group.description }}</p>
+              <div class="group-stats">
+                <div class="stats-item">
+                  <span class="stats-label">멤버</span>
+                  <span class="stats-value">{{ group.memberCount }}</span>
+                </div>
+                <div class="stats-item">
+                  <span class="stats-label">게시글</span>
+                  <span class="stats-value">{{ group.postCount }}</span>
+                </div>
               </div>
             </div>
-            <p class="group-description">{{ group.description }}</p>
-            <div class="group-stats">
-              <div class="stats-item">
-                <span class="stats-label">멤버</span>
-                <span class="stats-value">{{ group.memberCount }}</span>
-              </div>
-              <div class="stats-item">
-                <span class="stats-label">게시글</span>
-                <span class="stats-value">{{ group.postCount }}</span>
-              </div>
-            </div>
-          </div>
+          </RouterLink>
         </div>
       </div>
     </main>
   </div>
 </template>
+
 <script setup>
-import { ref, computed } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, onMounted } from "vue";
+import { useRouter, RouterLink } from "vue-router";
+import axios from "axios";
+import { useCounterStore } from "@/stores/counter";
 
 // 상태 관리
-const selectedCategory = ref("전체");
-const categories = ["전체", "취미", "문화", "독서", "예술", "일상"];
+const selectedCategory = ref("1");
+const categories = ["1", "2", "3", "4", "5", "6"];
 
 // 그룹 생성 버튼 후 그룹 생성 페이지로 이동
 const router = useRouter();
+const store = useCounterStore();
+const API_URL = store.API_URL;
+
 const goGroupCreate = () => {
   router.push({ name: "GroupCreateView" });
 };
 
-// 그룹 데이터
-const allGroups = ref([
-  {
-    id: 1,
-    name: "시간을 기록하는 사람들",
-    description: "일상의 특별한 순간을 글과 사진으로 남기는 모임",
-    type: "문화",
-    memberCount: "287",
-    postCount: "1.2k",
-    activityLevel: "활발",
-    image: "https://via.placeholder.com/400x300",
-  },
-  {
-    id: 2,
-    name: "한옥 살롱",
-    description: "전통과 현대가 공존하는 공간에서 나누는 대화",
-    type: "문화",
-    memberCount: "156",
-    postCount: "856",
-    activityLevel: "보통",
-    image: "https://via.placeholder.com/400x300",
-  },
-  {
-    id: 3,
-    name: "조용한 글쓰기",
-    description: "매일 아침 한 편의 글로 시작하는 하루",
-    type: "예술",
-    memberCount: "342",
-    postCount: "2.1k",
-    activityLevel: "활발",
-    image: "https://via.placeholder.com/400x300",
-  },
-  {
-    id: 4,
-    name: "청파동 책모임",
-    description: "오래된 동네 책방에서 만나는 문학 모임",
-    type: "독서",
-    memberCount: "89",
-    postCount: "456",
-    activityLevel: "보통",
-    image: "https://via.placeholder.com/400x300",
-  },
-  {
-    id: 5,
-    name: "일상의 스케치",
-    description: "연필과 종이로 담아내는 도시의 일상",
-    type: "예술",
-    memberCount: "167",
-    postCount: "1.5k",
-    activityLevel: "활발",
-    image: "https://via.placeholder.com/400x300",
-  },
-  {
-    id: 6,
-    name: "차와 이야기",
-    description: "따뜻한 차 한잔과 함께하는 오후의 대화",
-    type: "일상",
-    memberCount: "234",
-    postCount: "987",
-    activityLevel: "보통",
-    image: "https://via.placeholder.com/400x300",
-  },
-]);
+// const allGroups = ref([
+//   {
+//     id: 1,
+//     name: "시간을 기록하는 사람들",
+//     description: "일상의 특별한 순간을 글과 사진으로 남기는 모임",
+//     type: "문화",
+//     memberCount: "287",
+//     postCount: "1.2k",
+//     activityLevel: "활발",
+//     image: "https://via.placeholder.com/400x300",
+//   },
+// ]);
+
+// // 그룹디테일로 이동하기
+// const goGroupDetail = () => {
+//   router.push({ name: "GroupDetailView" });
+// };
+
+// 그룹 데이터 가져오기
+const allGroups = ref([]);
+const getGroupData = () => {
+  axios({
+    method: "get",
+    url: `${API_URL}/api/v1/groups/`,
+    headers: {
+      Authorization: `Token ${store.token}`, // 토큰 추가
+    },
+  })
+    .then((response) => {
+      console.log("response = ", response);
+      allGroups.value = response.data;
+    })
+    .catch((error) => {
+      console.error("그룹 데이터 가져오기 실패:", error);
+    });
+};
+
+onMounted(() => {
+  getGroupData();
+});
 
 // 필터링된 그룹 computed 속성
 const filteredGroups = computed(() => {
-  if (selectedCategory.value === "전체") {
+  if (selectedCategory.value === "1") {
     return allGroups.value;
   }
-  return allGroups.value.filter((group) => group.type === selectedCategory.value);
+  return allGroups.value.filter((group) => group.category === selectedCategory.value);
 });
 </script>
 

@@ -1,6 +1,6 @@
 <template>
   <div v-if="movie">
-    <!-- 백드롭 이미지 섹션 (전체 폭) -->
+    백드롭 이미지 섹션 (전체 폭)
     <div class="position-relative movie-backdrop mb-4">
       <img :src="`https://image.tmdb.org/t/p/original/${movie.backdrop_path}`" :alt="movie.title" class="w-100" />
       <!-- 영화 정보 오버레이 -->
@@ -110,8 +110,10 @@ const route = useRoute();
 const movie = ref(null);
 const movieId = route.params.movieId;
 
-const API_KEY =
-  "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2YjI0YzA4NjJkNTQwODFmYjE0Y2VhZGMwMWZkODI4MCIsIm5iZiI6MTczMTY0NzQ1Ni42NDg5MzUzLCJzdWIiOiI2NzM2ZDc0MWZmZTM4NzhlOWU5ZmFmYjkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.eYQu1H6KBYqKX0e-WvHcWIH3AT1ioH1j-4OmFLxxUxk";
+// const API_KEY =
+//   "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2YjI0YzA4NjJkNTQwODFmYjE0Y2VhZGMwMWZkODI4MCIsIm5iZiI6MTczMTY0NzQ1Ni42NDg5MzUzLCJzdWIiOiI2NzM2ZDc0MWZmZTM4NzhlOWU5ZmFmYjkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.eYQu1H6KBYqKX0e-WvHcWIH3AT1ioH1j-4OmFLxxUxk";
+
+const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
 const getMovieDetails = () => {
   axios({
@@ -122,7 +124,7 @@ const getMovieDetails = () => {
     },
     headers: {
       accept: "application/json",
-      Authorization: API_KEY,
+      Authorization: `Bearer ${API_KEY}`,
     },
   })
     .then((response) => {
