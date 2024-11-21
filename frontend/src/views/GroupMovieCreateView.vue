@@ -88,8 +88,7 @@ const watchedDate = ref("");
 const isSearching = ref(false);
 const isSaving = ref(false);
 
-const API_KEY =
-  "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2YjI0YzA4NjJkNTQwODFmYjE0Y2VhZGMwMWZkODI4MCIsIm5iZiI6MTczMTY0NzQ1Ni42NDg5MzUzLCJzdWIiOiI2NzM2ZDc0MWZmZTM4NzhlOWU5ZmFmYjkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.eYQu1H6KBYqKX0e-WvHcWIH3AT1ioH1j-4OmFLxxUxk";
+const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
 const goGroupMovieCreate = () => {
   router.push({ name: "GroupDetail" });
@@ -114,7 +113,7 @@ watch(
           language: "ko-KR",
         },
         headers: {
-          Authorization: API_KEY,
+          Authorization: `Bearer ${API_KEY}`,
         },
       });
       searchResults.value = response.data.results;
