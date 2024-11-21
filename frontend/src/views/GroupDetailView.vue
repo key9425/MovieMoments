@@ -1,7 +1,6 @@
 <template>
   <div>
     <h1>GroupDetail</h1>
-    <RouterLink></RouterLink>
     <button @click="goGroupMovieCreate">그룹영화생성</button>
 
     <div v-if="groupData">
@@ -17,10 +16,6 @@
     </div>
   </div>
 </template>
-
-
-
-
 
 <script setup>
 import { ref, onMounted } from "vue";

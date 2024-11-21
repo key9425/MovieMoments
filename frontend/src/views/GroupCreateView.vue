@@ -157,49 +157,49 @@ const toggleUserSelection = (user) => {
   }
 };
 
-const createGroup = async () => {
-  try {
-    const formData = new FormData();
+const createGroup = () => {
+  const formData = new FormData();
 
-    formData.append("group_name", groupData.name);
-    formData.append("description", groupData.description);
-    formData.append("category", groupData.category);
+  formData.append("group_name", groupData.name);
+  formData.append("description", groupData.description);
+  formData.append("category", groupData.category);
 
-    if (groupData.image) {
-      formData.append("group_img", groupData.image);
-    }
-
-    // 선택된 멤버들 추가
-    if (selectedUsers.value && selectedUsers.value.length > 0) {
-      selectedUsers.value.forEach((userId) => {
-        formData.append("members", userId.toString()); // ID를 문자열로 변환
-      });
-    }
-
-    // FormData 내용 확인
-    console.log("Sending data:");
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
-    }
-
-    const response = await axios({
-      method: "post",
-      url: `${store.API_URL}/api/v1/groups/`,
-      data: formData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Token ${store.token}`,
-      },
-    });
-
-    console.log("그룹 생성 성공:", response.data);
-    router.push({ name: "HomeView" });
-  } catch (error) {
-    console.error("그룹 생성 실패:", error.response?.data || error.message);
-    if (error.response) {
-      console.log("Error response:", error.response.data);
-    }
+  if (groupData.image) {
+    formData.append("group_img", groupData.image);
   }
+
+  // 선택된 멤버들 추가
+  if (selectedUsers.value && selectedUsers.value.length > 0) {
+    selectedUsers.value.forEach((userId) => {
+      formData.append("members", userId.toString()); // ID를 문자열로 변환
+    });
+  }
+
+  // FormData 내용 확인
+  console.log("Sending data:");
+  for (let [key, value] of formData.entries()) {
+    console.log(`${key}: ${value}`);
+  }
+
+  axios({
+    method: "post",
+    url: `${store.API_URL}/api/v1/groups/`,
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then((response) => {
+      console.log("그룹 생성 성공:", response.data);
+      router.push({ name: "HomeView" });
+    })
+    .catch((error) => {
+      console.error("그룹 생성 실패:", error.response?.data || error.message);
+      if (error.response) {
+        console.log("Error response:", error.response.data);
+      }
+    });
 };
 </script>
 
