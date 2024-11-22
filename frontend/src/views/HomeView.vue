@@ -1,46 +1,66 @@
 <!-- HomeView -->
 <template>
   <div class="home-container">
-    <h1>Home page</h1>
     <br />
-    <h2>오늘의 추천영화</h2>
-    <div class="recommended-movies">
-      <div v-if="loadingMovies" class="text-center py-4">로딩 중...</div>
-      <div v-else-if="movieError" class="text-red-500 py-4">
-        {{ movieError }}
+    <!-- 상단 제목 -->
+    <section>
+      <div class="header-section">
+        <h2 class="main-title">오늘의 추천 영화</h2>
       </div>
-      <div v-else class="movies-grid">
-        <div v-for="movie in recommendedMovies" :key="movie.id" class="movie-card">
-          <div class="movie-image-container">
-            <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-image" />
-          </div>
-          <div class="movie-info">
-            <h3 class="movie-title">{{ movie.title }}</h3>
+    </section>
+
+    <!-- 추천영화 섹션 -->
+    <section>
+      <div class="recommended-movies">
+        <div v-if="loadingMovies" class="text-center py-4">로딩 중...</div>
+        <div v-else-if="movieError" class="text-red-500 py-4">
+          {{ movieError }}
+        </div>
+        <div v-else class="movies-scroll">
+          <div class="movies-row">
+            <div v-for="movie in recommendedMovies" :key="movie.id" class="movie-card">
+              <div class="movie-image-container">
+                <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-image" />
+              </div>
+              <div class="movie-info">
+                <h3 class="movie-title">{{ movie.title }}</h3>
+                <div class="movie-meta">
+                  <span>{{ movie.release_date.substring(0, 4) }}</span>
+                  <span class="dot">·</span>
+                  <!-- 장르 데이터 오게되면 수정 -->
+                  <span>{{ movie.country || "미국" }}</span>
+                  <span class="dot">·</span>
+                  <span>{{ movie.genre || "드라마" }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <form>
-      <input type="text" placeholder="그룹검색" class="search-btn" />
-    </form>
+    </section>
 
-    <button @click="openModal" class="create-group-btn">그룹생성</button>
-
-    <!-- 모달 컴포넌트에 트랜지션 추가 -->
-    <Transition name="modal">
-      <GroupCreateModal v-if="isModalOpen" @close="closeModal" @group-created="onGroupCreated" />
-    </Transition>
-
-    <main class="main-content">
-      <!-- 그룹 필터 -->
-      <div class="filter-section">
+    <!-- 검색창 영역 -->
+    <!-- 검색창 -->
+    <div class="search-section">
+      <div class="search-container">
+        <input type="text" placeholder="그룹검색" class="search-btn" />
+        <!-- 그룹 필터 -->
         <select v-model="selectedCategory" class="category-dropdown" @change="filterGroups">
           <option v-for="category in categories" :key="category" :value="category">
             {{ category }}
           </option>
         </select>
+        <!-- 그룹 생성 버튼 -->
+        <button @click="openModal" class="create-group-btn">그룹생성</button>
       </div>
 
+      <!-- 모달 컴포넌트 -->
+      <Transition name="modal">
+        <GroupCreateModal v-if="isModalOpen" @close="closeModal" @group-created="onGroupCreated" />
+      </Transition>
+    </div>
+
+    <main class="main-content">
       <!-- 그룹 그리드 -->
       <div class="groups-grid">
         <div v-for="group in filteredGroups" :key="group.id" :id="group.id" class="group-card">
@@ -49,6 +69,7 @@
               <img :src="'http://127.0.0.1:8000' + group.group_img" :alt="group.group_name" class="group-image" />
               <div class="group-type">{{ group.category }}</div>
             </div>
+
             <div class="group-info">
               <div class="group-header">
                 <h3 class="group-name">{{ group.group_name }}</h3>
@@ -56,15 +77,23 @@
                   {{ group.activityLevel }}
                 </div>
               </div>
+
               <p class="group-description">{{ group.description }}</p>
+
+              <!-- 카드에서 멤버와 게시글 부분 -->
               <div class="group-stats">
-                <div class="stats-item">
-                  <span class="stats-label">멤버</span>
-                  <span class="stats-value">{{ group.memberCount }}</span>
+                <div class="stats-left">
+                  <div class="stats-item">
+                    <span class="stats-label">게시글</span>
+                    <span class="stats-value">{{ group.postCount }}</span>
+                  </div>
                 </div>
-                <div class="stats-item">
-                  <span class="stats-label">게시글</span>
-                  <span class="stats-value">{{ group.postCount }}</span>
+
+                <div class="stats-right">
+                  <div class="member-avatars">
+                    <img v-for="(member, index) in group.include_members.slice(0, 3)" :key="member.id" :src="'http://127.0.0.1:8000' + member.profile_img" :alt="member.name" class="member-avatar" />
+                    <span v-if="group.include_members.length > 3" class="stats-value ml-2">+{{ group.include_members.length - 3 }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -106,7 +135,6 @@ const closeModal = () => {
 };
 
 // 추천 영화 데이터 가져오기
-
 const fetchRecommendedMovies = () => {
   loadingMovies.value = true;
   movieError.value = null;
@@ -173,64 +201,146 @@ const onGroupCreated = () => {
 </script>
 
 <style scoped>
+/* 전체 컨테이너 */
 .home-container {
-  background-color: #ffffff;
-  min-height: 100vh;
-  color: #4a4a4a;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-/* 그룹 생성 버튼 스타일 */
-.create-group-btn {
-  padding: 8px 16px;
-  background-color: #635985;
-  color: white;
-  border: none;
+/* 추천 영화 섹션 */
+.recommended-movies {
+  margin: 2rem 0;
+}
+
+.movies-scroll {
+  overflow-x: auto;
+  padding: 1rem 0;
+}
+
+/* 스크롤바 스타일링 */
+.movies-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.movies-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
   border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  margin: 20px;
 }
 
-.create-group-btn:hover {
-  background-color: #524a6e;
+.movies-scroll::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
 }
 
-/* 검색 버튼 스타일 */
+.movies-scroll::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+.movies-row {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.5rem 0 1.5rem 0;
+}
+
+.movie-card {
+  flex: 0 0 auto;
+  width: 200px;
+}
+
+.movie-image-container {
+  position: relative;
+  height: 280px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.movie-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.movie-card:hover .movie-image {
+  transform: scale(1.05);
+}
+
+.movie-info {
+  padding: 0.8rem 0;
+}
+
+.movie-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #3a3a3a;
+  margin-bottom: 0.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.movie-meta {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.dot {
+  margin: 0 0.3rem;
+}
+
+/* 검색 섹션 */
+.search-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
 .search-btn {
-  width: 1000px;
+  flex: 1;
   height: 50px;
   border: none;
   border-radius: 10px;
   text-align: left;
-  display: block;
-  margin: 30px auto;
   padding-left: 20px;
   background-color: #f5f5f5;
-  cursor: pointer;
 }
 
 .search-btn:hover {
   background-color: #ebebeb;
 }
 
-/* 모달 트랜지션 효과 */
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.3s ease;
+.create-group-btn {
+  padding: 8px 16px;
+  height: 50px;
+  background-color: #3a3a3a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  white-space: nowrap;
 }
 
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
+.create-group-btn:hover {
+  background-color: #3a3a3a;
 }
 
+/* 메인 컨텐츠 영역 */
 .main-content {
   padding-top: 64px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
+/* 필터 섹션 */
 .filter-section {
   padding: 0 2rem;
   margin-bottom: 3rem;
@@ -239,7 +349,8 @@ const onGroupCreated = () => {
 }
 
 .category-dropdown {
-  padding: 0.8rem 2rem;
+  height: 50px;
+  padding: 0 2rem;
   font-size: 0.95rem;
   border: 1px solid #e6e3e1;
   border-radius: 8px;
@@ -255,15 +366,16 @@ const onGroupCreated = () => {
 }
 
 .category-dropdown:hover {
-  border-color: #635985;
+  border-color: #3a3a3a;
 }
 
 .category-dropdown:focus {
   outline: none;
-  border-color: #635985;
-  box-shadow: 0 0 0 2px rgba(99, 89, 133, 0.1);
+  border-color: #3a3a3a;
+  box-shadow: 0 0 0 2px 3a3a3a;
 }
 
+/* 그룹 그리드 */
 .groups-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -277,6 +389,7 @@ const onGroupCreated = () => {
   overflow: hidden;
   transition: transform 0.2s ease;
   border: 1px solid #e6e3e1;
+  border-radius: 8px;
 }
 
 .group-card:hover {
@@ -303,7 +416,8 @@ const onGroupCreated = () => {
   padding: 0.4rem 0.8rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #635985;
+  color: #3a3a3a;
+  border-radius: 4px;
 }
 
 .group-info {
@@ -320,7 +434,7 @@ const onGroupCreated = () => {
 .group-name {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #333333;
+  color: #3a3a3a;
   letter-spacing: -0.5px;
 }
 
@@ -329,6 +443,11 @@ const onGroupCreated = () => {
   color: #666666;
   margin-bottom: 1.5rem;
   line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .group-stats {
@@ -336,6 +455,7 @@ const onGroupCreated = () => {
   gap: 2rem;
   padding-top: 1rem;
   border-top: 1px solid #e6e3e1;
+  align-items: center;
 }
 
 .stats-item {
@@ -355,78 +475,56 @@ const onGroupCreated = () => {
   color: #333333;
   font-weight: 600;
 }
-/* 추천 영화 섹션 스타일 */
-.recommended-movies {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 0 2rem;
+
+/* 활동 배지 */
+.activity-badge {
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
-.movies-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+/* 모달 트랜지션 */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
 }
 
-.movie-card {
-  background: #ffffff;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: transform 0.2s ease;
-  border: 1px solid #e6e3e1;
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
 }
 
-.movie-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.04);
-}
-
-.movie-image-container {
-  position: relative;
-  height: 270px;
-}
-
-.movie-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.movie-info {
-  padding: 1rem;
-}
-
-.movie-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333333;
-  margin-bottom: 0.5rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.movie-rating {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.rating-star {
-  color: #ffd700;
-}
-
-.rating-value {
-  font-size: 0.9rem;
-  color: #666666;
-}
-
+/* 반응형 디자인 */
 @media (max-width: 768px) {
+  .movie-card {
+    width: 150px;
+  }
+
+  .movie-image-container {
+    height: 210px;
+  }
+
+  .search-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
   .search-btn {
-    width: 90%;
-    margin: 20px auto;
+    width: 100%;
+  }
+
+  .create-group-btn {
+    width: 100%;
+  }
+
+  .groups-grid {
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
+  }
+
+  .group-image-container {
+    height: 180px;
   }
 
   .category-dropdown {
@@ -434,21 +532,8 @@ const onGroupCreated = () => {
     max-width: 300px;
   }
 
-  .groups-grid {
+  .filter-section {
     padding: 0 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  }
-  .recommended-movies {
-    padding: 0 1rem;
-  }
-
-  .movies-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 1rem;
-  }
-
-  .movie-image-container {
-    height: 210px;
   }
 }
 </style>

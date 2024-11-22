@@ -173,9 +173,8 @@ def group_movie_create(request, group_id):
 def recommended_movies(request):
     # 전체 영화 목록 가져오기
     all_movies = list(Movie.objects.all())
-    
-    # 전체 영화 수가 6개보다 적을 경우를 대비
-    num_recommendations = min(6, len(all_movies))
+
+    num_recommendations = min(10, len(all_movies))
     
     # 랜덤하게 6개 선택
     recommended_movies = random.sample(all_movies, num_recommendations)

@@ -1,23 +1,23 @@
 <template>
   <nav class="navigation">
-    <div class="nav-content">
+    <div class="nav-container">
       <div class="nav-left">
-        <h1 class="site-title">영화처럼, 순간처럼</h1>
+        <RouterLink :to="{ name: 'HomeView' }" class="site-title">영화처럼, 순간처럼</RouterLink>
       </div>
-    </div>
-    <div v-if="store.token" class="nav-right">
-      <!-- 네비게이션 아이템 -->
-      <RouterLink :to="{ name: 'HomeView' }" class="nav-link">홈</RouterLink>
-      <RouterLink :to="{ name: 'MovieView' }" class="nav-link">영화</RouterLink>
 
-      <div class="profile-button">
-        <!-- 프로필 이미지를 RouterLink로 감싸서 클릭 시 프로필 페이지로 이동 -->
-        <RouterLink v-if="store.currentUser" :to="{ name: 'ProfileView', params: { user_id: store.currentUser.id } }" class="profile-link">
-          <img :src="store.currentUser?.profile_img || 'https://via.placeholder.com/32'" alt="프로필" class="profile-img" />
-        </RouterLink>
+      <div v-if="store.token" class="nav-right">
+        <div class="nav-links">
+          <RouterLink :to="{ name: 'HomeView' }" class="nav-link" active-class="nav-link-active">홈</RouterLink>
+          <RouterLink :to="{ name: 'MovieView' }" class="nav-link" active-class="nav-link-active">영화</RouterLink>
+        </div>
 
-        <!-- 로그아웃 버튼 -->
-        <button class="nav-link logout-btn" @click="logOut">로그아웃</button>
+        <div class="profile-section">
+          <RouterLink v-if="store.currentUser" :to="{ name: 'ProfileView', params: { user_id: store.currentUser.id } }" class="profile-link">
+            <!-- <img :src="store.currentUser?.profile_img || '/api/placeholder/32/32'" alt="프로필" class="profile-img" /> -->
+            <img :src="profile_img" alt="img" />
+          </RouterLink>
+          <button @click="logOut" class="logout-btn">로그아웃</button>
+        </div>
       </div>
     </div>
   </nav>
@@ -26,6 +26,7 @@
 <script setup>
 import { RouterLink } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
+
 const store = useCounterStore();
 
 const logOut = function () {
@@ -39,63 +40,97 @@ const logOut = function () {
   top: 0;
   left: 0;
   right: 0;
-  background-color: #fffefc; /* 밝은 베이지 */
-  padding: 1rem 0;
-  border-bottom: 1px solid #e6e3e1;
+  background-color: white;
+  border-bottom: 1px solid #e6e6e6;
   z-index: 1000;
+  height: 64px;
+  display: flex;
+  align-items: center;
 }
-.nav-content {
-  /* max-width: 1200px; */
+
+.nav-container {
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+.nav-left {
+  display: flex;
+  align-items: center;
+}
+
 .site-title {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #ff7336; /* 반려생활 로고색 */
+  color: rgb(71, 71, 71);
+  text-decoration: none;
   letter-spacing: -0.5px;
 }
 
 .nav-right {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 2.5rem;
+  gap: 32px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
 }
 
 .nav-link {
   text-decoration: none;
-  color: #666666;
+  color: rgb(130, 130, 130);
   font-size: 0.95rem;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.nav-link.logout-btn {
-  padding: 0 10px;
-  color: white;
-  background-color: #ff8a05;
-  border-radius: 5px;
+  font-weight: 400;
+  padding: 8px 4px;
+  transition: all 0.2s ease;
 }
 
 .nav-link:hover {
-  color: #454545;
-  /* background-color: #ff8a05; */
+  color: rgb(71, 71, 71);
 }
 
-.profile-button {
-  border-radius: 4px;
+/* 활성 상태의 네비게이션 링크 스타일 */
+.nav-link-active {
+  color: rgb(71, 71, 71);
+  font-weight: 600;
+}
+
+.profile-section {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-link {
+  display: flex;
+  align-items: center;
 }
 
 .profile-img {
   width: 32px;
   height: 32px;
+  border-radius: 50%;
   object-fit: cover;
+}
+
+.logout-btn {
+  background-color: transparent;
+  border: none;
+  color: rgb(71, 71, 71);
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 8px 4px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.logout-btn:hover {
+  color: #000;
 }
 </style>
