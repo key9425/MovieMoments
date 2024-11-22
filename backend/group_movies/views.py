@@ -10,6 +10,10 @@ from django.contrib.auth import get_user_model
 
 from .serializers import GroupSerializer, MovieSerializer, GroupMovieSerializer, ArticleSerializer, CommentSerializer, GroupDetailSerializer, GroupWhatMovieSerializer, ArticleCreateSerializer
 from .models import Movie, GroupMovie, Group, Article, Comment
+import random
+from django.http import JsonResponse
+
+
 
 User = get_user_model()
 
@@ -165,3 +169,23 @@ def group_movie_create(request, group_id):
    
    serializer = GroupWhatMovieSerializer(group_movie)
    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+def recommended_movies(request):
+    # 전체 영화 목록 가져오기
+    all_movies = list(Movie.objects.all())
+    
+    # 전체 영화 수가 6개보다 적을 경우를 대비
+    num_recommendations = min(6, len(all_movies))
+    
+    # 랜덤하게 6개 선택
+    recommended_movies = random.sample(all_movies, num_recommendations)
+
+    movie_data = [{
+        'id': movie.id,
+        'title': movie.title,
+        'poster_path': movie.poster_path,
+        'release_date': movie.release_date
+    } for movie in recommended_movies]
+    return JsonResponse({
+        'recommended_movies': movie_data
+    })

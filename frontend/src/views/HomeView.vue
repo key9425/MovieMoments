@@ -1,13 +1,35 @@
 <!-- HomeView -->
 <template>
-  <div>
+  <div class="home-container">
     <h1>Home page</h1>
     <br />
+    <h2>오늘의 추천영화</h2>
+    <div class="recommended-movies">
+      <div v-if="loadingMovies" class="text-center py-4">로딩 중...</div>
+      <div v-else-if="movieError" class="text-red-500 py-4">
+        {{ movieError }}
+      </div>
+      <div v-else class="movies-grid">
+        <div v-for="movie in recommendedMovies" :key="movie.id" class="movie-card">
+          <div class="movie-image-container">
+            <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-image" />
+          </div>
+          <div class="movie-info">
+            <h3 class="movie-title">{{ movie.title }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
     <form>
-      <input type="text" placeholder="그룹검색" />
+      <input type="text" placeholder="그룹검색" class="search-btn" />
     </form>
 
-    <button @click="goGroupCreate">그룹생성</button>
+    <button @click="openModal" class="create-group-btn">그룹생성</button>
+
+    <!-- 모달 컴포넌트에 트랜지션 추가 -->
+    <Transition name="modal">
+      <GroupCreateModal v-if="isModalOpen" @close="closeModal" @group-created="onGroupCreated" />
+    </Transition>
 
     <main class="main-content">
       <!-- 그룹 필터 -->
@@ -58,37 +80,60 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter, RouterLink } from "vue-router";
 import axios from "axios";
 import { useCounterStore } from "@/stores/counter";
+import GroupCreateModal from "@/components/GroupCreateModal.vue";
 
 // 상태 관리
+const recommendedMovies = ref([]);
+const loadingMovies = ref(true);
+const movieError = ref(null);
+
 const selectedCategory = ref("1");
 const categories = ["1", "2", "3", "4", "5", "6"];
+const isModalOpen = ref(false);
 
-// 그룹 생성 버튼 후 그룹 생성 페이지로 이동
 const router = useRouter();
 const store = useCounterStore();
 const API_URL = store.API_URL;
 
-const goGroupCreate = () => {
-  router.push({ name: "GroupCreateView" });
+const openModal = () => {
+  isModalOpen.value = true;
+  document.body.style.overflow = "hidden";
 };
 
-// const allGroups = ref([
-//   {
-//     id: 1,
-//     name: "시간을 기록하는 사람들",
-//     description: "일상의 특별한 순간을 글과 사진으로 남기는 모임",
-//     type: "문화",
-//     memberCount: "287",
-//     postCount: "1.2k",
-//     activityLevel: "활발",
-//     image: "https://via.placeholder.com/400x300",
-//   },
-// ]);
+const closeModal = () => {
+  isModalOpen.value = false;
+  document.body.style.overflow = "auto";
+};
 
-// // 그룹디테일로 이동하기
-// const goGroupDetail = () => {
-//   router.push({ name: "GroupDetailView" });
-// };
+// 추천 영화 데이터 가져오기
+
+const fetchRecommendedMovies = () => {
+  loadingMovies.value = true;
+  movieError.value = null;
+
+  axios({
+    method: "get",
+    url: `${API_URL}/api/v1/recommended-movies/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then((response) => {
+      console.log("추천영화:", response);
+      recommendedMovies.value = response.data.recommended_movies;
+    })
+    .catch((error) => {
+      movieError.value = "영화 정보를 불러오는데 실패했습니다.";
+      console.error("Error fetching recommended movies:", error);
+    })
+    .finally(() => {
+      loadingMovies.value = false;
+    });
+};
+
+onMounted(() => {
+  fetchRecommendedMovies();
+});
 
 // 그룹 데이터 가져오기
 const allGroups = ref([]);
@@ -97,7 +142,7 @@ const getGroupData = () => {
     method: "get",
     url: `${API_URL}/api/v1/groups/`,
     headers: {
-      Authorization: `Token ${store.token}`, // 토큰 추가
+      Authorization: `Token ${store.token}`,
     },
   })
     .then((response) => {
@@ -120,73 +165,64 @@ const filteredGroups = computed(() => {
   }
   return allGroups.value.filter((group) => group.category === selectedCategory.value);
 });
+
+const onGroupCreated = () => {
+  closeModal(); // 모달 닫기
+  getGroupData(); // 그룹 목록 새로고침
+};
 </script>
 
 <style scoped>
-.app-container {
-  /* background-color: #f8f7f6; 따뜻한 베이지 배경 */
+.home-container {
   background-color: #ffffff;
   min-height: 100vh;
   color: #4a4a4a;
 }
 
-.navigation {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background-color: #fffefc; /* 밝은 베이지 */
-  padding: 1rem 0;
-  border-bottom: 1px solid #e6e3e1;
-  z-index: 1000;
-}
-
-.nav-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.site-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #635985; /* 부드러운 보라색 */
-  letter-spacing: -0.5px;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 2.5rem;
-}
-
-.nav-link {
-  text-decoration: none;
-  color: #666666;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-  color: #635985; /* 부드러운 보라색 */
-}
-
-.profile-button {
-  width: 32px;
-  height: 32px;
+/* 그룹 생성 버튼 스타일 */
+.create-group-btn {
+  padding: 8px 16px;
+  background-color: #635985;
+  color: white;
+  border: none;
   border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid #e6e3e1;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  margin: 20px;
 }
 
-.profile-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.create-group-btn:hover {
+  background-color: #524a6e;
+}
+
+/* 검색 버튼 스타일 */
+.search-btn {
+  width: 1000px;
+  height: 50px;
+  border: none;
+  border-radius: 10px;
+  text-align: left;
+  display: block;
+  margin: 30px auto;
+  padding-left: 20px;
+  background-color: #f5f5f5;
+  cursor: pointer;
+}
+
+.search-btn:hover {
+  background-color: #ebebeb;
+}
+
+/* 모달 트랜지션 효과 */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
 }
 
 .main-content {
@@ -195,34 +231,6 @@ const filteredGroups = computed(() => {
   margin: 0 auto;
 }
 
-.header-section {
-  padding: 4rem 2rem;
-  text-align: center;
-  position: relative;
-}
-
-.header-line {
-  width: 40px;
-  height: 2px;
-  background-color: #635985; /* 부드러운 보라색 */
-  margin: 0 auto 1.5rem;
-}
-
-.welcome-text {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #443c68; /* 진한 보라그레이 */
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.5px;
-}
-
-.date-text {
-  color: #8b8b8b;
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-/* 드롭다운 스타일 */
 .filter-section {
   padding: 0 2rem;
   margin-bottom: 3rem;
@@ -239,7 +247,7 @@ const filteredGroups = computed(() => {
   color: #666666;
   cursor: pointer;
   min-width: 150px;
-  appearance: none; /* 기본 화살표 제거 */
+  appearance: none;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
@@ -254,33 +262,6 @@ const filteredGroups = computed(() => {
   outline: none;
   border-color: #635985;
   box-shadow: 0 0 0 2px rgba(99, 89, 133, 0.1);
-}
-
-.filter-buttons {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.filter-button {
-  padding: 0.6rem 1.2rem;
-  border: none;
-  background: #ffffff;
-  color: #666666;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.filter-button:hover {
-  background-color: #635985; /* 부드러운 보라색 */
-  color: white;
-}
-
-.filter-button.active {
-  background-color: #635985; /* 부드러운 보라색 */
-  color: white;
 }
 
 .groups-grid {
@@ -322,7 +303,7 @@ const filteredGroups = computed(() => {
   padding: 0.4rem 0.8rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #635985; /* 부드러운 보라색 */
+  color: #635985;
 }
 
 .group-info {
@@ -374,48 +355,78 @@ const filteredGroups = computed(() => {
   color: #333333;
   font-weight: 600;
 }
-
-/* 검색 버튼 스타일을 미디어 쿼리 밖으로 이동하고 수정 */
-.search-btn {
-  width: 1000px;
-  height: 50px;
-  border: none;
-  border-radius: 10px;
-  text-align: left;
-  display: block;
-  margin: 30px auto;
-  padding-left: 20px;
-  background-color: #f5f5f5;
-  cursor: pointer;
+/* 추천 영화 섹션 스타일 */
+.recommended-movies {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 2rem;
 }
 
-.search-btn:hover {
-  background-color: #ebebeb;
+.movies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.movie-card {
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+  border: 1px solid #e6e3e1;
+}
+
+.movie-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.04);
+}
+
+.movie-image-container {
+  position: relative;
+  height: 270px;
+}
+
+.movie-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.movie-info {
+  padding: 1rem;
+}
+
+.movie-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.movie-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.rating-star {
+  color: #ffd700;
+}
+
+.rating-value {
+  font-size: 0.9rem;
+  color: #666666;
 }
 
 @media (max-width: 768px) {
-  .nav-content {
-    padding: 0 1rem;
-  }
-
-  .header-section {
-    padding: 2rem 1rem;
-  }
-
-  .welcome-text {
-    font-size: 1.5rem;
-  }
-
-  .filter-section {
-    padding: 0 1rem;
-  }
-
-  /* .filter-buttons {
-    overflow-x: auto;
-    padding-bottom: 1rem;
-  } */
-  .filter-section {
-    padding: 0 1rem;
+  .search-btn {
+    width: 90%;
+    margin: 20px auto;
   }
 
   .category-dropdown {
@@ -427,11 +438,17 @@ const filteredGroups = computed(() => {
     padding: 0 1rem;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   }
+  .recommended-movies {
+    padding: 0 1rem;
+  }
 
-  /* 모바일에서의 검색 버튼 스타일 조정 */
-  .search-btn {
-    width: 90%; /* 모바일에서는 화면 너비의 90%로 조정 */
-    margin: 20px auto;
+  .movies-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .movie-image-container {
+    height: 210px;
   }
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <AppNavBar />
+    <AppNavBar v-if="!$route.meta.hideNavbar" />
     <main class="main-content">
       <RouterView />
     </main>

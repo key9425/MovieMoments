@@ -19,11 +19,14 @@ const router = createRouter({
       path: "/",
       name: "LogInView",
       component: LogInView,
+      // Navbar 숨기기
+      meta: { hideNavbar: true },
     },
     {
       path: "/signup",
       name: "SignUpView",
       component: SignUpView,
+      meta: { hideNavbar: true },
     },
     {
       path: "/home",
