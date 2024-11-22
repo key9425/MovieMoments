@@ -22,15 +22,21 @@
     <div class="container">
       <div class="row">
         <!-- 왼쪽 열 - 포스터 -->
-        <!-- 왼쪽 열 - 포스터 -->
         <div class="col-md-4 mb-4">
           <div class="text-center">
             <img :src="`https://image.tmdb.org/t/p/w500/${movie.poster_path}`" :alt="movie.title" class="img-fluid rounded mb-3" />
             <div class="d-grid gap-2">
-              <button class="btn btn-outline-danger">
+              <!-- ============================================================================ -->
+              <!-- 찜하기 버튼 -->
+              <button v-if="!isLiked" @click="likeMovie" class="btn btn-outline-danger">
                 <i class="fas fa-heart me-2"></i>
                 찜하기
               </button>
+              <button v-else @click="unlikeMovie" class="btn btn-danger">
+                <i class="fas fa-heart me-2"></i>
+                찜취소
+              </button>
+              <!-- ============================================================================ -->
             </div>
           </div>
         </div>
@@ -108,6 +114,7 @@ import { useRoute } from "vue-router";
 
 const route = useRoute();
 const movie = ref(null);
+const isLiked = ref(false);
 const movieId = route.params.movieId;
 
 // const API_KEY =
@@ -115,6 +122,65 @@ const movieId = route.params.movieId;
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
+// ======================================================
+// 현재 영화가 찜한 상태인지 확인
+const checkLikeStatus = () => {
+  axios({
+    method: "get",
+    url: `${store.API_URL}/api/v1/movies/${props.movieId}/like/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then((response) => {
+      isLiked.value = response.data.is_liked;
+    })
+    .catch((error) => {
+      console.error("찜 상태 확인 실패:", error);
+    });
+};
+
+// 찜하기
+const likeMovie = () => {
+  axios({
+    method: "post",
+    url: `${store.API_URL}/api/v1/movies/${props.movieId}/like/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then(() => {
+      isLiked.value = true;
+    })
+    .catch((error) => {
+      console.error("찜하기 실패:", error);
+    });
+};
+
+// 찜취소
+const unlikeMovie = () => {
+  axios({
+    method: "delete",
+    url: `${store.API_URL}/api/v1/movies/${props.movieId}/like/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then(() => {
+      isLiked.value = false;
+    })
+    .catch((error) => {
+      console.error("찜취소 실패:", error);
+    });
+};
+
+// 컴포넌트 마운트 시 찜 상태 확인
+onMounted(() => {
+  checkLikeStatus();
+});
+// ======================================================
+
+//  영화 상세정보 가져오기
 const getMovieDetails = () => {
   axios({
     method: "get",
@@ -190,5 +256,15 @@ onMounted(() => {
 img {
   min-height: 200px;
   background-color: #e9ecef;
+}
+/* 버튼에 호버 효과 추가 */
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
 }
 </style>
