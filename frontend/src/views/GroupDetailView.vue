@@ -29,10 +29,10 @@
       </div>
 
       <!-- 새 영화 추가 버튼 -->
-      <button @click="openModal" class="add-movie-btn" :id="route.params.groupId">+</button>
+      <button @click="openModal" class="add-movie-btn">+</button>
       <!-- 모달 컴포넌트 -->
       <Transition name="modal">
-        <GroupMovieCreateModal v-if="isModalOpen" @close="closeModal" @group-movie-created="onGroupMovieCreated" />
+        <GroupMovieCreateModal v-if="isModalOpen" @close="closeModal" @group-movie-created="onGroupMovieCreated" :id="route.params.group_id" />
       </Transition>
     </main>
   </div>

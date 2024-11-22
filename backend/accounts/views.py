@@ -66,6 +66,6 @@ def search_users(request):
     users = User.objects.filter(
         Q(email__icontains=query) |  # email 포함
         Q(name__icontains=query)     # name 포함
-    )[:5]  # 최대 5개 결과
+    )
     serializer = UserLoginSerializer(users, many=True)
     return Response(serializer.data)
