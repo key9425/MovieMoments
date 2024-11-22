@@ -46,8 +46,8 @@
         <input type="text" placeholder="그룹검색" class="search-btn" />
         <!-- 그룹 필터 -->
         <select v-model="selectedCategory" class="category-dropdown" @change="filterGroups">
-          <option v-for="category in categories" :key="category" :value="category">
-            {{ category }}
+          <option v-for="category in categories" :key="category.id" :value="category.id">
+            {{ category.name }}
           </option>
         </select>
         <!-- 그룹 생성 버튼 -->
@@ -67,7 +67,19 @@
           <RouterLink :to="{ name: 'GroupDetailView', params: { group_id: group.id } }">
             <div class="group-image-container">
               <img :src="'http://127.0.0.1:8000' + group.group_img" :alt="group.group_name" class="group-image" />
-              <div class="group-type">{{ group.category }}</div>
+              <div
+                class="group-type"
+                :class="{
+                  'category-family': getCategoryName(group.category) === '가족',
+                  'category-couple': getCategoryName(group.category) === '연인',
+                  'category-friend': getCategoryName(group.category) === '친구',
+                  'category-work': getCategoryName(group.category) === '직장',
+                  'category-ssafy': getCategoryName(group.category) === 'SSAFY',
+                  'category-etc': getCategoryName(group.category) === '기타',
+                }"
+              >
+                {{ getCategoryName(group.category) }}
+              </div>
             </div>
 
             <div class="group-info">
@@ -116,8 +128,32 @@ const recommendedMovies = ref([]);
 const loadingMovies = ref(true);
 const movieError = ref(null);
 
+const categories = [
+  { id: "1", name: "가족" },
+  { id: "2", name: "연인" },
+  { id: "3", name: "친구" },
+  { id: "4", name: "직장" },
+  { id: "5", name: "SSAFY" },
+  { id: "6", name: "기타" },
+];
+
+// 카테고리 ID를 이름으로 변환하는 함수
+const getCategoryName = (categoryId) => {
+  const category = categories.find((cat) => cat.id === categoryId);
+  return category ? category.name : "기타";
+};
+
+// 선택된 카테고리 초기값 설정
 const selectedCategory = ref("1");
-const categories = ["1", "2", "3", "4", "5", "6"];
+
+// 필터링된 그룹 computed 속성 수정
+const filteredGroups = computed(() => {
+  if (selectedCategory.value === "1") {
+    return allGroups.value;
+  }
+  return allGroups.value.filter((group) => group.category === selectedCategory.value);
+});
+
 const isModalOpen = ref(false);
 
 const router = useRouter();
@@ -184,14 +220,6 @@ const getGroupData = () => {
 
 onMounted(() => {
   getGroupData();
-});
-
-// 필터링된 그룹 computed 속성
-const filteredGroups = computed(() => {
-  if (selectedCategory.value === "1") {
-    return allGroups.value;
-  }
-  return allGroups.value.filter((group) => group.category === selectedCategory.value);
 });
 
 const onGroupCreated = () => {
@@ -375,6 +403,37 @@ const onGroupCreated = () => {
   box-shadow: 0 0 0 2px 3a3a3a;
 }
 
+/* 카테고리 색상 스타일 추가 */
+.category-family {
+  background-color: #e9fae9 !important;
+  color: #2c7a2c !important;
+}
+
+.category-couple {
+  background-color: #fae9e9 !important;
+  color: #7a2c2c !important;
+}
+
+.category-friend {
+  background-color: #e9eafa !important;
+  color: #2c2c7a !important;
+}
+
+.category-work {
+  background-color: #faf6e9 !important;
+  color: #7a672c !important;
+}
+
+.category-ssafy {
+  background-color: #f2e9fa !important;
+  color: #672c7a !important;
+}
+
+.category-etc {
+  background-color: #e9fafa !important;
+  color: #2c7a7a !important;
+}
+
 /* 그룹 그리드 */
 .groups-grid {
   display: grid;
@@ -412,12 +471,11 @@ const onGroupCreated = () => {
   position: absolute;
   top: 1rem;
   left: 1rem;
-  background-color: rgba(255, 255, 255, 0.95);
   padding: 0.4rem 0.8rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #3a3a3a;
   border-radius: 4px;
+  /* 배경색과 텍스트 색상은 위의 카테고리 클래스에서 지정됨 */
 }
 
 .group-info {

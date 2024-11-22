@@ -5,9 +5,7 @@ import HomeView from "@/views/HomeView.vue";
 import MovieView from "@/views/MovieView.vue";
 import MovieDetailView from "@/views/MovieDetailView.vue";
 import ProfileView from "@/views/ProfileView.vue";
-import GroupCreateView from "@/views/GroupCreateView.vue";
 import GroupDetailView from "@/views/GroupDetailView.vue";
-import GroupMovieCreateView from "@/views/GroupMovieCreateView.vue";
 import GroupWatchedMovie from "@/views/GroupWatchedMovie.vue";
 import ArticleCreate from "@/components/ArticleModal.vue";
 // import { useCounterStore } from "@/stores/counter";
@@ -49,19 +47,9 @@ const router = createRouter({
       component: ProfileView,
     },
     {
-      path: "/group-create",
-      name: "GroupCreateView",
-      component: GroupCreateView,
-    },
-    {
       path: "/group/:group_id",
       name: "GroupDetailView",
       component: GroupDetailView,
-    },
-    {
-      path: "/group-movie/create/:group_id",
-      name: "GroupMovieCreateView",
-      component: GroupMovieCreateView,
     },
     {
       path: "/group/:group_id/:group_movie_id",
