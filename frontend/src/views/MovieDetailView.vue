@@ -111,14 +111,14 @@
 import axios from "axios";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
+import { useCounterStore } from "@/stores/counter";
 
 const route = useRoute();
 const movie = ref(null);
 const isLiked = ref(false);
+const props = defineProps(["movie"]);
+const store = useCounterStore();
 const movieId = route.params.movieId;
-
-// const API_KEY =
-//   "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2YjI0YzA4NjJkNTQwODFmYjE0Y2VhZGMwMWZkODI4MCIsIm5iZiI6MTczMTY0NzQ1Ni42NDg5MzUzLCJzdWIiOiI2NzM2ZDc0MWZmZTM4NzhlOWU5ZmFmYjkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.eYQu1H6KBYqKX0e-WvHcWIH3AT1ioH1j-4OmFLxxUxk";
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 

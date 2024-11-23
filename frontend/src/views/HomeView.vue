@@ -18,21 +18,22 @@
         </div>
         <div v-else class="movies-scroll">
           <div class="movies-row">
+            <!--  ******* 장르 모델 경로 변경 후 확인 *******-->
             <div v-for="movie in recommendedMovies" :key="movie.id" class="movie-card">
-              <div class="movie-image-container">
-                <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-image" />
-              </div>
-              <div class="movie-info">
-                <h3 class="movie-title">{{ movie.title }}</h3>
-                <div class="movie-meta">
-                  <span>{{ movie.release_date.substring(0, 4) }}</span>
-                  <span class="dot">·</span>
-                  <!-- 장르 데이터 오게되면 수정 -->
-                  <span>{{ movie.country || "미국" }}</span>
-                  <span class="dot">·</span>
-                  <span>{{ movie.genre || "드라마" }}</span>
+              <RouterLink :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }">
+                <div class="movie-image-container">
+                  <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-image" />
                 </div>
-              </div>
+                <div class="movie-info">
+                  <h3 class="movie-title">{{ movie.title }}</h3>
+                  <div class="movie-meta">
+                    <span>{{ movie.release_date.substring(0, 4) }}</span>
+                    <span class="dot">·</span>
+                    <!--  ******* 장르 데이터 속성으로 적용 필요 *******-->
+                    <span>{{ movie.genre }}</span>
+                  </div>
+                </div>
+              </RouterLink>
             </div>
           </div>
         </div>
@@ -40,10 +41,10 @@
     </section>
 
     <!-- 검색창 영역 -->
-    <!-- 검색창 -->
     <div class="search-section">
       <div class="search-container">
-        <input type="text" placeholder="그룹검색" class="search-btn" />
+        <!-- 검색창 -->
+        <input type="text" :value="groupKeyword" @input="handleSearchGroups" placeholder="그룹명을 입력하세요." class="search-btn" />
         <!-- 그룹 필터 -->
         <select v-model="selectedCategory" class="category-dropdown" @change="filterGroups">
           <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -92,11 +93,11 @@
 
               <p class="group-description">{{ group.description }}</p>
 
-              <!-- 카드에서 멤버와 게시글 부분 -->
+              <!-- 카드에서 멤버와 영화(몇 편 봤는지) 부분 -->
               <div class="group-stats">
                 <div class="stats-left">
                   <div class="stats-item">
-                    <span class="stats-label">게시글</span>
+                    <span class="stats-label">영화</span>
                     <span class="stats-value">{{ group.postCount }}</span>
                   </div>
                 </div>
@@ -104,7 +105,7 @@
                 <div class="stats-right">
                   <div class="member-avatars">
                     <img v-for="(member, index) in group.include_members.slice(0, 3)" :key="member.id" :src="'http://127.0.0.1:8000' + member.profile_img" :alt="member.name" class="member-avatar" />
-                    <span v-if="group.include_members.length > 3" class="stats-value ml-2">+{{ group.include_members.length - 3 }}</span>
+                    <span v-if="group.include_members.length > 3" class="left-member-count stats-value ml-2">+{{ group.include_members.length - 3 }}</span>
                   </div>
                 </div>
               </div>
@@ -117,9 +118,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useRouter, RouterLink } from "vue-router";
 import axios from "axios";
+import { ref, onMounted } from "vue";
+import { useRouter, RouterLink } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import GroupCreateModal from "@/components/GroupCreateModal.vue";
 
@@ -127,8 +128,12 @@ import GroupCreateModal from "@/components/GroupCreateModal.vue";
 const recommendedMovies = ref([]);
 const loadingMovies = ref(true);
 const movieError = ref(null);
+// - 검색 상태 관리
+const groupKeyword = ref("");
+console.log(groupKeyword.value);
 
 const categories = [
+  { id: "0", name: "전체" },
   { id: "1", name: "가족" },
   { id: "2", name: "연인" },
   { id: "3", name: "친구" },
@@ -144,15 +149,7 @@ const getCategoryName = (categoryId) => {
 };
 
 // 선택된 카테고리 초기값 설정
-const selectedCategory = ref("1");
-
-// 필터링된 그룹 computed 속성 수정
-const filteredGroups = computed(() => {
-  if (selectedCategory.value === "1") {
-    return allGroups.value;
-  }
-  return allGroups.value.filter((group) => group.category === selectedCategory.value);
-});
+const selectedCategory = ref("0");
 
 const isModalOpen = ref(false);
 
@@ -174,7 +171,7 @@ const closeModal = () => {
 const fetchRecommendedMovies = () => {
   loadingMovies.value = true;
   movieError.value = null;
-
+  // ******* axios 요청 경로 은영이 모델 재설계 후 확인 *******
   axios({
     method: "get",
     url: `${API_URL}/api/v1/recommended-movies/`,
@@ -195,12 +192,10 @@ const fetchRecommendedMovies = () => {
     });
 };
 
-onMounted(() => {
-  fetchRecommendedMovies();
-});
-
 // 그룹 데이터 가져오기
 const allGroups = ref([]);
+const filteredGroups = ref([]);
+
 const getGroupData = () => {
   axios({
     method: "get",
@@ -211,14 +206,48 @@ const getGroupData = () => {
   })
     .then((response) => {
       console.log("response = ", response);
-      allGroups.value = response.data;
+      // 기존 데이터 초기화
+      allGroups.value = [];
+      filteredGroups.value = [];
+
+      // 그룹별 멤버 정보를 받아오기 위해서 그룹 상세 정보 api를 다시 호출
+      response.data.map((group, index) => {
+        axios({
+          method: "get",
+          url: `${store.API_URL}/api/v1/groups/${group.id}/`,
+          headers: {
+            Authorization: `Token ${store.token}`,
+          },
+        })
+          .then((response) => {
+            allGroups.value.push(response.data);
+            filteredGroups.value = allGroups.value;
+          })
+          .catch((error) => {
+            console.error("그룹 상세 데이터 가져오기 실패:", error);
+          });
+      });
     })
     .catch((error) => {
       console.error("그룹 데이터 가져오기 실패:", error);
     });
 };
 
+const handleSearchGroups = (event) => {
+  groupKeyword.value = event.currentTarget.value;
+
+  // 그룹 필터링
+  filteredGroups.value = allGroups.value.filter((group) => {
+    const nameMatches = group.group_name.toLowerCase().includes(groupKeyword.value.toLowerCase());
+    const categoryMatches = selectedCategory.value === "0" || group.category === selectedCategory.value;
+    return nameMatches && categoryMatches;
+  });
+
+  console.log(filteredGroups.value);
+};
+
 onMounted(() => {
+  fetchRecommendedMovies();
   getGroupData();
 });
 
@@ -231,9 +260,9 @@ const onGroupCreated = () => {
 <style scoped>
 /* 전체 컨테이너 */
 .home-container {
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
-  padding: 20px;
+  /* padding: 20px; */
 }
 
 /* 추천 영화 섹션 */
@@ -342,6 +371,10 @@ const onGroupCreated = () => {
 
 .search-btn:hover {
   background-color: #ebebeb;
+}
+
+.search-btn:focus {
+  outline: none;
 }
 
 .create-group-btn {
@@ -593,5 +626,25 @@ const onGroupCreated = () => {
   .filter-section {
     padding: 0 1rem;
   }
+}
+
+a {
+  text-decoration: none;
+}
+.member-avatars {
+  display: flex;
+  align-items: center;
+
+  .left-member-count {
+    margin-left: 10px;
+  }
+}
+
+.member-avatar {
+  width: 40px;
+  border-radius: 30px;
+  border: 4px white solid;
+  /* margin: 0px; */
+  margin: -5px;
 }
 </style>

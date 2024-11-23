@@ -20,7 +20,6 @@ export const useCounterStore = defineStore(
     });
 
     // 회원가입 요청 액션
-    // form이랑 survey 둘 다 받아서 처리해야 하는데 ,,,
     const signUp = function (payload) {
       const { name, email, username, password1, password2 } = payload;
 
@@ -44,6 +43,14 @@ export const useCounterStore = defineStore(
           console.log(error);
           console.log("Error response:", error.response?.data);
           console.log("Error status:", error.response?.status);
+
+          // 에러 응답에서 첫 번째 에러 메시지를 추출
+          if (error.response?.data) {
+            const firstErrorKey = Object.keys(error.response.data)[0];
+            const errorMessage = error.response.data[firstErrorKey];
+            throw new Error(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
+          }
+          throw new Error("회원가입 중 오류가 발생했습니다.");
         });
     };
 
@@ -63,7 +70,30 @@ export const useCounterStore = defineStore(
           console.log("로그인 성공");
           token.value = response.data.key;
           currentUser.value = response.data.user;
-          console.log(currentUser);
+
+          // 로그인 성공 시 추가적으로 프로필 정보 api를 통해 프로필 정보 외 기타 정보도 currentUser 정보로 저장
+          axios({
+            method: "get",
+            url: `http://127.0.0.1:8000/api/v2/${currentUser.value.id}/profile/`,
+            headers: {
+              Authorization: `Token ${response.data.key}`,
+            },
+          })
+            .then((res) => {
+              console.log(res.data);
+              currentUser.value.id = res.data.id;
+              currentUser.value.name = res.data.name;
+              currentUser.value.username = res.data.username;
+              currentUser.value.email = res.data.email;
+              currentUser.value.profile_img = res.data.profile_img;
+              currentUser.value.followers_count = res.data.followers_count;
+              currentUser.value.followings_count = res.data.followings_count;
+              currentUser.value.is_following = res.data.is_following;
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+
           router.push({ name: "HomeView" });
         })
         .catch((error) => {

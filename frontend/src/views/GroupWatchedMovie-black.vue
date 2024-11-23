@@ -40,13 +40,38 @@
     <!-- 탭 컨텐츠 -->
     <main class="main-content">
       <!-- 타임라인 탭 -->
-      <Timeline :currentTab="currentTab" />
+      <section v-if="currentTab === 'timeline'" class="timeline-section">
+        <div class="timeline-event" v-for="event in timelineEvents" :key="event.time">
+          <div class="event-time">{{ event.time }}</div>
+          <div class="event-content">
+            <h5>{{ event.title }}</h5>
+            <p v-if="event.description">{{ event.description }}</p>
+          </div>
+        </div>
+      </section>
 
       <!-- 한줄평 탭 -->
-      <OneLineReview :currentTab="currentTab" />
+      <section v-if="currentTab === 'reviews'" class="reviews-section">
+        <div class="review-card" v-for="review in reviews" :key="review.id">
+          <div class="review-header">
+            <div class="user-info">
+              <img :src="review.userProfile" :alt="review.userName" class="user-avatar" />
+              <span class="user-name">{{ review.userName }}</span>
+            </div>
+            <span class="review-date">{{ review.date }}</span>
+          </div>
+          <p class="review-text">{{ review.content }}</p>
+        </div>
+      </section>
 
       <!-- 갤러리 탭 -->
-      <Gallery :currentTab="currentTab" />
+      <section v-if="currentTab === 'gallery'" class="gallery-section">
+        <div class="gallery-grid">
+          <div v-for="image in galleryImages" :key="image.id" class="gallery-item" @click="openImage(image)">
+            <img :src="image.url" :alt="image.description" />
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- 채팅 패널 -->
@@ -75,16 +100,13 @@
 </template>
 
 <script setup>
-import axios from "axios";
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRoute } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import ArticleModal from "@/components/ArticleModal.vue";
-import Timeline from "@/components/GroupWatchedMovie/Timeline.vue";
-import OneLineReview from "@/components/GroupWatchedMovie/OneLineReview.vue";
-import Gallery from "@/components/GroupWatchedMovie/Gallery.vue";
 
 const route = useRoute();
+import axios from "axios";
 const heroSection = ref(null);
 const tabNav = ref(null);
 const isTabSticky = ref(false);
@@ -102,6 +124,25 @@ const tabs = [
   { id: "reviews", name: "한줄평" },
   { id: "gallery", name: "갤러리" },
 ];
+
+// 샘플 데이터
+const timelineEvents = ref([
+  { time: "17:30", title: "영화관 도착! 다같이 모였어요 🎬" },
+  { time: "18:00", title: "팝콘 먹으면서 영화 시작 전 수다 타임 🍿" },
+  { time: "18:30", title: "영화 시작! 🎥" },
+]);
+
+const reviews = ref([
+  {
+    id: 1,
+    userName: "민지",
+    userProfile: "/api/placeholder/40/40",
+    content: "시간 가는 줄 몰랐어요! 플롯이 정말 탄탄해요.",
+    date: "2024.03.15",
+  },
+]);
+
+const galleryImages = ref([{ id: 1, url: "/api/placeholder/300/300", description: "Gallery image 1" }]);
 
 // 스크롤 이벤트 핸들러
 const handleScroll = () => {
@@ -143,14 +184,14 @@ const sendMessage = () => {
 const getGroupWatchedMovie = () => {
   axios({
     method: "get",
-    url: `${store.API_URL}/api/v1/groups/movie/${route.params.group_movie_id}/`,
+    url: `${store.API_URL}/api/v1/groups/${route.params.group_movie_id}/articles/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },
   })
     .then((response) => {
       console.log(response.data);
-      movie.value = response.data;
+      movie.value = response.data.group_movie;
     })
     .catch((error) => {
       console.log(error.response.data);
@@ -171,8 +212,8 @@ onUnmounted(() => {
 <style scoped>
 .page-container {
   min-height: 100vh;
-  background-color: #ffffff;
-  color: #333333;
+  background-color: #141414;
+  color: white;
 }
 
 /* 헤더 스타일 */
@@ -184,9 +225,9 @@ onUnmounted(() => {
 }
 
 .create-article-btn {
-  background: rgba(255, 255, 255, 0.9);
-  color: #333333;
-  border: 1px solid #e1e1e1;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
   padding: 0.8rem 1.5rem;
   border-radius: 8px;
   backdrop-filter: blur(10px);
@@ -198,9 +239,8 @@ onUnmounted(() => {
 }
 
 .create-article-btn:hover {
-  background: #f8f9fa;
+  background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 히어로 섹션 스타일 */
@@ -218,7 +258,7 @@ onUnmounted(() => {
   height: 100%;
 }
 
-.backdrop-wrapper img {
+.backdrop-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -230,7 +270,7 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.8) 60%, #ffffff 100%);
+  background: linear-gradient(to bottom, rgba(20, 20, 20, 0.2) 0%, rgba(20, 20, 20, 0.8) 60%, #141414 100%);
 }
 
 .movie-info {
@@ -251,7 +291,7 @@ onUnmounted(() => {
 .movie-poster {
   width: 300px;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 }
 
 .movie-details {
@@ -262,26 +302,24 @@ onUnmounted(() => {
   font-size: 3.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
-  color: #1a1a1a;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .movie-meta {
   font-size: 1.1rem;
-  color: rgba(0, 0, 0, 0.7);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .divider {
   margin: 0 0.5rem;
-  color: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.4);
 }
 
 /* 탭 네비게이션 스타일 */
 .tab-navigation {
-  background: #ffffff;
+  background: #141414;
   padding: 1rem 0;
   transition: all 0.3s ease;
-  border-bottom: 1px solid #e1e1e1;
 }
 
 .tab-navigation.sticky {
@@ -290,9 +328,8 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(20, 20, 20, 0.95);
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .tab-container {
@@ -306,7 +343,7 @@ onUnmounted(() => {
 .tab-button {
   background: none;
   border: none;
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 1.1rem;
   padding: 0.5rem 1rem;
   cursor: pointer;
@@ -314,8 +351,8 @@ onUnmounted(() => {
 }
 
 .tab-button.active {
-  color: #3a3a3a;
-  border-bottom: 2px solid #3a3a3a;
+  color: white;
+  border-bottom: 2px solid #3498db;
 }
 
 /* 메인 컨텐츠 스타일 */
@@ -325,30 +362,113 @@ onUnmounted(() => {
   padding: 2rem 5%;
 }
 
+/* 타임라인 스타일 */
+.timeline-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.timeline-event {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.event-time {
+  flex-shrink: 0;
+  font-size: 1.2rem;
+  color: #3498db;
+  width: 80px;
+}
+
+/* 리뷰 스타일 */
+.reviews-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.review-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.review-date {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 갤러리 스타일 */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.gallery-item {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.gallery-item:hover img {
+  transform: scale(1.05);
+}
+
+/* 채팅 패널 스타일 */
 /* 채팅 패널 스타일 */
 .chat-panel {
   position: fixed;
   bottom: 0;
   right: 2rem;
   width: 350px;
-  background: #ffffff;
+  background: #1a1a1a;
   border-radius: 12px 12px 0 0;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
   z-index: 1000;
   transition: transform 0.3s ease;
 }
 
 .chat-header {
   padding: 1rem;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e1e1e1;
+  background: #2c2c2c;
   border-radius: 12px 12px 0 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
   user-select: none;
-  color: #333333;
 }
 
 .toggle-icon {
@@ -359,7 +479,6 @@ onUnmounted(() => {
   height: 400px;
   display: flex;
   flex-direction: column;
-  border: 1px solid #e1e1e1;
 }
 
 .messages-container {
@@ -389,25 +508,24 @@ onUnmounted(() => {
 
 .message-author {
   font-size: 0.8rem;
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.6);
   margin-bottom: 0.2rem;
 }
 
 .message-bubble {
-  background: #f0f2f5;
+  background: #2c2c2c;
   padding: 0.8rem 1rem;
   border-radius: 1rem;
-  color: #333333;
+  color: white;
 }
 
 .message-mine .message-bubble {
-  background: #3a3a3a;
-  color: white;
+  background: #3498db;
 }
 
 .message-time {
   font-size: 0.7rem;
-  color: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.4);
   margin-top: 0.2rem;
 }
 
@@ -415,31 +533,29 @@ onUnmounted(() => {
   padding: 1rem;
   display: flex;
   gap: 0.5rem;
-  background: #f8f9fa;
-  border-top: 1px solid #e1e1e1;
+  background: #2c2c2c;
 }
 
 .chat-input input {
   flex-grow: 1;
   padding: 0.8rem 1rem;
   border-radius: 20px;
-  border: 1px solid #e1e1e1;
-  background: #ffffff;
-  color: #333333;
+  border: none;
+  background: #1a1a1a;
+  color: white;
   font-size: 0.9rem;
 }
 
 .chat-input input:focus {
   outline: none;
-  border-color: #3a3a3a;
-  box-shadow: 0 0 0 2px rgba(41, 128, 185, 0.2);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5);
 }
 
 .chat-input button {
   padding: 0.8rem 1.2rem;
   border-radius: 20px;
   border: none;
-  background: #3a3a3a;
+  background: #3498db;
   color: white;
   font-weight: 500;
   cursor: pointer;
@@ -447,25 +563,7 @@ onUnmounted(() => {
 }
 
 .chat-input button:hover {
-  background: #2471a3;
-}
-
-/* 스크롤바 스타일링 */
-.messages-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.messages-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.messages-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  background: #2980b9;
 }
 
 /* 반응형 스타일 */
@@ -511,7 +609,6 @@ onUnmounted(() => {
   .chat-panel {
     right: 0;
     width: 100%;
-    background: #ffffff;
   }
 
   .chat-content {
@@ -522,5 +619,23 @@ onUnmounted(() => {
     padding: 0.6rem 1rem;
     font-size: 0.9rem;
   }
+}
+
+/* 스크롤바 스타일링 */
+.messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 </style>

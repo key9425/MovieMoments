@@ -1,5 +1,6 @@
 <template>
   <div class="user-profile">
+    <!-- 개인 정보 섹션 -->
     <div class="profile-header">
       <img :src="profile_img" alt="프로필 이미지" />
       <div class="profile-info">
@@ -26,6 +27,7 @@
       </div>
     </div>
 
+    <!-- 최근 작성한 글 -->
     <div class="profile-content">
       <div class="section-title">
         <h3>최근 작성한 글</h3>
@@ -39,6 +41,7 @@
         </div>
       </div>
 
+      <!-- 좋아요 한 영화 -->
       <div class="section-title">
         <h3>좋아요한 영화</h3>
         <span>더보기</span>
@@ -73,6 +76,7 @@ const is_following = ref(false);
 const store = useCounterStore();
 const route = useRoute();
 
+// 팔로우 요청
 const follow = function () {
   axios({
     method: "post",
@@ -92,6 +96,7 @@ const follow = function () {
     });
 };
 
+// 프로필 페이지 들어오면 프로필 
 onMounted(() => {
   axios({
     method: "get",

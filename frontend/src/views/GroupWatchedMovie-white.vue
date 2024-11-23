@@ -39,14 +39,30 @@
 
     <!-- 탭 컨텐츠 -->
     <main class="main-content">
-      <!-- 타임라인 탭 -->
       <Timeline :currentTab="currentTab" />
 
       <!-- 한줄평 탭 -->
-      <OneLineReview :currentTab="currentTab" />
+      <section v-if="currentTab === 'reviews'" class="reviews-section">
+        <div class="review-card" v-for="review in reviews" :key="review.id">
+          <div class="review-header">
+            <div class="user-info">
+              <img :src="review.userProfile" :alt="review.userName" class="user-avatar" />
+              <span class="user-name">{{ review.userName }}</span>
+            </div>
+            <span class="review-date">{{ review.date }}</span>
+          </div>
+          <p class="review-text">{{ review.content }}</p>
+        </div>
+      </section>
 
       <!-- 갤러리 탭 -->
-      <Gallery :currentTab="currentTab" />
+      <section v-if="currentTab === 'gallery'" class="gallery-section">
+        <div class="gallery-grid">
+          <div v-for="image in galleryImages" :key="image.id" class="gallery-item" @click="openImage(image)">
+            <img :src="image.url" :alt="image.description" />
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- 채팅 패널 -->
@@ -75,16 +91,14 @@
 </template>
 
 <script setup>
-import axios from "axios";
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRoute } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import ArticleModal from "@/components/ArticleModal.vue";
 import Timeline from "@/components/GroupWatchedMovie/Timeline.vue";
-import OneLineReview from "@/components/GroupWatchedMovie/OneLineReview.vue";
-import Gallery from "@/components/GroupWatchedMovie/Gallery.vue";
 
 const route = useRoute();
+import axios from "axios";
 const heroSection = ref(null);
 const tabNav = ref(null);
 const isTabSticky = ref(false);
@@ -102,6 +116,18 @@ const tabs = [
   { id: "reviews", name: "한줄평" },
   { id: "gallery", name: "갤러리" },
 ];
+
+const reviews = ref([
+  {
+    id: 1,
+    userName: "민지",
+    userProfile: "/api/placeholder/40/40",
+    content: "시간 가는 줄 몰랐어요! 플롯이 정말 탄탄해요.",
+    date: "2024.03.15",
+  },
+]);
+
+const galleryImages = ref([{ id: 1, url: "/api/placeholder/300/300", description: "Gallery image 1" }]);
 
 // 스크롤 이벤트 핸들러
 const handleScroll = () => {
@@ -143,14 +169,14 @@ const sendMessage = () => {
 const getGroupWatchedMovie = () => {
   axios({
     method: "get",
-    url: `${store.API_URL}/api/v1/groups/movie/${route.params.group_movie_id}/`,
+    url: `${store.API_URL}/api/v1/groups/${route.params.group_movie_id}/articles/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },
   })
     .then((response) => {
       console.log(response.data);
-      movie.value = response.data;
+      movie.value = response.data.group_movie;
     })
     .catch((error) => {
       console.log(error.response.data);
@@ -323,6 +349,72 @@ onUnmounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 5%;
+}
+
+/* 리뷰 스타일 */
+.reviews-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.review-card {
+  background: #f8f9fa;
+  border: 1px solid #e1e1e1;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.review-date {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+/* 갤러리 스타일 */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.gallery-item {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid #e1e1e1;
+  background: #ffffff;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.gallery-item:hover img {
+  transform: scale(1.05);
 }
 
 /* 채팅 패널 스타일 */
