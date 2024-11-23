@@ -1,44 +1,3 @@
-<script setup>
-import { ref } from "vue";
-const props = defineProps(["currentTab"]);
-
-const reviews = ref([
-  {
-    id: 1,
-    userName: "민지",
-    userProfile: "/api/placeholder/40/40",
-    content: "시간 가는 줄 몰랐어요! 플롯이 정말 탄탄해요.",
-    date: "2024.03.15",
-  },
-]);
-
-const newReview = ref("");
-const isSubmitting = ref(false);
-
-const submitReview = async () => {
-  if (!newReview.value.trim()) return;
-
-  try {
-    isSubmitting.value = true;
-
-    const review = {
-      id: Date.now(),
-      userName: "현재 사용자",
-      userProfile: "/api/placeholder/40/40",
-      content: newReview.value,
-      date: new Date().toLocaleDateString("ko-KR"),
-    };
-
-    reviews.value.push(review); // 새 리뷰를 목록 끝에 추가
-    newReview.value = "";
-  } catch (error) {
-    console.error("리뷰 제출 실패:", error);
-  } finally {
-    isSubmitting.value = false;
-  }
-};
-</script>
-
 <template>
   <section v-if="currentTab === 'reviews'" class="reviews-section">
     <!-- 리뷰 목록 -->
@@ -63,6 +22,50 @@ const submitReview = async () => {
     </div>
   </section>
 </template>
+
+<script setup>
+import { ref } from "vue";
+const props = defineProps(["currentTab"]);
+
+// const reviews = ref([
+//   {
+//     id: 1,
+//     userName: "민지",
+//     userProfile: "/api/placeholder/40/40",
+//     content: "시간 가는 줄 몰랐어요! 플롯이 정말 탄탄해요.",
+//     date: "2024.03.15",
+//   },
+// ]);
+
+const reviews = ref([]);
+
+const newReview = ref("");
+const isSubmitting = ref(false);
+
+// 리뷰 제출 요청
+const submitReview = async () => {
+  if (!newReview.value.trim()) return;
+
+  try {
+    isSubmitting.value = true;
+
+    const review = {
+      id: Date.now(),
+      userName: "현재 사용자",
+      userProfile: "/api/placeholder/40/40",
+      content: newReview.value,
+      date: new Date().toLocaleDateString("ko-KR"),
+    };
+
+    reviews.value.push(review); // 새 리뷰를 목록 끝에 추가
+    newReview.value = "";
+  } catch (error) {
+    console.error("리뷰 제출 실패:", error);
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+</script>
 
 <style scoped>
 /* 리뷰 섹션 스타일 */
