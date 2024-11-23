@@ -78,6 +78,7 @@ const submitReview = () => {
     .then((response) => {
       console.log("post response", response.data);
       reviews.value.push(response.data); // 서버에서 받은 전체 리뷰 목록으로 업데이트
+    //   reviews.value = [...reviews.value, response.data]
       newReview.value = ""; // 입력창 초기화
       isSubmitting.value = false; // 제출 상태 해제
     })
