@@ -55,12 +55,6 @@ const sortedTimelineEvents = computed(() => {
 });
 
 // 기존에 작성한 데이터 받아오기
-// 아래 형식으로 받아오게끔 요청
-// const timelineEvents = ref([
-//   { time: "17:30", title: "영화관 도착! 다같이 모였어요 🎬" },
-//   { time: "18:00", title: "팝콘 먹으면서 영화 시작 전 수다 타임 🍿" },
-//   { time: "18:30", title: "영화 시작! 🎥" },
-// ]);
 const getTimelineEvent = () => {
   axios({
     method: "get",
@@ -73,7 +67,7 @@ const getTimelineEvent = () => {
     .then((response) => {
       console.log("onMount 응답 결과 : ");
       console.log(response);
-      timelineEvents.value = response.data;
+      timelineEvents.value = response.data.timeline;
     })
     .catch((error) => {
       console.log(error);

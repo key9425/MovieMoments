@@ -1,11 +1,12 @@
 <template>
   <section v-if="currentTab === 'reviews'" class="reviews-section">
     <!-- 리뷰 목록 -->
+    <!-- 받아오는 거 보고 변수명 바꾸기 -->
     <div class="review-card" v-for="review in reviews" :key="review.id">
       <div class="review-header">
         <div class="user-info">
           <img :src="review.userProfile" :alt="review.userName" class="user-avatar" />
-          <span class="user-name">{{ review.userName }}</span>
+          <span class="user-name">{{ review.username }}</span>
         </div>
         <span class="review-date">{{ review.date }}</span>
       </div>
@@ -38,56 +39,60 @@ const reviews = ref([]);
 const getReview = () => {
   axios({
     method: "get",
-    url: `${store.API_URL}/api/v1/groups/${route.params.group_movie_id}/reviews/`,
+    url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },
   })
     .then((response) => {
-      console.log(response.data);
-      reviews.value = response.data;
+      console.log("onMount 응답 결과 : ");
+      console.log(response);
+      reviews.value = response.data.review;
     })
     .catch((error) => {
       console.log(error);
+      console.log("한줄평 받아오기 실패");
     });
 };
 
-// const reviews = ref([
-//   {
-//     id: 1,
-//     userName: "민지",
-//     userProfile: "/api/placeholder/40/40",
-//     content: "시간 가는 줄 몰랐어요! 플롯이 정말 탄탄해요.",
-//     date: "2024.03.15",
-//   },
-// ]);
+// 새로 작성한 리뷰 제출 요청
+const newReview = ref({
+  group_id: "",
+  name: "",
+  userProfile: "",
+  content: "",
+  data: "",
+});
 
-const newReview = ref("");
 const isSubmitting = ref(false);
 
-// 리뷰 제출 요청
-const submitReview = async () => {
+const submitReview = () => {
   if (!newReview.value.trim()) return;
 
-  try {
-    isSubmitting.value = true;
+  isSubmitting.value = true;
 
-    const review = {
-      id: Date.now(),
-      userName: "현재 사용자",
-      userProfile: "/api/placeholder/40/40",
+  axios({
+    method: "post",
+    url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/review/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+    data: {
       content: newReview.value,
-      date: new Date().toLocaleDateString("ko-KR"),
-    };
-
-    reviews.value.push(review); // 새 리뷰를 목록 끝에 추가
-    newReview.value = "";
-  } catch (error) {
-    console.error("리뷰 제출 실패:", error);
-  } finally {
-    isSubmitting.value = false;
-  }
+    },
+  })
+    .then((response) => {
+      console.log(response.data);
+      reviews.value = response.data; // 서버에서 받은 전체 리뷰 목록으로 업데이트
+      newReview.value = ""; // 입력창 초기화
+      isSubmitting.value = false; // 제출 상태 해제
+    })
+    .catch((error) => {
+      console.log(error);
+      isSubmitting.value = false;
+    });
 };
+
 onMounted(() => {
   getReview();
 });
