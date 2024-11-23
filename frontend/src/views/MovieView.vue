@@ -17,20 +17,21 @@
         <div v-else class="movies-scroll">
           <div class="movies-row">
             <div v-for="movie in recommendedMovies" :key="movie.id" class="movie-card">
-              <div class="movie-image-container">
-                <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-image" />
-              </div>
-              <div class="movie-info">
-                <h3 class="movie-title">{{ movie.title }}</h3>
-                <div class="movie-meta">
-                  <span>{{ movie.release_date.substring(0, 4) }}</span>
-                  <span class="dot">·</span>
-                  <!-- 장르 데이터 오게되면 수정 -->
-                  <span>{{ movie.country || "미국" }}</span>
-                  <span class="dot">·</span>
-                  <span>{{ movie.genre || "드라마" }}</span>
+              <RouterLink :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }">
+                <div class="movie-image-container">
+                  <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-image" />
                 </div>
-              </div>
+
+                <div class="movie-info">
+                  <h3 class="movie-title">{{ movie.title }}</h3>
+                  <div class="movie-meta">
+                    <span>{{ movie.release_date.substring(0, 4) }}</span>
+                    <span class="dot">·</span>
+                    <!-- 장르 데이터 오게되면 수정 -->
+                    <span>{{ movie.genre }}</span>
+                  </div>
+                </div>
+              </RouterLink>
             </div>
           </div>
         </div>

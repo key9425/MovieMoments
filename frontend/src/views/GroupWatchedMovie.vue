@@ -110,14 +110,14 @@ const tabs = [
 ];
 
 // 스크롤 이벤트 핸들러
-const handleScroll = () => {
-  if (!heroSection.value || !tabNav.value) return;
+// const handleScroll = () => {
+//   if (!heroSection.value || !tabNav.value) return;
 
-  const heroHeight = heroSection.value.offsetHeight;
-  const scrollPosition = window.scrollY;
+//   const heroHeight = heroSection.value.offsetHeight;
+//   const scrollPosition = window.scrollY;
 
-  isTabSticky.value = scrollPosition > heroHeight - tabNav.value.offsetHeight;
-};
+//   isTabSticky.value = scrollPosition > heroHeight - tabNav.value.offsetHeight;
+// };
 
 // 채팅 기능
 const toggleChat = () => {
@@ -166,12 +166,12 @@ const getGroupWatchedMovie = () => {
 // 컴포넌트 라이프사이클 훅
 onMounted(() => {
   getGroupWatchedMovie();
-  window.addEventListener("scroll", handleScroll);
+  // window.addEventListener("scroll", handleScroll);
 });
 
-onUnmounted(() => {
-  window.removeEventListener("scroll", handleScroll);
-});
+// onUnmounted(() => {
+//   window.removeEventListener("scroll", handleScroll);
+// });
 </script>
 
 <style scoped>
