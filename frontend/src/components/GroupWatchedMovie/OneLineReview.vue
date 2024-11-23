@@ -56,13 +56,7 @@ const getReview = () => {
 };
 
 // 새로 작성한 리뷰 제출 요청
-const newReview = ref({
-  group_id: "",
-  name: "",
-  userProfile: "",
-  content: "",
-  data: "",
-});
+const newReview = ref("");
 
 const isSubmitting = ref(false);
 

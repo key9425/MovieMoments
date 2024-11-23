@@ -59,7 +59,7 @@ const getTimelineEvent = () => {
   axios({
     method: "get",
     // url: `타임라인 요청 url`,
-    url: `${store.API_URL}/api/v1/groups/movie/${route.params.group_movie_id}/`,
+    url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },

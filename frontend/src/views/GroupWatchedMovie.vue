@@ -143,7 +143,7 @@ const sendMessage = () => {
 const getGroupWatchedMovie = () => {
   axios({
     method: "get",
-    url: `${store.API_URL}/api/v1/groups/movie/${route.params.group_movie_id}/`,
+    url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },
