@@ -5,12 +5,12 @@
     <div class="review-card" v-for="review in reviews" :key="review.id">
       <div class="review-header">
         <div class="user-info">
-          <img :src="review.userProfile" :alt="review.userName" class="user-avatar" />
-          <span class="user-name">{{ review.username }}</span>
+          <img :src="review.userProfile" :alt="review.name" class="user-avatar" />
+          <span class="user-name">{{ review.user.name }}</span>
         </div>
-        <span class="review-date">{{ review.date }}</span>
+        <span class="review-date">{{ review.created_at }}</span>
       </div>
-      <p class="review-text">{{ review.content }}</p>
+      <p class="review-text">{{ review.review }}</p>
     </div>
 
     <!-- 리뷰 작성 폼 -->
@@ -72,7 +72,7 @@ const submitReview = () => {
       Authorization: `Token ${store.token}`,
     },
     data: {
-      content: newReview.value,
+      review: newReview.value,
     },
   })
     .then((response) => {

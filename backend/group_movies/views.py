@@ -230,7 +230,7 @@ def review_create(request, group_movie_id):
     group_movie = GroupMovie.objects.get(pk=group_movie_id)
     serializer = ReviewCreateSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
-        serializer.save(user=get_user_model(), group_movie=group_movie)
+        serializer.save(user=request.user, group_movie=group_movie)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
         
 
