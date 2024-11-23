@@ -45,6 +45,14 @@ class Timeline(models.Model):
     class Meta:
         ordering = ['time']
 
+# 한줄평
+class Review(models.Model):
+    group_movie = models.ForeignKey(GroupMovie, on_delete=models.CASCADE, related_name='review')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,  related_name='review')
+    review = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
 # 게시글 : 그룹에서 본 영화 안의 컨텐츠
 class Article(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,  related_name='article')

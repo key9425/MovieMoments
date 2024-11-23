@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 
 from .serializers import (GroupSerializer, MovieSerializer, GroupMovieSerializer, 
     CommentSerializer, GroupDetailSerializer, GroupWhatMovieSerializer, 
-    GroupMovieDetailSerializer, ArticleCreateSerializer, ArticleImageCreateSerializer, TimelineCreateSerializer, ArticleSerializer, TimelineSerializer)
+    GroupMovieDetailSerializer, ArticleCreateSerializer, ArticleImageCreateSerializer, ReviewCreateSerializer, TimelineCreateSerializer, ArticleSerializer, TimelineSerializer)
 
 from .models import Movie, GroupMovie, Group, Article, Comment, ArticleImage
 import random
@@ -199,7 +199,7 @@ def group_movie_detail(request, group_movie_id):
     if request.method == 'GET':
         serializer = GroupMovieDetailSerializer(group_movie)
         return Response(serializer.data)
-    
+
 
 # 게시글 생성(갤러리 저장)
 @api_view(['POST'])
@@ -222,6 +222,17 @@ def article_create(request, group_movie_id):
         # 생성된 게시글 반환
         return Response(ArticleSerializer(article).data, status=status.HTTP_201_CREATED)
 
+# 한줄평 생성
+@api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+def review_create(request, group_movie_id):
+    # 그룹 무비 조회
+    group_movie = GroupMovie.objects.get(pk=group_movie_id)
+    serializer = ReviewCreateSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True):
+        serializer.save(user=get_user_model(), group_movie=group_movie)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
 
 # 타임라인 생성
 @api_view(['POST'])
