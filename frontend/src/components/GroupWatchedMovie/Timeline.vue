@@ -72,6 +72,7 @@ const getTimelineEvent = () => {
     },
   })
     .then((response) => {
+      console.log(response);
       timelineEvents.value = response.data;
     })
     .catch((error) => {

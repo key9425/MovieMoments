@@ -25,7 +25,31 @@
 
 <script setup>
 import { ref } from "vue";
+import { useCounterStore } from "@/stores/counter";
+import axios from "axios";
+import { useRoute } from "vue-router";
+
 const props = defineProps(["currentTab"]);
+const store = useCounterStore();
+const route = useRoute();
+
+// 기존에 작성한 리뷰데이터 받아오기
+const reviews = ref([]);
+const getReview = () => {
+  axios({
+    method: "get",
+    url: `${store.API_URL}/api/v1/groups/${route.params.group_movie_id}/articles/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then((response) => {
+      reviews.value = response.data;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
 
 // const reviews = ref([
 //   {
@@ -36,8 +60,6 @@ const props = defineProps(["currentTab"]);
 //     date: "2024.03.15",
 //   },
 // ]);
-
-const reviews = ref([]);
 
 const newReview = ref("");
 const isSubmitting = ref(false);
