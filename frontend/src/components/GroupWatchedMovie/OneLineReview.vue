@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useCounterStore } from "@/stores/counter";
 import axios from "axios";
 import { useRoute } from "vue-router";
@@ -38,12 +38,13 @@ const reviews = ref([]);
 const getReview = () => {
   axios({
     method: "get",
-    url: `${store.API_URL}/api/v1/groups/${route.params.group_movie_id}/articles/`,
+    url: `${store.API_URL}/api/v1/groups/${route.params.group_movie_id}/reviews/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },
   })
     .then((response) => {
+      console.log(response.data);
       reviews.value = response.data;
     })
     .catch((error) => {
@@ -87,6 +88,9 @@ const submitReview = async () => {
     isSubmitting.value = false;
   }
 };
+onMounted(() => {
+  getReview();
+});
 </script>
 
 <style scoped>

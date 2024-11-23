@@ -106,7 +106,7 @@ class TimelineCreateSerializer(serializers.ModelSerializer):
     time = serializers.TimeField(format='%H:%M', input_formats=['%H:%M'])
     class Meta:
         model = Timeline
-        fields = ['id', 'time', 'description']
+        fields = ['id', 'time', 'title']
 
 class ArticleImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -126,7 +126,7 @@ class TimelineSerializer(serializers.ModelSerializer):
     time = serializers.TimeField(format='%H:%M')
     class Meta:
         model = Timeline
-        fields = ['id', 'time', 'description']
+        fields = ['id', 'time', 'title']
 
 # 그룹 무비 상세페이지 (영화, 게시글(사용자), 타임라인(사용자), 갤러리)-조회
 class GroupMovieDetailSerializer(serializers.ModelSerializer):    

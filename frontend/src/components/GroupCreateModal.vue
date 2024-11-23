@@ -530,7 +530,7 @@ const toggleUserSelection = (user) => {
   }
 };
 
-const handleSubmit = async () => {
+const handleSubmit = () => {
   const formData = new FormData();
 
   formData.append("group_name", groupData.name);
@@ -547,21 +547,21 @@ const handleSubmit = async () => {
     });
   }
 
-  try {
-    const response = await axios({
-      method: "post",
-      url: `${store.API_URL}/api/v1/groups/`,
-      data: formData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Token ${store.token}`,
-      },
+  axios({
+    method: "post",
+    url: `${store.API_URL}/api/v1/groups/`,
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then((response) => {
+      console.log("그룹 생성 성공:", response.data);
+      emit("group-created");
+    })
+    .catch((error) => {
+      console.error("그룹 생성 실패:", error.response?.data || error.message);
     });
-
-    console.log("그룹 생성 성공:", response.data);
-    emit("group-created");
-  } catch (error) {
-    console.error("그룹 생성 실패:", error.response?.data || error.message);
-  }
 };
 </script>

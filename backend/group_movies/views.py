@@ -225,7 +225,7 @@ def article_create(request, group_movie_id):
 
 # 타임라인 생성
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def timeline_create(request, group_movie_id):
     # 그룹 무비 조회
     group_movie = GroupMovie.objects.get(pk=group_movie_id)

@@ -65,13 +65,13 @@ const getTimelineEvent = () => {
   axios({
     method: "get",
     // url: `타임라인 요청 url`,
-    // 은영이랑 상의 후 채우기
-    url: `${store.API_URL}/api/v1/groups/${route.params.group_movie_id}/articles/`,
+    url: `${store.API_URL}/api/v1/groups/movie/${route.params.group_movie_id}/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },
   })
     .then((response) => {
+      console.log("onMount 응답 결과 : ");
       console.log(response);
       timelineEvents.value = response.data;
     })
@@ -99,8 +99,7 @@ const addTimelineEvent = () => {
   axios({
     method: "post",
     // url: `타임라인 요청 url`,
-    // 은영이랑 상의 후 채우기
-    url: `${store.API_URL}/api/v1/groups/${route.params.group_movie_id}/articles/`,
+    url: `${store.API_URL}/api/v1/groups/movie/${route.params.group_movie_id}/timeline/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },
@@ -109,11 +108,13 @@ const addTimelineEvent = () => {
       title: newEvent.value.title,
     },
   })
-    .then(() => {
-      timelineEvents.value.push({
-        time: formattedTime,
-        title: newEvent.value.title,
-      });
+    .then((response) => {
+      console.log(response.data);
+      timelineEvents.value = response.data;
+      // timelineEvents.value.push({
+      //   time: formattedTime,
+      //   title: newEvent.value.title,
+      // });
 
       newEvent.value = {
         hours: "00",
