@@ -1,5 +1,13 @@
 <template>
   <section v-if="currentTab === 'reviews'" class="reviews-section">
+    <!-- 리뷰 작성 폼 -->
+    <div class="review-input-form">
+      <form @submit.prevent="submitReview" class="input-group">
+        <input v-model="newReview" type="text" placeholder="영화에 대한 한줄평을 작성해주세요." class="review-input" :maxlength="200" required />
+        <div class="char-count">{{ newReview.length }}/200</div>
+        <button type="submit" class="add-review-btn" :disabled="isSubmitting || !newReview.trim()">등록</button>
+      </form>
+    </div>
     <!-- 리뷰 목록 -->
     <!-- 받아오는 거 보고 변수명 바꾸기 -->
     <div class="review-card" v-for="review in reviews" :key="review.id">
@@ -11,15 +19,6 @@
         <span class="review-date">{{ review.created_at }}</span>
       </div>
       <p class="review-text">{{ review.review }}</p>
-    </div>
-
-    <!-- 리뷰 작성 폼 -->
-    <div class="review-input-form">
-      <form @submit.prevent="submitReview" class="input-group">
-        <input v-model="newReview" type="text" placeholder="영화에 대한 한줄평을 작성해주세요." class="review-input" :maxlength="200" required />
-        <button type="submit" class="add-review-btn" :disabled="isSubmitting || !newReview.trim()">등록</button>
-      </form>
-      <div class="char-count">{{ newReview.length }}/200</div>
     </div>
   </section>
 </template>
@@ -47,7 +46,9 @@ const getReview = () => {
     .then((response) => {
       console.log("onMount 응답 결과 : ");
       console.log("review response", response);
-      reviews.value = response.data.review;
+      reviews.value = response.data.review.sort((a, b) => {
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
     })
     .catch((error) => {
       console.log(error);
@@ -77,8 +78,8 @@ const submitReview = () => {
   })
     .then((response) => {
       console.log("post response", response.data);
-      reviews.value.push(response.data); // 서버에서 받은 전체 리뷰 목록으로 업데이트
-    //   reviews.value = [...reviews.value, response.data]
+      // reviews.value.push(response.data); // 서버에서 받은 전체 리뷰 목록으로 업데이트
+      reviews.value = [response.data, ...reviews.value];
       newReview.value = ""; // 입력창 초기화
       isSubmitting.value = false; // 제출 상태 해제
     })

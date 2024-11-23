@@ -45,6 +45,10 @@
       <!-- 한줄평 탭 -->
       <OneLineReview :currentTab="currentTab" />
 
+      <!-- 게시글 탭 -->
+      <!-- <Article :currentTab="currentTab" /> -->
+      <Article :currentTab="currentTab" />
+
       <!-- 갤러리 탭 -->
       <Gallery :currentTab="currentTab" />
     </main>
@@ -83,6 +87,7 @@ import ArticleModal from "@/components/ArticleModal.vue";
 import Timeline from "@/components/GroupWatchedMovie/Timeline.vue";
 import OneLineReview from "@/components/GroupWatchedMovie/OneLineReview.vue";
 import Gallery from "@/components/GroupWatchedMovie/Gallery.vue";
+import Article from "@/components/GroupWatchedMovie/Article.vue";
 
 const route = useRoute();
 const heroSection = ref(null);
@@ -100,6 +105,7 @@ const currentUserId = ref("user1");
 const tabs = [
   { id: "timeline", name: "타임라인" },
   { id: "reviews", name: "한줄평" },
+  { id: "article", name: "게시글" },
   { id: "gallery", name: "갤러리" },
 ];
 

@@ -2,31 +2,26 @@
   <div v-if="currentTab === 'article'" class="article-container">
     <!-- 게시글 작성 폼 -->
     <div class="article-form">
-      <form @submit.prevent="submitArticle">
-        <textarea v-model="newArticle.content" placeholder="게시글을 작성해주세요..." class="article-textarea"></textarea>
-        <div class="char-count">{{ newArticle.content.length }}/2000</div>
+      <textarea v-model="newArticle.content" placeholder="게시글을 작성해주세요..." class="article-textarea"></textarea>
 
-        <!-- 이미지 업로드 영역 -->
-        <div class="image-upload-area">
-          <label for="image-upload" class="image-upload-label">
-            <div class="upload-icon">+</div>
-            <span>사진 추가</span>
-          </label>
-          <input type="file" id="image-upload" multiple accept="image/*" @change="handleImageUpload" class="hidden" />
+      <!-- 이미지 업로드 영역 -->
+      <div class="image-upload-area">
+        <label for="image-upload" class="image-upload-label">
+          <div class="upload-icon">+</div>
+          <span>사진 추가</span>
+        </label>
+        <input type="file" id="image-upload" multiple accept="image/*" @change="handleImageUpload" class="hidden" />
 
-          <!-- 미리보기 이미지 -->
-          <div class="preview-images" v-if="newArticle.images.length">
-            <div v-for="(image, index) in newArticle.images" :key="index" class="preview-image-container">
-              <img :src="image.url" class="preview-image" />
-              <button @click="removeImage(index)" class="remove-image">×</button>
-            </div>
+        <!-- 미리보기 이미지 -->
+        <div class="preview-images" v-if="newArticle.images.length">
+          <div v-for="(image, index) in newArticle.images" :key="index" class="preview-image-container">
+            <img :src="image.url" class="preview-image" />
+            <button @click="removeImage(index)" class="remove-image">×</button>
           </div>
         </div>
+      </div>
 
-        <button type="submit" class="add-article-btn" :disabled="isSubmitting || (!newArticle.content.trim() && !newArticle.images.length)">등록</button>
-
-        <!-- <button @click="submitArticle" class="submit-button">게시하기</button> -->
-      </form>
+      <button @click="submitArticle" class="submit-button">게시하기</button>
     </div>
 
     <!-- 게시글 목록 -->
@@ -44,18 +39,14 @@
 
         <!-- 이미지 그리드 -->
         <div v-if="article.images.length" class="image-grid">
-          <template v-if="article.images.length <= 3">
-            <div v-for="(image, index) in article.images" :key="index" class="grid-image-wrapper">
-              <img :src="image.url" @click="openImageModal(article.images, index)" class="grid-image" />
-            </div>
+          <template v-if="article.images.length <= 2">
+            <img v-for="(image, index) in article.images" :key="index" :src="image.url" @click="openImageModal(article.images, index)" class="grid-image" />
           </template>
 
           <template v-else>
-            <div v-for="(image, index) in article.images.slice(0, 3)" :key="index" class="grid-image-wrapper">
-              <img :src="image.url" @click="openImageModal(article.images, index)" class="grid-image" />
-            </div>
-            <div class="grid-image-wrapper more-images" @click="openImageModal(article.images, 2)">
-              <img :src="article.images[2].url" class="grid-image background-image" />
+            <img v-for="(image, index) in article.images.slice(0, 2)" :key="index" :src="image.url" @click="openImageModal(article.images, index)" class="grid-image" />
+            <div class="grid-image more-images" @click="openImageModal(article.images, 2)">
+              <img :src="article.images[2].url" class="background-image" />
               <div class="more-overlay">
                 <span>+{{ article.images.length - 2 }}</span>
               </div>
@@ -189,21 +180,17 @@ const formatDate = (date) => {
 
 <style scoped>
 .article-container {
-  margin: 32px auto 0;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .article-form {
-  background: #f8f9fa;
+  background: white;
   border-radius: 8px;
-  padding: 24px;
+  padding: 20px;
   margin-bottom: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-.char-count {
-  text-align: right;
-  font-size: 0.8rem;
-  color: #666;
-  padding: 0 0.5rem;
 }
 
 .article-textarea {
@@ -214,12 +201,6 @@ const formatDate = (date) => {
   border-radius: 4px;
   resize: vertical;
   margin-bottom: 12px;
-}
-
-.article-textarea:focus {
-  outline: none;
-  border-color: #666;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
 }
 
 .image-upload-area {
@@ -277,28 +258,7 @@ const formatDate = (date) => {
   cursor: pointer;
 }
 
-.add-article-btn {
-  width: 100%;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  border: none;
-  background: #666;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.add-article-btn:hover:not(:disabled) {
-  background: #555;
-  transform: translateY(-1px);
-}
-
-.add-article-btn:disabled {
-  background: #cccccc;
-  cursor: not-allowed;
-}
-
-/* .submit-button {
+.submit-button {
   width: 100%;
   padding: 12px;
   background: #3a3a3a;
@@ -306,7 +266,7 @@ const formatDate = (date) => {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-} */
+}
 
 .articles-list {
   display: flex;
@@ -359,18 +319,10 @@ const formatDate = (date) => {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 8px;
 }
-.grid-image-wrapper {
-  position: relative;
-  padding-bottom: 100%; /* 정사각형 비율 생성 */
-  overflow: hidden;
-}
 
 .grid-image {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
-  height: 100%;
+  height: 200px;
   object-fit: cover;
   border-radius: 4px;
   cursor: pointer;
@@ -496,9 +448,6 @@ const formatDate = (date) => {
 @media (max-width: 768px) {
   .image-grid {
     grid-template-columns: 1fr;
-  }
-  .grid-image-wrapper {
-    padding-bottom: 100%; /* 모바일에서도 정사각형 유지 */
   }
 
   .grid-image {

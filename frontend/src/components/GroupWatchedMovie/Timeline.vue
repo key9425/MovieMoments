@@ -1,15 +1,6 @@
 <template>
   <!-- 타임라인 탭 -->
   <section v-if="currentTab === 'timeline'" class="timeline-section">
-    <!-- timelineEvents를 시간순으로 정렬(sortedTimelineEvents)한 걸 v-for로 하나씩 event -->
-    <div class="timeline-event" v-for="event in sortedTimelineEvents" :key="event.time">
-      <div class="event-time">{{ event.time }}</div>
-      <div class="event-content">
-        <h5>{{ event.title }}</h5>
-        <p v-if="event.description">{{ event.description }}</p>
-      </div>
-    </div>
-
     <!-- 타임라인 입력 폼 -->
     <div class="timeline-input-form">
       <div class="input-group">
@@ -28,6 +19,14 @@
         </div>
         <input type="text" v-model="newEvent.title" placeholder="하루에 대한 기록을 남겨주세요." class="title-input" required />
         <button @click="addTimelineEvent" class="add-event-btn">등록</button>
+      </div>
+    </div>
+    <!-- timelineEvents를 시간순으로 정렬(sortedTimelineEvents)한 걸 v-for로 하나씩 event -->
+    <div class="timeline-event" v-for="event in sortedTimelineEvents" :key="event.time">
+      <div class="event-time">{{ event.time }}</div>
+      <div class="event-content">
+        <h5>{{ event.title }}</h5>
+        <p v-if="event.description">{{ event.description }}</p>
       </div>
     </div>
   </section>

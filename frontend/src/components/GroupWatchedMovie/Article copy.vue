@@ -44,14 +44,14 @@
 
         <!-- 이미지 그리드 -->
         <div v-if="article.images.length" class="image-grid">
-          <template v-if="article.images.length <= 3">
+          <template v-if="article.images.length <= 2">
             <div v-for="(image, index) in article.images" :key="index" class="grid-image-wrapper">
               <img :src="image.url" @click="openImageModal(article.images, index)" class="grid-image" />
             </div>
           </template>
 
           <template v-else>
-            <div v-for="(image, index) in article.images.slice(0, 3)" :key="index" class="grid-image-wrapper">
+            <div v-for="(image, index) in article.images.slice(0, 2)" :key="index" class="grid-image-wrapper">
               <img :src="image.url" @click="openImageModal(article.images, index)" class="grid-image" />
             </div>
             <div class="grid-image-wrapper more-images" @click="openImageModal(article.images, 2)">
