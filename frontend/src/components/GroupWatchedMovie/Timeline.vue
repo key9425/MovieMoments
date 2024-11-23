@@ -99,11 +99,11 @@ const addTimelineEvent = () => {
   axios({
     method: "post",
     // url: `타임라인 요청 url`,
-    url: `${store.API_URL}/api/v1/groups/movie/${route.params.group_movie_id}/timeline/`,
+    url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/timeline/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },
-    body: {
+    data: {
       time: formattedTime,
       title: newEvent.value.title,
     },
@@ -111,11 +111,6 @@ const addTimelineEvent = () => {
     .then((response) => {
       console.log(response.data);
       timelineEvents.value = response.data;
-      // timelineEvents.value.push({
-      //   time: formattedTime,
-      //   title: newEvent.value.title,
-      // });
-
       newEvent.value = {
         hours: "00",
         minutes: "00",
