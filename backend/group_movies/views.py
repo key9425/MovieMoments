@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 
 from .serializers import (GroupSerializer, MovieSerializer, GroupMovieSerializer, 
     CommentSerializer, GroupDetailSerializer, GroupWhatMovieSerializer, 
-    GroupMovieDetailSerializer, ArticleCreateSerializer, ArticleImageCreateSerializer, ReviewCreateSerializer, TimelineCreateSerializer, ArticleSerializer, TimelineSerializer)
+    GroupMovieDetailSerializer, ArticleCreateSerializer, ArticleImageCreateSerializer, ReviewCreateSerializer, ReviewSerializer, TimelineCreateSerializer, ArticleSerializer, TimelineSerializer)
 
 from .models import Movie, GroupMovie, Group, Article, Comment, ArticleImage
 import random
@@ -230,8 +230,8 @@ def review_create(request, group_movie_id):
     group_movie = GroupMovie.objects.get(pk=group_movie_id)
     serializer = ReviewCreateSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
-        serializer.save(user=request.user, group_movie=group_movie)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        review=serializer.save(user=request.user, group_movie=group_movie)
+        return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
         
 
 # 타임라인 생성
