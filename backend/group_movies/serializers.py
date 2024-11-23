@@ -103,9 +103,10 @@ class ArticleImageCreateSerializer(serializers.ModelSerializer):
 
 # 타임라인 생성
 class TimelineCreateSerializer(serializers.ModelSerializer):
+    time = serializers.TimeField(format='%H:%M', input_formats=['%H:%M'])
     class Meta:
         model = Timeline
-        fields = ['time', 'description']
+        fields = ['id', 'time', 'description']
 
 class ArticleImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -121,10 +122,11 @@ class ArticleSerializer(serializers.ModelSerializer):
 
 # 타임라인 조회
 class TimelineSerializer(serializers.ModelSerializer):
-    user = GroupMovieUserSerializer(read_only=True)
+     # 시간을 "HH:MM" 형식으로 반환
+    time = serializers.TimeField(format='%H:%M')
     class Meta:
         model = Timeline
-        fields = ['id', 'time', 'description', 'created_at']
+        fields = ['id', 'time', 'description']
 
 # 그룹 무비 상세페이지 (영화, 게시글(사용자), 타임라인(사용자), 갤러리)-조회
 class GroupMovieDetailSerializer(serializers.ModelSerializer):    
