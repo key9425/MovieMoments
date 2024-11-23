@@ -111,10 +111,13 @@
 import axios from "axios";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
+import { useCounterStore } from "@/stores/counter";
 
 const route = useRoute();
 const movie = ref(null);
 const isLiked = ref(false);
+const props = defineProps(["movie"]);
+const store = useCounterStore();
 const movieId = route.params.movieId;
 
 // const API_KEY =

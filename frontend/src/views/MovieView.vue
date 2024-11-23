@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="movie-container">
     <!-- 상단 제목 -->
     <section>
       <div class="header-section">
@@ -38,12 +38,28 @@
     </section>
 
     <!-- 검색창 -->
-    <!-- 검색창을 눌렀을 때 모달창을 띄우는게 필요하니까 버튼임 -->
-    <div class="search-container">
-      <input type="text" placeholder="영화검색" class="search-btn" />
-      <button type="button" @click="openModal" class="search-btn">영화 제목을 입력해주세요.</button>
+    <!-- 검색 기능 -->
+    <div class="search-section">
+      <div class="search-container">
+        <input type="text" v-model="searchKeyword" @input="handleSearch" placeholder="영화 제목을 입력하세요." class="search-input" @focus="isSearchFocused = true" @blur="handleSearchBlur" />
+      </div>
+
+      <!-- 검색 결과 드롭다운 -->
+      <div v-if="isSearchFocused && (searchResults.length > 0 || searchKeyword)" class="search-results-dropdown">
+        <div v-if="searchResults.length > 0" class="search-results">
+          <RouterLink v-for="movie in searchResults" :key="movie.id" :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }" class="movie-item">
+            <div class="movie-poster-wrapper">
+              <img :src="movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : '/no-poster.jpg'" :alt="movie.title" class="movie-poster" />
+            </div>
+            <div class="movie-item-info">
+              <h3 class="movie-item-title">{{ movie.title }}</h3>
+              <p class="movie-item-year">{{ new Date(movie.release_date).getFullYear() }}</p>
+            </div>
+          </RouterLink>
+        </div>
+        <div v-else class="no-results">"{{ searchKeyword }}" 에 대한 검색 결과가 없습니다.</div>
+      </div>
     </div>
-    <SearchModal :is-open="isModalOpen" @close="closeModal" />
     <br />
 
     <h2>박스오피스 순위</h2>
@@ -68,10 +84,10 @@
 
 <script setup>
 import MovieCard from "@/components/MovieCard.vue";
-import SearchModal from "@/components/SearchModal.vue";
 import axios from "axios";
 import { useCounterStore } from "@/stores/counter";
 import { onMounted, ref } from "vue";
+import { debounce } from "lodash";
 
 const populaMovies = ref([]);
 const nowPlayingMovies = ref([]);
@@ -113,16 +129,46 @@ onMounted(() => {
   fetchRecommendedMovies();
 });
 
-// 모달
-const isModalOpen = ref(false);
+const searchKeyword = ref("");
+const searchResults = ref([]);
 
-const openModal = () => {
-  isModalOpen.value = true;
+// 영화 검색 관련
+const searchMovies = (word) => {
+  if (!word.trim()) {
+    searchResults.value = [];
+    return;
+  }
+  axios({
+    method: "get",
+    url: `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(word)}&language=ko-KR&page=1`,
+    headers: {
+      accept: "application/json",
+      Authorization: `Bearer ${API_KEY}`,
+    },
+  })
+    .then((response) => {
+      searchResults.value = response.data.results;
+      console.log(searchResults.value);
+    })
+    .catch((error) => {
+      console.error("영화 검색 에러:", error);
+    });
 };
 
-const closeModal = () => {
-  isModalOpen.value = false;
+// 검색 관련 상태 추가
+const isSearchFocused = ref(false);
+
+// 검색 blur 핸들러 추가
+const handleSearchBlur = () => {
+  // 약간의 지연을 줘서 링크 클릭이 가능하도록 함
+  setTimeout(() => {
+    isSearchFocused.value = false;
+  }, 200);
 };
+
+const handleSearch = debounce((event) => {
+  searchMovies(searchKeyword.value);
+});
 
 // 박스오피스 순위
 const getPopularMovies = () => {
@@ -190,6 +236,12 @@ onMounted(() => {
 
 <style scoped>
 /* 영화 */
+
+.movie-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 20px;
+}
 .movie-list {
   display: flex;
   gap: 20px;
@@ -198,15 +250,16 @@ onMounted(() => {
 }
 
 /* 검색모달 */
-.search-btn {
-  width: 1000px;
-  height: 50px;
-  border-style: none;
+.search-input {
+  width: 100%;
+  border: 1px solid #ddd;
+
+  border-radius: 4px;
   position: center;
-  border-radius: 10px;
   text-align: left;
   display: block; /* 추가 */
   margin: 50px auto; /* 상하 여백 30px, 가운데 정렬 */
+  margin-bottom: 20px;
   background-color: #f5f5f5;
   cursor: pointer; /* 마우스 오버시 포인터 변경 */
 }
@@ -301,5 +354,124 @@ onMounted(() => {
   .movie-image-container {
     height: 210px;
   }
+}
+
+/* 검색을 위한 스타일 추가 */
+.search-section {
+  position: relative;
+  /* max-width: 600px; */
+  margin: 0 70px;
+}
+
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 15px 45px 15px 20px;
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.search-input:hover {
+  background-color: #ebebeb;
+}
+
+.search-input:focus {
+  border-color: #666;
+  box-shadow: 0 0 0 3px rgba(102, 102, 102, 0.1);
+  outline: none;
+}
+
+.search-results-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.search-results {
+  padding: 10px 0;
+}
+
+.movie-item {
+  display: flex;
+  padding: 10px 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.2s ease;
+}
+
+.movie-item:hover {
+  background-color: #f8f9fa;
+}
+
+.movie-poster-wrapper {
+  width: 50px;
+  height: 75px;
+  margin-right: 15px;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.movie-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.movie-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.movie-item-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+  color: #333;
+}
+
+.movie-item-year {
+  font-size: 14px;
+  color: #666;
+  margin: 4px 0 0 0;
+}
+
+.no-results {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+/* 스크롤바 스타일링 */
+.search-results-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.search-results-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.search-results-dropdown::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.search-results-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #666;
 }
 </style>

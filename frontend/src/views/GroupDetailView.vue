@@ -4,16 +4,16 @@
     <aside class="sidebar">
       <div v-if="groupData" class="group-info">
         <img :src="'http://127.0.0.1:8000' + groupData.group_img" alt="그룹대표이미지" class="group-img" />
-        <h2>그룹명: {{ groupData?.group_name }}</h2>
-        <p class="group-description">그룹설명: {{ groupData?.description }}</p>
+        <h2>{{ groupData?.group_name }}</h2>
+        <p class="group-description">{{ groupData?.description }}</p>
 
         <!-- 멤버 목록 -->
         <div class="members-section">
           <div v-for="member in groupData.include_members" :key="member.id" class="member-item">
             <img :src="'http://127.0.0.1:8000' + member.profile_img" :alt="member.name" />
             <div class="member-info">
-              <h4 class="member-name">이름: {{ member.name }}</h4>
-              <p class="member-email">이메일: {{ member.email }}</p>
+              <h4 class="member-name">{{ member.name }}</h4>
+              <p class="member-email">{{ member.email }}</p>
             </div>
           </div>
         </div>

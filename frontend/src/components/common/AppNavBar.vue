@@ -13,8 +13,8 @@
 
         <div class="profile-section">
           <RouterLink v-if="store.currentUser" :to="{ name: 'ProfileView', params: { user_id: store.currentUser.id } }" class="profile-link">
-            <!-- <img :src="store.currentUser?.profile_img || '/api/placeholder/32/32'" alt="프로필" class="profile-img" /> -->
-            <img :src="profile_img" alt="img" />
+            <img :src="store.currentUser?.profile_img" alt="프로필" class="profile-img" />
+            <!-- <img :src="profile_img" alt="img" /> -->
           </RouterLink>
           <button @click="logOut" class="logout-btn">로그아웃</button>
         </div>
@@ -28,6 +28,7 @@ import { RouterLink } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 
 const store = useCounterStore();
+// console.log("현재 유저 정보", store.currentUser);
 
 const logOut = function () {
   store.logOut();
@@ -50,7 +51,7 @@ const logOut = function () {
 
 .nav-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 0 24px;
   display: flex;

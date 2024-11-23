@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <AppNavBar v-if="!$route.meta.hideNavbar" />
-    <main class="main-content">
+    <main :class="{ 'main-content': isPaddingPage }">
       <RouterView />
     </main>
   </div>
@@ -9,9 +9,11 @@
 
 <script setup>
 import AppNavBar from "./components/common/AppNavBar.vue";
-import { RouterView } from "vue-router";
-import { useCounterStore } from "@/stores/counter";
-const store = useCounterStore();
+import { RouterView, useRoute } from "vue-router";
+import { computed } from "vue";
+
+const route = useRoute();
+const isPaddingPage = computed(() => route.path !== "/" && route.path !== "/signup");
 </script>
 
 <style scoped>
@@ -20,6 +22,6 @@ const store = useCounterStore();
 }
 
 .main-content {
-  padding-top: 100px; /* Navbar 높이만큼 상단 여백 추가 */
+  padding-top: 64px;
 }
 </style>

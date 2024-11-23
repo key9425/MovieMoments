@@ -1,6 +1,9 @@
 <template>
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal-content">
+      <!-- X 버튼 추가 -->
+      <button class="close-btn" @click="$emit('close')">×</button>
+
       <h1 class="modal-title">그룹 생성</h1>
 
       <div class="form-section">
@@ -22,6 +25,8 @@
           <div class="image-upload-area" @click="triggerFileInput">
             <div v-if="imagePreview" class="preview-container">
               <img :src="imagePreview" alt="Preview" />
+              <!-- 이미지 삭제 버튼 추가 -->
+              <button class="delete-image-btn" @click.stop="deleteImage">×</button>
             </div>
             <div v-else class="upload-placeholder">
               <span class="plus-icon">+</span>
@@ -30,23 +35,33 @@
           </div>
         </div>
 
-        <!-- 영화메이트 -->
+        <!-- 영화메이트 섹션 -->
         <div class="form-group">
           <label>영화메이트</label>
-          <input type="text" v-model="searchQuery" placeholder="검색" class="search-input" />
+          <div class="search-input-container">
+            <div class="selected-users-chips">
+              <div v-for="user in selectedUsers" :key="user.id" class="user-chip">
+                {{ user.name }}
+                <button @click.stop="toggleUserSelection(user)" class="remove-user-btn">×</button>
+              </div>
+              <input type="text" v-model="searchQuery" placeholder="검색" class="search-input" :class="{ 'with-selections': selectedUsers.length > 0 }" />
+            </div>
+          </div>
+
           <!-- 검색 결과 -->
           <div class="search-results" v-if="searchResults.length">
-            <div v-for="user in searchResults" :key="user.id" class="user-item" @click="toggleUserSelection(user)">
+            <div v-for="user in searchResults" :key="user.id" class="user-item" :class="{ 'user-selected': isUserSelected(user) }" @click="toggleUserSelection(user)">
               <div class="user-icon">👤</div>
               <div class="user-info">
                 <div class="user-name">{{ user.name }}</div>
                 <div class="user-email">{{ user.email }}</div>
               </div>
+              <div v-if="isUserSelected(user)" class="check-icon">✓</div>
             </div>
           </div>
         </div>
 
-        <!-- 카테고리 -->
+        <!-- 카테고리 섹션 -->
         <div class="form-group">
           <label>카테고리</label>
           <div class="category-container">
@@ -62,9 +77,11 @@
                 'category-work': category.name === '직장',
                 'category-ssafy': category.name === 'SSAFY',
                 'category-etc': category.name === '기타',
+                selected: groupData.category === category.id,
               }"
             >
               {{ category.name }}
+              <!-- <span v-if="groupData.category === category.id" class="category-check">✓</span> -->
             </button>
           </div>
         </div>
@@ -91,6 +108,8 @@
 }
 
 .modal-content {
+  position: relative; /* 닫기 버튼의 절대 위치 기준점 */
+
   background-color: #fff;
   width: 90%;
   max-width: 500px;
@@ -98,6 +117,27 @@
   overflow-y: auto;
   padding: 32px;
   border-radius: 8px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.close-btn:hover {
+  background-color: #f0f0f0;
 }
 
 .modal-title {
@@ -147,6 +187,7 @@
 .preview-container {
   width: 100%;
   height: 100%;
+  position: relative;
 }
 
 .preview-container img {
@@ -156,21 +197,48 @@
   border-radius: 4px;
 }
 
+/* 이미지 삭제 버튼 스타일 추가 */
+.delete-image-btn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  color: #666;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.delete-image-btn:hover {
+  background-color: #f0f0f0;
+}
+
 .search-results {
-  margin-top: 8px;
+  margin-top: 4px;
   border: 1px solid #eee;
   border-radius: 4px;
   max-height: 200px;
   overflow-y: auto;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .user-item {
   display: flex;
   align-items: center;
-  padding: 12px;
+  padding: 8px 12px;
   cursor: pointer;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+.user-item:hover {
+  background-color: #f5f5f5;
 }
 
 .user-item:last-child {
@@ -191,6 +259,123 @@
   color: #666;
 }
 
+/* 선택된 사용자 태그 스타일 */
+.selected-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.selected-user-tag {
+  display: flex;
+  align-items: center;
+  background-color: #e8e8e8;
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 14px;
+}
+
+.remove-user-btn {
+  border: none;
+  background: none;
+  margin-left: 4px;
+  cursor: pointer;
+  color: #666;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-user-btn:hover {
+  color: #333;
+}
+
+/* 검색 입력창 컨테이너 스타일 */
+.search-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.selected-users-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  min-height: 48px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  align-items: center;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  background-color: #e8e8e8;
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 14px;
+  max-width: fit-content;
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  padding: 4px 8px;
+  font-size: 14px;
+  background: transparent;
+  flex: 1;
+  min-width: 120px;
+}
+
+.search-input.with-selections {
+  margin-left: 4px;
+}
+
+.remove-user-btn {
+  border: none;
+  background: none;
+  margin-left: 4px;
+  cursor: pointer;
+  color: #666;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.remove-user-btn:hover {
+  color: #333;
+}
+
+/* 사용자 아이템 선택 스타일 */
+.user-item {
+  position: relative;
+  padding-right: 40px; /* 체크 아이콘 공간 확보 */
+}
+
+.user-selected {
+  background-color: #f0f7ff;
+}
+
+.check-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #4caf50;
+  font-weight: bold;
+}
+
+/* 카테고리 버튼 선택 스타일 */
+.category-btn {
+  position: relative;
+  padding-right: 32px; /* 체크 아이콘 공간 확보 */
+}
+
 .category-container {
   display: flex;
   flex-wrap: wrap;
@@ -200,28 +385,28 @@
 .category-btn {
   padding: 8px 16px;
   border: none;
-  border-radius: 20px;
+  border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
 }
 
-.category-family {
-  background-color: #e9fae9;
+.category-family.selected {
+  background-color: #d4f3d4;
 }
-.category-couple {
-  background-color: #fae9e9;
+.category-couple.selected {
+  background-color: #f3d4d4;
 }
-.category-friend {
-  background-color: #e9eafa;
+.category-friend.selected {
+  background-color: #d4d6f3;
 }
-.category-work {
-  background-color: #faf6e9;
+.category-work.selected {
+  background-color: #f3ecd4;
 }
-.category-ssafy {
-  background-color: #f2e9fa;
+.category-ssafy.selected {
+  background-color: #e6d4f3;
 }
-.category-etc {
-  background-color: #e9fafa;
+.category-etc.selected {
+  background-color: #d4f3f3;
 }
 
 .submit-btn {
@@ -284,12 +469,32 @@ const handleImageChange = (event) => {
   }
 };
 
+// 이미지 삭제 함수 추가
+const deleteImage = () => {
+  imagePreview.value = null;
+  groupData.image = null;
+  if (fileInput.value) {
+    fileInput.value.value = ""; // 파일 input 초기화
+  }
+};
+
 const triggerFileInput = () => {
   fileInput.value.click();
 };
 
+// 사용자 선택 여부 확인 함수 추가
+const isUserSelected = (user) => {
+  return selectedUsers.value.some((selectedUser) => selectedUser.id === user.id);
+};
+
+// 카테고리 선택 함수
 const selectCategory = (categoryId) => {
-  groupData.category = categoryId;
+  // 이미 선택된 카테고리를 다시 클릭하면 선택 해제
+  if (groupData.category === categoryId) {
+    groupData.category = "";
+  } else {
+    groupData.category = categoryId;
+  }
 };
 
 watch(searchQuery, (newQuery) => {
