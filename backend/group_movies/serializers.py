@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Movie, Group, GroupMovie, Article, Comment, Timeline, ArticleImage
+from .models import Movie, Group, GroupMovie, Article, Comment, Timeline, ArticleImage, Review
 from django.contrib.auth import get_user_model
 
 
@@ -101,6 +101,12 @@ class ArticleImageCreateSerializer(serializers.ModelSerializer):
         model = ArticleImage
         fields = ['image']
 
+# 한줄평 생성
+class ReviewCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['review']
+
 # 타임라인 생성
 class TimelineCreateSerializer(serializers.ModelSerializer):
     time = serializers.TimeField(format='%H:%M', input_formats=['%H:%M'])
@@ -120,6 +126,12 @@ class ArticleSerializer(serializers.ModelSerializer):
         model = Article
         fields = ['id', 'user', 'content', 'created_at', 'updated_at', 'images']
 
+class ReviewSerializer(serializers.ModelSerializer):
+    user = GroupMovieUserSerializer(read_only=True)
+    class Meta:
+        model = Review
+        fields = ['id', 'review', 'user', 'created_at']
+
 # 타임라인 조회
 class TimelineSerializer(serializers.ModelSerializer):
      # 시간을 "HH:MM" 형식으로 반환
@@ -131,6 +143,7 @@ class TimelineSerializer(serializers.ModelSerializer):
 # 그룹 무비 상세페이지 (영화, 게시글(사용자), 타임라인(사용자), 갤러리)-조회
 class GroupMovieDetailSerializer(serializers.ModelSerializer):    
     article = ArticleSerializer(many=True, read_only=True)
+    review = ReviewSerializer(many=True, read_only=True)
     timeline = TimelineSerializer(many=True, read_only=True)
     article_img = ArticleImageSerializer(many=True, read_only=True)
     movie = MovieSerializer(read_only=True)
@@ -138,5 +151,5 @@ class GroupMovieDetailSerializer(serializers.ModelSerializer):
         model = GroupMovie
         fields = [
             'id', 'movie', 'watched_date',
-            'article', 'timeline', 'article_img'
+            'article', 'timeline', 'article_img', 'review'
         ]
