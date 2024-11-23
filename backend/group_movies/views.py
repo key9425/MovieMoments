@@ -8,8 +8,11 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.contrib.auth import get_user_model
 
-from .serializers import GroupSerializer, MovieSerializer, GroupMovieSerializer, ArticleSerializer, CommentSerializer, GroupDetailSerializer, GroupWhatMovieSerializer, ArticleCreateSerializer
-from .models import Movie, GroupMovie, Group, Article, Comment
+from .serializers import (GroupSerializer, MovieSerializer, GroupMovieSerializer, 
+    CommentSerializer, GroupDetailSerializer, GroupWhatMovieSerializer, 
+    GroupMovieDetailSerializer, ArticleCreateSerializer, ArticleImageCreateSerializer, TimelineCreateSerializer, ArticleSerializer, TimelineSerializer)
+
+from .models import Movie, GroupMovie, Group, Article, Comment, ArticleImage
 import random
 from django.http import JsonResponse
 
@@ -95,37 +98,35 @@ def movie_list(request):
         return Response(serializer.data)
     
 
-@api_view(['GET', 'POST'])
-# @permission_classes([IsAuthenticated])
-def article_list(request, group_movie_id):
-    group_movie = get_object_or_404(GroupMovie, pk=group_movie_id)
-    if request.method == 'GET':
-        articles = Article.objects.filter(group_movie=group_movie).order_by('-created_at')
-        response_data = {
-            'group_movie': GroupMovieSerializer(group_movie).data,
-            'articles': ArticleSerializer(articles, many=True).data
-        }
-        return Response(response_data)
-    elif request.method == 'POST':
-        serializer = ArticleCreateSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(user=request.user, group_movie=group_movie)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+# @api_view(['GET', 'POST'])
+# # @permission_classes([IsAuthenticated])
+# def article_list(request, group_movie_id):
+#     group_movie = get_object_or_404(GroupMovie, pk=group_movie_id)
+#     if request.method == 'GET':
+#         articles = Article.objects.filter(group_movie=group_movie).order_by('-created_at')
+#         response_data = {
+#             'group_movie': GroupMovieSerializer(group_movie).data,
+#             'articles': ArticleSerializer(articles, many=True).data
+#         }
+#         return Response(response_data)
+#     elif request.method == 'POST':
+#         serializer = ArticleCreateSerializer(data=request.data)
+#         if serializer.is_valid(raise_exception=True):
+#             serializer.save(user=request.user, group_movie=group_movie)
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
-
-@api_view(['GET', 'POST'])
-# @permission_classes([IsAuthenticated])
-def article_detail(request, group_movie_id, article_id):
-    article = get_object_or_404(Article, pk=article_id)
-    if request.method == 'GET':
-        serializer = ArticleSerializer(article)
-        return Response(serializer.data)
-    elif request.method == 'POST':
-        serializer = CommentSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(user=request.user, article=article)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+# @api_view(['GET', 'POST'])
+# # @permission_classes([IsAuthenticated])
+# def article_detail(request, group_movie_id, article_id):
+#     article = get_object_or_404(Article, pk=article_id)
+#     if request.method == 'GET':
+#         serializer = ArticleSerializer(article)
+#         return Response(serializer.data)
+#     elif request.method == 'POST':
+#         serializer = CommentSerializer(data=request.data)
+#         if serializer.is_valid(raise_exception=True):
+#             serializer.save(user=request.user, article=article)
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
 
 @api_view(['POST'])
@@ -188,3 +189,54 @@ def recommended_movies(request):
     return JsonResponse({
         'recommended_movies': movie_data
     })
+
+#####################################################
+# 그룹 무비 상세페이지 (게시글, 타임라인, 갤러리)
+@api_view(['GET', 'POST'])
+# @permission_classes([IsAuthenticated])
+def group_movie_detail(request, group_movie_id):
+    group_movie = GroupMovie.objects.get(pk=group_movie_id)
+    if request.method == 'GET':
+        serializer = GroupMovieDetailSerializer(group_movie)
+        return Response(serializer.data)
+    
+
+# 게시글 생성(갤러리 저장)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def article_create(request, group_movie_id):
+    # 그룹 무비 조회
+    group_movie = GroupMovie.objects.get(pk=group_movie_id)
+    # 게시글 생성
+    serializer = ArticleCreateSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True):
+        article = serializer.save(user=request.user, group_movie=group_movie)
+
+        # 이미지 파일들 처리
+        images = request.FILES.getlist('images')
+        for image in images:
+            image_serializer = ArticleImageCreateSerializer(data={'image': image})
+            if image_serializer.is_valid(raise_exception=True):
+                image_serializer.save(article=article, group_movie=group_movie)
+        
+        # 생성된 게시글 반환
+        return Response(ArticleSerializer(article).data, status=status.HTTP_201_CREATED)
+
+
+# 타임라인 생성
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def timeline_create(request, group_movie_id):
+    # 그룹 무비 조회
+    group_movie = GroupMovie.objects.get(pk=group_movie_id)
+    # 타임라인 생성
+    serializer = TimelineCreateSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True):
+        timeline = serializer.save(user=request.user, group_movie=group_movie)
+        
+        # # 생성된 타임라인 반환
+        # return Response(TimelineSerializer(timeline).data, status=status.HTTP_201_CREATED)
+
+        # 해당 그룹 무비의 모든 타임라인 가져오기 및 반환
+        timelines = group_movie.timeline.all()  # related_name 사용
+        return Response(TimelineSerializer(timelines, many=True).data, status=status.HTTP_201_CREATED)

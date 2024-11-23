@@ -143,14 +143,14 @@ const sendMessage = () => {
 const getGroupWatchedMovie = () => {
   axios({
     method: "get",
-    url: `${store.API_URL}/api/v1/groups/${route.params.group_movie_id}/articles/`,
+    url: `${store.API_URL}/api/v1/groups/movie/${route.params.group_movie_id}/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },
   })
     .then((response) => {
       console.log(response.data);
-      movie.value = response.data.group_movie;
+      movie.value = response.data;
     })
     .catch((error) => {
       console.log(error.response.data);
