@@ -9,12 +9,14 @@
 
         <!-- 멤버 목록 -->
         <div class="members-section">
-          <div v-for="member in groupData.include_members" :key="member.id" class="member-item">
-            <img :src="'http://127.0.0.1:8000' + member.profile_img" :alt="member.name" />
-            <div class="member-info">
-              <h4 class="member-name">{{ member.name }}</h4>
-              <p class="member-email">{{ member.email }}</p>
-            </div>
+          <div v-for="member in groupData.include_members" :key="member.id">
+            <RouterLink :to="{ name: 'ProfileView', params: { user_id: member.id } }" class="member-item">
+              <img :src="'http://127.0.0.1:8000' + member.profile_img" :alt="member.name" />
+              <div class="member-info">
+                <h4 class="member-name">{{ member.name }}</h4>
+                <p class="member-email">{{ member.email }}</p>
+              </div>
+            </RouterLink>
           </div>
         </div>
       </div>
@@ -45,6 +47,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import MovieWatchCard from "@/components/MovieWatchCard.vue";
 import GroupMovieCreateModal from "@/components/GroupMovieCreateModal.vue";
+import ProfileView from "./ProfileView.vue";
 
 export default {
   name: "GroupDetail",
@@ -242,5 +245,9 @@ export default {
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
+}
+a {
+  text-decoration: none;
+  color: black;
 }
 </style>

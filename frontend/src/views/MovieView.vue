@@ -475,4 +475,8 @@ onMounted(() => {
 .search-results-dropdown::-webkit-scrollbar-thumb:hover {
   background: #666;
 }
+
+a {
+  text-decoration: none;
+}
 </style>

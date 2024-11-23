@@ -213,8 +213,8 @@ const getMovieImages = () => {
       // backdrop만 선택하고 랜덤으로 섞기
       const shuffledBackdrops = response.data.backdrops.sort(() => Math.random() - 0.5);
 
-      // 앞에서 5개만 선택
-      movieImages.value = shuffledBackdrops.slice(0, 5);
+      // 앞에서 6개만 선택
+      movieImages.value = shuffledBackdrops.slice(0, 6);
 
       console.log("랜덤 선택된 backdrop:", movieImages.value); // 디버깅용
     })
@@ -228,6 +228,9 @@ const getMovieCasts = () => {
   axios({
     method: "get",
     url: `https://api.themoviedb.org/3/movie/${movieId}/credits`,
+    params: {
+      language: "ko-KR",
+    },
     headers: {
       accept: "application/json",
       Authorization: `Bearer ${API_KEY}`,
