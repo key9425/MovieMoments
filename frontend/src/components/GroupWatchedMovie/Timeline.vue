@@ -1,31 +1,7 @@
-<script setup>
-import { ref, computed } from "vue";
-
-// 샘플 데이터
-const timelineEvents = ref([
-  { time: "17:30", title: "영화관 도착! 다같이 모였어요 🎬" },
-  { time: "18:00", title: "팝콘 먹으면서 영화 시작 전 수다 타임 🍿" },
-  { time: "18:30", title: "영화 시작! 🎥" },
-]);
-
-const newEvent = ref({
-  hours: "00",
-  minutes: "00",
-  title: "",
-});
-
-const sortedTimelineEvents = computed(() => {
-  return [...timelineEvents.value].sort((a, b) => {
-    return b.time.localeCompare(a.time);
-  });
-});
-
-const props = defineProps(["currentTab"]);
-</script>
-
 <template>
   <!-- 타임라인 탭 -->
   <section v-if="currentTab === 'timeline'" class="timeline-section">
+    <!-- timelineEvents를 시간순으로 정렬(sortedTimelineEvents)한 걸 v-for로 하나씩 event -->
     <div class="timeline-event" v-for="event in sortedTimelineEvents" :key="event.time">
       <div class="event-time">{{ event.time }}</div>
       <div class="event-content">
@@ -56,6 +32,103 @@ const props = defineProps(["currentTab"]);
     </div>
   </section>
 </template>
+
+<script setup>
+import { ref, computed, onMounted } from "vue";
+import axios from "axios";
+import { useRoute } from "vue-router";
+import { useCounterStore } from "@/stores/counter";
+
+const props = defineProps(["currentTab"]);
+const store = useCounterStore();
+const route = useRoute();
+//=====================================================================
+
+// 사용자가 기존에 입력한 타임라인 데이터 채워질 곳
+const timelineEvents = ref([]);
+
+// 시간순서대로 표시되도록 정렬
+const sortedTimelineEvents = computed(() => {
+  return [...timelineEvents.value].sort((a, b) => {
+    return a.time.localeCompare(b.time);
+  });
+});
+
+// 기존에 작성한 데이터 받아오기
+// 아래 형식으로 받아오게끔 요청
+// const timelineEvents = ref([
+//   { time: "17:30", title: "영화관 도착! 다같이 모였어요 🎬" },
+//   { time: "18:00", title: "팝콘 먹으면서 영화 시작 전 수다 타임 🍿" },
+//   { time: "18:30", title: "영화 시작! 🎥" },
+// ]);
+const getTimelineEvent = () => {
+  axios({
+    method: "get",
+    // url: `타임라인 요청 url`,
+    // 은영이랑 상의 후 채우기
+    url: `${store.API_URL}/api/v1/groups/${route.params.group_movie_id}/articles/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then((response) => {
+      timelineEvents.value = response.data;
+    })
+    .catch((error) => {
+      console.log(error);
+      console.log("타임라인 받아오기 실패");
+    });
+};
+
+// 입력폼에 작성한 내용인 newEvent에 저장
+const newEvent = ref({
+  hours: "00",
+  minutes: "00",
+  title: "",
+});
+
+// 새로 타임라인 등록에 대한 요청
+const addTimelineEvent = () => {
+  // 내용이 없다면 서버에 보내지 않겠다.
+  if (!newEvent.value.title) return;
+
+  // 타임라인에 타임에 "17:30"으로 들어가게
+  const formattedTime = `${newEvent.value.hours}:${newEvent.value.minutes}`;
+
+  axios({
+    method: "post",
+    // url: `타임라인 요청 url`,
+    // 은영이랑 상의 후 채우기
+    url: `${store.API_URL}/api/v1/groups/${route.params.group_movie_id}/articles/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+    body: {
+      time: formattedTime,
+      title: newEvent.value.title,
+    },
+  })
+    .then(() => {
+      timelineEvents.value.push({
+        time: formattedTime,
+        title: newEvent.value.title,
+      });
+
+      newEvent.value = {
+        hours: "00",
+        minutes: "00",
+        title: "",
+      };
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
+onMounted(() => {
+  getTimelineEvent();
+});
+</script>
 
 <style scoped>
 /* 타임라인 스타일 */

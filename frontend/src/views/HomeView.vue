@@ -12,13 +12,13 @@
     <!-- 추천영화 섹션 -->
     <section>
       <div class="recommended-movies">
-        
         <div v-if="loadingMovies" class="text-center py-4">로딩 중...</div>
         <div v-else-if="movieError" class="text-red-500 py-4">
           {{ movieError }}
         </div>
         <div v-else class="movies-scroll">
           <div class="movies-row">
+            <!--  ******* 장르 모델 경로 변경 후 확인 *******-->
             <div v-for="movie in recommendedMovies" :key="movie.id" class="movie-card">
               <RouterLink :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }">
                 <div class="movie-image-container">
@@ -28,9 +28,9 @@
                   <h3 class="movie-title">{{ movie.title }}</h3>
                   <div class="movie-meta">
                     <span>{{ movie.release_date.substring(0, 4) }}</span>
-                    <!-- 장르 데이터 오게되면 수정 -->
                     <span class="dot">·</span>
-                    <span>{{ movie.genre || "드라마" }}</span>
+                    <!--  ******* 장르 데이터 속성으로 적용 필요 *******-->
+                    <span>{{ movie.genre }}</span>
                   </div>
                 </div>
               </RouterLink>
@@ -171,7 +171,7 @@ const closeModal = () => {
 const fetchRecommendedMovies = () => {
   loadingMovies.value = true;
   movieError.value = null;
-
+  // ******* axios 요청 경로 은영이 모델 재설계 후 확인 *******
   axios({
     method: "get",
     url: `${API_URL}/api/v1/recommended-movies/`,

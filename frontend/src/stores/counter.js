@@ -20,7 +20,6 @@ export const useCounterStore = defineStore(
     });
 
     // 회원가입 요청 액션
-    // form이랑 survey 둘 다 받아서 처리해야 하는데 ,,,
     const signUp = function (payload) {
       const { name, email, username, password1, password2 } = payload;
 
@@ -75,7 +74,7 @@ export const useCounterStore = defineStore(
           // 로그인 성공 시 추가적으로 프로필 정보 api를 통해 프로필 정보 외 기타 정보도 currentUser 정보로 저장
           axios({
             method: "get",
-            url: `http://127.0.0.1:8000/api/v2/${response.data.user.id}/profile/`,
+            url: `http://127.0.0.1:8000/api/v2/${currentUser.value.id}/profile/`,
             headers: {
               Authorization: `Token ${response.data.key}`,
             },
