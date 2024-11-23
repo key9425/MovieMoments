@@ -46,7 +46,7 @@ const getReview = () => {
   })
     .then((response) => {
       console.log("onMount 응답 결과 : ");
-      console.log(response);
+      console.log("review response", response);
       reviews.value = response.data.review;
     })
     .catch((error) => {
@@ -76,8 +76,8 @@ const submitReview = () => {
     },
   })
     .then((response) => {
-      console.log(response.data);
-      reviews.value = response.data; // 서버에서 받은 전체 리뷰 목록으로 업데이트
+      console.log("post response", response.data);
+      reviews.value.push(response.data); // 서버에서 받은 전체 리뷰 목록으로 업데이트
       newReview.value = ""; // 입력창 초기화
       isSubmitting.value = false; // 제출 상태 해제
     })
