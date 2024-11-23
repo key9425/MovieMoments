@@ -35,25 +35,37 @@ class GroupMovie(models.Model):
     watched_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+#################################################################
+# 타임라인
+class Timeline(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    group_movie = models.ForeignKey(GroupMovie, on_delete=models.CASCADE, related_name='timeline')
+    time = models.TimeField()
+    description = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        ordering = ['time']
 
+# 게시글 : 그룹에서 본 영화 안의 컨텐츠
 class Article(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,  related_name='article')
-    group_movie = models.ForeignKey(GroupMovie, on_delete=models.CASCADE, related_name='articles')
-    like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='like_articles')
-    title = models.CharField(max_length=100)
+    group_movie = models.ForeignKey(GroupMovie, on_delete=models.CASCADE, related_name='article')
     content = models.TextField()
-    img = models.ImageField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
 
+# 갤러리(여러장 가능)
+class ArticleImage(models.Model):
+    article = models.ForeignKey(Article, related_name='images', on_delete=models.CASCADE)
+    group_movie = models.ForeignKey(GroupMovie, on_delete=models.CASCADE, related_name='article_img')
+    image = models.ImageField(upload_to='article_imges/')
+
+
+################################################3
 class Comment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,  related_name='comment')
     article = models.ForeignKey(Article, on_delete=models.CASCADE,  related_name='comments')
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-
-# 설문조사 모델
-# 채팅 모델
