@@ -232,7 +232,7 @@ def timeline_create(request, group_movie_id):
     # 타임라인 생성
     serializer = TimelineCreateSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
-        timeline = serializer.save(user=request.user, group_movie=group_movie)
+        serializer.save(group_movie=group_movie)
         
         # # 생성된 타임라인 반환
         # return Response(TimelineSerializer(timeline).data, status=status.HTTP_201_CREATED)

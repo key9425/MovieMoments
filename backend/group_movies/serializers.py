@@ -124,7 +124,7 @@ class TimelineSerializer(serializers.ModelSerializer):
     user = GroupMovieUserSerializer(read_only=True)
     class Meta:
         model = Timeline
-        fields = ['id', 'user', 'time', 'description', 'created_at']
+        fields = ['id', 'time', 'description', 'created_at']
 
 # 그룹 무비 상세페이지 (영화, 게시글(사용자), 타임라인(사용자), 갤러리)-조회
 class GroupMovieDetailSerializer(serializers.ModelSerializer):    

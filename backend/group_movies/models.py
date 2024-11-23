@@ -38,7 +38,6 @@ class GroupMovie(models.Model):
 #################################################################
 # 타임라인
 class Timeline(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     group_movie = models.ForeignKey(GroupMovie, on_delete=models.CASCADE, related_name='timeline')
     time = models.TimeField()
     description = models.CharField(max_length=200)
