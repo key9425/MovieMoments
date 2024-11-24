@@ -26,7 +26,8 @@
               </div>
               <button @click="likeMovie()" :class="['like-btn', isLiked ? 'liked' : '']">
                 <i class="fas fa-heart"></i>
-                {{ isLiked ? "찜취소" : "찜하기" }}
+                찜하기
+                <!-- {{ isLiked ? "보고싶어요" : "보고싶어요" }} -->
               </button>
             </div>
           </div>
@@ -306,7 +307,7 @@ onMounted(() => {
 .like-btn {
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  border: 2px solid #dc3545;
+  border: 2px solid #454545;
   background: transparent;
   color: white;
   font-weight: 600;

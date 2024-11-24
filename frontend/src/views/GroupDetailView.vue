@@ -118,7 +118,6 @@ export default {
 <style scoped>
 .group-container {
   display: flex;
-  min-height: 100vh;
   background: #fff;
 }
 
