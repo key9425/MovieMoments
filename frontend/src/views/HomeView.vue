@@ -39,7 +39,7 @@
                     <div class="movie-info">
                       <h3>{{ movie.title }}</h3>
                       <div class="movie-meta">
-                        <span>{{ movie.release_date?.substring(0, 4) }}년</span>
+                        <span>{{ movie.release_date?.substring(0, 4) }}</span>
                       </div>
                     </div>
                   </div>
@@ -111,7 +111,7 @@
               <div class="group-stats">
                 <div class="stats-left">
                   <div class="stats-item">
-                    <span class="stats-label">영화</span>
+                    <span class="stats-label">영화: {{ group.watched_movies.length }}</span>
                     <span class="stats-value">{{ group.postCount }}</span>
                   </div>
                 </div>
@@ -133,7 +133,7 @@
 
 <script setup>
 import axios from "axios";
-import { ref, onMounted, computed, onBeforeUnmount } from "vue";
+import { ref, onMounted, computed, onBeforeUnmount, watch } from "vue";
 import { useRouter, RouterLink } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import GroupCreateModal from "@/components/GroupCreateModal.vue";
@@ -248,6 +248,10 @@ const getGroupData = () => {
     });
 };
 
+watch(filteredGroups, () => {
+  console.log("filtered group", filteredGroups.value);
+});
+
 const filterGroups = () => {
   // 그룹 필터링
   filteredGroups.value = allGroups.value.filter((group) => {
@@ -336,7 +340,7 @@ onBeforeUnmount(() => {
 /* 전체 컨테이너 */
 .home-container {
   /* max-width: 1300px; */
-
+  background-color: #f8f9fa;
   margin: 0 auto;
 }
 
@@ -545,11 +549,11 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   text-align: left;
   padding-left: 20px;
-  background-color: #f5f5f5;
+  background-color: #ebebeb;
 }
 
 .search-btn:hover {
-  background-color: #ebebeb;
+  background-color: #d8d8d8;
 }
 
 .search-btn:focus {
@@ -559,7 +563,7 @@ onBeforeUnmount(() => {
 .create-group-btn {
   padding: 8px 16px;
   height: 50px;
-  background-color: #3a3a3a;
+  background-color: #4a4a4a;
   color: white;
   border: none;
   border-radius: 4px;
@@ -570,7 +574,7 @@ onBeforeUnmount(() => {
 }
 
 .create-group-btn:hover {
-  background-color: #4a4a4a;
+  background-color: #dc3545;
 }
 
 /* 메인 컨텐츠 영역 */

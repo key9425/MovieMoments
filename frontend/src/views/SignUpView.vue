@@ -1,42 +1,239 @@
 <template>
-  <div class="signup-container">
-    <h1>회원가입</h1>
+  <main class="signup-container">
+    <div class="signup-content">
+      <!-- 타이틀 -->
+      <div class="title-section">
+        <h1 class="main-title">회원가입</h1>
+        <p class="subtitle">영화같은 순간을 함께 나눠보세요</p>
+      </div>
 
-    <div class="form-card">
-      <form @submit.prevent="signUp" class="signup-form">
-        <div class="input-field">
-          <label for="name">이름</label>
-          <input type="text" id="name" v-model.trim="name" placeholder="홍길동" />
+      <!-- 회원가입 폼 -->
+      <div class="signup-box">
+        <form @submit.prevent="signUp" class="signup-form">
+          <div class="form-group">
+            <input type="text" id="name" v-model.trim="name" placeholder="이름" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <input type="email" id="email" v-model.trim="email" placeholder="이메일" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <input type="text" id="username" v-model.trim="username" placeholder="아이디" class="form-input" />
+            <p class="input-guide">한글/영문/숫자 10자까지</p>
+          </div>
+
+          <div class="form-group">
+            <input type="password" id="password1" v-model.trim="password1" placeholder="비밀번호" class="form-input" />
+            <p class="input-guide">영문/숫자/특수문자 조합 8자 이상</p>
+          </div>
+
+          <div class="form-group">
+            <input type="password" id="password2" v-model.trim="password2" placeholder="비밀번호 확인" class="form-input" />
+          </div>
+
+          <button type="submit" class="submit-btn">가입하기</button>
+        </form>
+
+        <div class="login-section">
+          <span>이미 계정이 있으신가요?</span>
+          <RouterLink to="/" class="login-link">로그인</RouterLink>
         </div>
-
-        <div class="input-field">
-          <label for="email">이메일</label>
-          <input type="email" id="email" v-model.trim="email" placeholder="example@example.com" />
-        </div>
-
-        <div class="input-field">
-          <label for="username">아이디</label>
-          <input type="text" id="username" v-model.trim="username" placeholder="아이디를 입력해주세요." />
-          <p class="input-guide">한글/영문/숫자 10자까지</p>
-        </div>
-
-        <div class="input-field">
-          <label for="password1">비밀번호</label>
-          <input type="password" id="password1" v-model.trim="password1" placeholder="비밀번호를 입력해주세요." />
-          <p class="input-guide">영문/숫자/특수문자 조합 8자 이상</p>
-        </div>
-
-        <div class="input-field">
-          <label for="password2">비밀번호 확인</label>
-          <input type="password" id="password2" v-model.trim="password2" placeholder="비밀번호를 한 번 더 입력해주세요." />
-        </div>
-
-        <button type="submit" class="submit-btn">회원가입</button>
-      </form>
+      </div>
     </div>
-  </div>
+
+    <img src="@/assets/logo-img.svg" alt="메인 캐릭터" class="hero-image" />
+  </main>
 </template>
 
+<style scoped>
+.signup-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signup-content {
+  width: 100%;
+  max-width: 460px;
+  padding: 0 2rem;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* 타이틀 섹션 */
+.title-section {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.main-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: #6c757d;
+}
+
+/* 회원가입 폼 */
+.signup-box {
+  background: white;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  position: relative;
+}
+
+.form-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #495057;
+  transition: all 0.2s ease;
+}
+
+.form-input::placeholder {
+  color: #adb5bd;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.input-guide {
+  font-size: 0.8rem;
+  color: #868e96;
+  margin-top: 0.5rem;
+  margin-left: 0.5rem;
+}
+
+.submit-btn {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border: none;
+  border-radius: 12px;
+  background-color: #dc3545;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submit-btn:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+/* 로그인 링크 섹션 */
+.login-section {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #6c757d;
+}
+
+.login-link {
+  color: #dc3545;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.login-link:hover {
+  color: #c82333;
+}
+
+/* 히어로 이미지 */
+.hero-image {
+  position: absolute;
+  bottom: -150px;
+  right: -150px;
+  width: 30%;
+  z-index: 1;
+  opacity: 0.8;
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+  .signup-content {
+    padding: 0 1.5rem;
+  }
+
+  .main-title {
+    font-size: 2rem;
+  }
+
+  .signup-box {
+    padding: 2rem;
+  }
+
+  .hero-image {
+    width: 300px;
+    right: -50px;
+    bottom: -50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .signup-content {
+    padding: 0 1rem;
+  }
+
+  .main-title {
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .signup-box {
+    padding: 1.5rem;
+  }
+
+  .hero-image {
+    width: 200px;
+    right: -30px;
+    bottom: -30px;
+  }
+}
+</style>
 <script setup>
 import { ref } from "vue";
 import { useCounterStore } from "@/stores/counter";
@@ -113,101 +310,3 @@ const signUp = function () {
     });
 };
 </script>
-
-<style scoped>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html,
-body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-#app {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-</style>
-
-<style scoped>
-.signup-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px;
-}
-
-h1 {
-  font-size: 32px;
-  font-weight: bold;
-  margin-bottom: 30px;
-}
-
-.form-card {
-  background: #f2f2f2;
-  padding: 40px;
-  border-radius: 10px;
-  width: 100%;
-  max-width: 500px;
-}
-
-.signup-form {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-}
-
-.input-field {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.input-field label {
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.input-field input {
-  padding: 15px;
-  border-radius: 5px;
-  border: none;
-  font-size: 14px;
-  width: 100%;
-}
-
-.input-field input::placeholder {
-  color: #999;
-}
-
-.input-guide {
-  font-size: 12px;
-  color: #666;
-  margin-top: -5px;
-}
-
-.submit-btn {
-  margin-top: 10px;
-  padding: 15px;
-  background: gray;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-@media (max-width: 768px) {
-  .form-card {
-    padding: 20px;
-  }
-}
-</style>

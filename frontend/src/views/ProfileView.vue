@@ -55,7 +55,7 @@
     <div class="container py-5">
       <!-- 내가 작성한 글 섹션 -->
       <section class="content-section mb-5">
-        <h2 class="section-title">내가 작성한 글</h2>
+        <h2 class="section-title">최근 작성한 글</h2>
         <div class="row g-4">
           <!-- ******* 은영이한테 요청받는 변수명 확인하고 수정 ******* ==================================== -->
           <!-- 
@@ -83,7 +83,7 @@
 
       <!-- 좋아요한 영화 섹션 -->
       <section class="content-section">
-        <h2 class="section-title">내가 찜한 영화</h2>
+        <h2 class="section-title">찜한 영화 목록</h2>
         <div class="row g-4">
           <div class="col-md-3" v-for="(likedMovie, index) in likedMovies" :key="index">
             <!-- ㅡmovie id 확인 후 주석 해제 -->

@@ -20,7 +20,7 @@
     <div class="movie-info">
       <h3>{{ movie.title }}</h3>
       <div class="movie-meta">
-        <span>{{ movie.release_date?.substring(0, 4) }}년</span>
+        <span>{{ movie.release_date?.substring(0, 4) }}</span>
         <!-- 장르가 있을 경우에만 표시 -->
         <template v-if="mainGenre">
           <span class="separator">•</span>

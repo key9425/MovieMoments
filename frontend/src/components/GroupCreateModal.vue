@@ -51,8 +51,7 @@
           <!-- 검색 결과 -->
           <div class="search-results" v-if="searchResults.length">
             <div v-for="user in searchResults" :key="user.id" class="user-item" :class="{ 'user-selected': isUserSelected(user) }" @click="toggleUserSelection(user)">
-              <!-- 은영이에게 유저별 프로필 이미지 부탁드리기 -->
-              <div class="user-icon">{{ user.profile_image }}</div>
+              <img :src="store.API_URL + user.profile_img" alt="" class="profile-image" />
               <div class="user-info">
                 <div class="user-name">{{ user.name }}</div>
                 <div class="user-email">{{ user.email }}</div>
@@ -157,6 +156,11 @@
   font-weight: 500;
 }
 
+.textarea-field {
+  height: 150px;
+  resize: none;
+}
+
 .input-field,
 .textarea-field,
 .search-input {
@@ -223,6 +227,7 @@
 
 .search-results {
   margin-top: 4px;
+  padding: 10px 0;
   border: 1px solid #eee;
   border-radius: 4px;
   max-height: 200px;
@@ -230,11 +235,17 @@
   background-color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
+.profile-image {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
 .user-item {
   display: flex;
+  gap: 10px;
   align-items: center;
-  padding: 8px 12px;
+  padding: 12px 12px;
   cursor: pointer;
   transition: background-color 0.2s;
 }

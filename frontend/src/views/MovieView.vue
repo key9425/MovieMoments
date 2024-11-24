@@ -27,31 +27,54 @@
       </div>
     </section>
 
-    <!-- 추천 영화 섹션 -->
+    <!-- 추천영화 섹션 -->
     <section class="movie-section">
       <div class="content-wrapper">
         <h2 class="section-title">오늘의 추천 영화</h2>
         <div v-if="loadingMovies" class="loading-state">
           <div class="spinner"></div>
-          <p>영화를 불러오는 중...</p>
+          <p>로딩 중...</p>
         </div>
         <div v-else-if="movieError" class="error-state">
           {{ movieError }}
         </div>
-        <div v-else class="movie-grid">
-          <RouterLink v-for="movie in recommendedMovies" :key="movie.id" :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }" class="movie-card">
-            <div class="poster-wrapper">
-              <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-poster" />
-              <div class="movie-overlay">
-                <div class="movie-info">
-                  <h3>{{ movie.title }}</h3>
-                  <div class="movie-meta">
-                    <span>{{ movie.release_date?.substring(0, 4) }}년</span>
+        <div v-else class="carousel-container" :style="{ width: `${carouselConfig.totalWidth}px`, margin: '0 auto' }">
+          <button v-if="canSlidePrev.recommend" class="carousel-button prev" @click="slide('recommend', 'prev')">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="carousel-wrapper" :style="{ width: `${carouselConfig.totalWidth}px` }">
+            <div
+              class="movie-carousel"
+              :style="{
+                transform: `translateX(-${currentSlide.recommend * (CARD_WIDTH + CARD_GAP)}px)`,
+                gap: `${CARD_GAP}px`,
+              }"
+            >
+              <RouterLink
+                v-for="movie in recommendedMovies"
+                :key="movie.id"
+                :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }"
+                class="movie-card"
+                :style="{ width: `${CARD_WIDTH}px` }"
+                type="recommend"
+              >
+                <div class="poster-wrapper">
+                  <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-poster" />
+                  <div class="movie-overlay">
+                    <div class="movie-info">
+                      <h3>{{ movie.title }}</h3>
+                      <div class="movie-meta">
+                        <span>{{ movie.release_date?.substring(0, 4) }}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </RouterLink>
             </div>
-          </RouterLink>
+          </div>
+          <button v-if="canSlideNext.recommend" class="carousel-button next" @click="slide('recommend', 'next')">
+            <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
     </section>
@@ -163,6 +186,7 @@ const CONTAINER_PADDING = 32; // 컨테이너 좌우 패딩
 
 // 케러셀 상태
 const currentSlide = ref({
+  recommend: 0,
   popular: 0,
   nowPlaying: 0,
   upcoming: 0,
@@ -191,6 +215,7 @@ const calculateArea = () => {
 
 // 각 섹션의 총 슬라이드 수 계산
 const totalSlides = computed(() => ({
+  recommend: Math.max(0, recommendedMovies.value.length - carouselConfig.value.cardsPerView),
   popular: Math.max(0, populaMovies.value.length - carouselConfig.value.cardsPerView),
   nowPlaying: Math.max(0, nowPlayingMovies.value.length - carouselConfig.value.cardsPerView),
   upcoming: Math.max(0, upComingMovies.value.length - carouselConfig.value.cardsPerView),
@@ -198,12 +223,14 @@ const totalSlides = computed(() => ({
 
 // 슬라이드 이동 가능 여부
 const canSlidePrev = computed(() => ({
+  recommend: currentSlide.value.recommend > 0,
   popular: currentSlide.value.popular > 0,
   nowPlaying: currentSlide.value.nowPlaying > 0,
   upcoming: currentSlide.value.upcoming > 0,
 }));
 
 const canSlideNext = computed(() => ({
+  recommend: currentSlide.value.recommend < totalSlides.value.recommend,
   popular: currentSlide.value.popular < totalSlides.value.popular,
   nowPlaying: currentSlide.value.nowPlaying < totalSlides.value.nowPlaying,
   upcoming: currentSlide.value.upcoming < totalSlides.value.upcoming,
@@ -389,7 +416,7 @@ onBeforeUnmount(() => {
 
 /* 검색 관련 스타일 */
 .search-wrapper {
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
   position: relative;
 }
@@ -479,7 +506,10 @@ onBeforeUnmount(() => {
 
 .movie-section {
   position: relative;
-  padding: 3rem 0;
+  padding-top: 4rem;
+}
+.movie-section:nth-last-child(1) {
+  padding-bottom: 4rem;
 }
 
 .section-title {

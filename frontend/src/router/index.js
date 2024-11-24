@@ -66,17 +66,17 @@ const router = createRouter({
 });
 
 // [추가] 메인페이지 접근인데 로그인 상태 아니면 로그인 페이지 보내기
-// router.beforeEach((to, from) => {
-//   const store = useCounterStore();
-//   const { isLogin } = storeToRefs(store);
+router.beforeEach((to, from) => {
+  const store = useCounterStore();
+  const { isLogin } = storeToRefs(store);
 
-//   if (to.name !== "LogInView" && to.name !== "SignUpView" && !isLogin.value) {
-//     window.alert("로그인이 필요합니다.");
-//     return { name: "LogInView" };
-//   } else if ((to.name === "LogInView" || to.name === "SignUpView") && isLogin.value) {
-//     window.alert("로그인이 되어있습니다.");
-//     return { name: from.name || "HomeView" };
-//   }
-// });
+  if (to.name !== "LogInView" && to.name !== "SignUpView" && !isLogin.value) {
+    window.alert("로그인이 필요합니다.");
+    return { name: "LogInView" };
+  } else if ((to.name === "LogInView" || to.name === "SignUpView") && isLogin.value) {
+    window.alert("로그인이 되어있습니다.");
+    return { name: from.name || "HomeView" };
+  }
+});
 
 export default router;

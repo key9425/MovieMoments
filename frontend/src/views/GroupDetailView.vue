@@ -47,7 +47,6 @@ import { useRoute, useRouter } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import MovieWatchCard from "@/components/MovieWatchCard.vue";
 import GroupMovieCreateModal from "@/components/GroupMovieCreateModal.vue";
-import ProfileView from "./ProfileView.vue";
 
 export default {
   name: "GroupDetail",
@@ -208,7 +207,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 2rem;
-  padding: 1rem;
+  padding: 0 1rem;
 }
 
 /* 새 영화 추가 버튼 */
