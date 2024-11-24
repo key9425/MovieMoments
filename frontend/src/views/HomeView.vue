@@ -3,32 +3,53 @@
   <div class="home-container">
     <br />
     <!-- 상단 제목 -->
-    <section>
+    <!-- <section>
       <div class="header-section">
         <h2 class="main-title">오늘의 추천 영화</h2>
       </div>
-    </section>
+    </section> -->
 
     <!-- 추천영화 섹션 -->
-    <section>
-      <div class="recommended-movies">
-        <div v-if="loadingMovies" class="text-center py-4">로딩 중...</div>
-        <div v-else-if="movieError" class="text-red-500 py-4">
+    <section class="movie-section">
+      <div class="content-wrapper">
+        <h2 class="section-title">오늘의 추천 영화</h2>
+        <div v-if="loadingMovies" class="loading-state">
+          <div class="spinner"></div>
+          <p>로딩 중...</p>
+        </div>
+        <div v-else-if="movieError" class="error-state">
           {{ movieError }}
         </div>
-        <div v-else class="movies-scroll">
-          <div class="movies-row">
-            <div v-for="movie in recommendedMovies" :key="movie.id" class="movie-card">
-              <RouterLink :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }">
-                <div class="movie-image-container">
-                  <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-image" />
-                </div>
-                <div class="movie-info">
-                  <h3 class="movie-title">{{ movie.title }}</h3>
+        <div v-else class="carousel-container" :style="{ width: `${carouselConfig.totalWidth}px`, margin: '0 auto' }">
+          <button v-if="canSlidePrev" class="carousel-button prev" @click="slide('prev')">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="carousel-wrapper" :style="{ width: `${carouselConfig.totalWidth}px` }">
+            <div
+              class="movie-carousel"
+              :style="{
+                transform: `translateX(-${currentSlide * (CARD_WIDTH + CARD_GAP)}px)`,
+                gap: `${CARD_GAP}px`,
+              }"
+            >
+              <RouterLink v-for="movie in recommendedMovies" :key="movie.id" :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }" class="movie-card" :style="{ width: `${CARD_WIDTH}px` }">
+                <div class="poster-wrapper">
+                  <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-poster" />
+                  <div class="movie-overlay">
+                    <div class="movie-info">
+                      <h3>{{ movie.title }}</h3>
+                      <div class="movie-meta">
+                        <span>{{ movie.release_date?.substring(0, 4) }}년</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </RouterLink>
             </div>
           </div>
+          <button v-if="canSlideNext" class="carousel-button next" @click="slide('next')">
+            <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
     </section>
@@ -112,10 +133,11 @@
 
 <script setup>
 import axios from "axios";
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, computed, onBeforeUnmount } from "vue";
 import { useRouter, RouterLink } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import GroupCreateModal from "@/components/GroupCreateModal.vue";
+import { debounce } from "lodash";
 
 // 상태 관리
 const recommendedMovies = ref([]);
@@ -240,127 +262,273 @@ const handleSearchGroups = (event) => {
   filterGroups();
 };
 
-onMounted(() => {
-  fetchRecommendedMovies();
-  getGroupData();
+// 케러셀 관련 상수
+const CARD_WIDTH = 224; // 카드 기본 너비
+const CARD_GAP = 20; // 카드 간격
+const CONTAINER_PADDING = 32; // 컨테이너 좌우 패딩
+
+// 케러셀 상태
+const currentSlide = ref(0);
+const carouselConfig = ref(null);
+
+// 슬라이드 가능 여부 계산
+const canSlidePrev = computed(() => currentSlide.value > 0);
+const canSlideNext = computed(() => {
+  if (!carouselConfig.value || !recommendedMovies.value) return false;
+  return currentSlide.value < Math.max(0, recommendedMovies.value.length - carouselConfig.value.cardsPerView);
 });
+
+// 화면 크기에 따른 카드 수와 너비 계산
+const calculateArea = () => {
+  const containerWidth = Math.min(window.innerWidth - CONTAINER_PADDING, 1300);
+
+  // 표시 가능한 최대 카드 수 계산
+  const possibleCards = Math.floor(containerWidth / (CARD_WIDTH + CARD_GAP));
+
+  // 실제 케러셀 너비 계산
+  const carouselWidth = possibleCards * CARD_WIDTH + (possibleCards - 1) * CARD_GAP;
+
+  return {
+    cardsPerView: possibleCards,
+    cardWidth: CARD_WIDTH,
+    totalWidth: carouselWidth,
+  };
+};
+
+// 슬라이드 이동 함수
+const slide = (direction) => {
+  if (direction === "next" && canSlideNext.value) {
+    currentSlide.value++;
+  } else if (direction === "prev" && canSlidePrev.value) {
+    currentSlide.value--;
+  }
+};
+
+// 화면 크기 변경 감지
+const handleResize = debounce(() => {
+  carouselConfig.value = calculateArea();
+
+  // 현재 슬라이드 위치 재조정
+  const maxSlide = Math.max(0, recommendedMovies.value.length - carouselConfig.value.cardsPerView);
+  if (currentSlide.value > maxSlide) {
+    currentSlide.value = maxSlide;
+  }
+}, 200);
 
 const onGroupCreated = () => {
   closeModal(); // 모달 닫기
   getGroupData(); // 그룹 목록 새로고침
 };
+
+onMounted(() => {
+  window.addEventListener("resize", handleResize);
+  carouselConfig.value = calculateArea();
+  fetchRecommendedMovies();
+  getGroupData();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", handleResize);
+});
 </script>
 
 <style scoped>
 /* 전체 컨테이너 */
 .home-container {
-  max-width: 1300px;
+  /* max-width: 1300px; */
+
   margin: 0 auto;
-  /* padding: 0 auto; */
 }
 
-.main-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #3a3a3a;
-  position: relative;
-  margin-bottom: 1rem;
+/* 추천 영화 섹션 스타일 */
+.movie-section {
+  background-color: #1a1a1a;
+  margin: -2rem 0 0 0;
+  padding: 4rem 0;
 }
-.main-title::after {
+
+.content-wrapper {
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.section-title {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.section-title::after {
   content: "";
   position: absolute;
   left: 0;
   bottom: -0.5rem;
-  width: 50px;
-  height: 3px;
-  background: #dc3545;
+  width: 60px;
+  height: 4px;
+  background: #ffd700;
 }
 
-/* 추천 영화 섹션 */
-.recommended-movies {
-  margin: 2rem 0;
-}
-
-.movies-scroll {
-  overflow-x: auto;
-  padding: 1rem 0;
-}
-
-/* 스크롤바 스타일링 */
-.movies-scroll::-webkit-scrollbar {
-  height: 8px;
-}
-
-.movies-scroll::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.movies-scroll::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.movies-scroll::-webkit-scrollbar-thumb:hover {
-  background: #666;
-}
-
-.movies-row {
-  display: flex;
-  gap: 1.5rem;
-  padding: 0.5rem 0 1.5rem 0;
-}
-
-.movie-card {
-  flex: 0 0 auto;
-  width: 200px;
-}
-
-.movie-image-container {
+/* 캐러셀 스타일 */
+.carousel-container {
   position: relative;
-  height: 280px;
-  border-radius: 4px;
+  padding: 0.5rem 0;
+}
+
+.carousel-wrapper {
   overflow: hidden;
 }
 
-.movie-image {
+.movie-carousel {
+  display: flex;
+  transition: transform 0.3s ease;
+}
+
+/* 영화 카드 스타일 */
+.movie-card {
+  flex-shrink: 0;
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  overflow: hidden;
+  transform-origin: center bottom;
+  transition: all 0.3s ease;
+}
+
+.movie-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(255, 215, 0, 0.3);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.poster-wrapper {
+  position: relative;
+  padding-top: 150%;
+}
+
+.movie-poster {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
 }
 
-.movie-card:hover .movie-image {
+.movie-card:hover .movie-poster {
   transform: scale(1.05);
 }
 
-.movie-info {
-  padding: 0.8rem 0;
+.movie-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent 30%, rgba(0, 0, 0, 0.8) 100%);
+  opacity: 0;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: flex-end;
+  padding: 1rem;
 }
 
-.movie-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #3a3a3a;
-  margin-bottom: 0.4rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.movie-card:hover .movie-overlay {
+  opacity: 1;
+}
+
+.movie-info {
+  padding: 0;
+}
+
+.movie-info h3 {
+  color: #ffd700;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  text-wrap: balance;
 }
 
 .movie-meta {
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.9rem;
-  color: #666;
+  font-weight: 500;
+  margin-top: 0.25rem;
 }
 
-.dot {
-  margin: 0 0.3rem;
+/* 캐러셀 네비게이션 버튼 */
+.carousel-button {
+  position: absolute;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(220, 53, 69, 0.9);
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.carousel-button:hover {
+  background: #dc3545;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-button.prev {
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+
+.carousel-button.next {
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
+/* 로딩 및 에러 상태 */
+.loading-state {
+  text-align: center;
+  padding: 2rem;
+  color: white;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top: 3px solid #ffd700;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  animation: spin 1s linear infinite;
+}
+
+.error-state {
+  text-align: center;
+  padding: 2rem;
+  color: #dc3545;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* 검색 섹션 */
 .search-section {
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 20px auto 0;
   padding: 20px;
 }
 
@@ -402,7 +570,7 @@ const onGroupCreated = () => {
 }
 
 .create-group-btn:hover {
-  background-color: #3a3a3a;
+  background-color: #4a4a4a;
 }
 
 /* 메인 컨텐츠 영역 */
@@ -412,14 +580,7 @@ const onGroupCreated = () => {
   margin: 0 auto;
 }
 
-/* 필터 섹션 */
-.filter-section {
-  padding: 0 2rem;
-  margin-bottom: 3rem;
-  display: flex;
-  justify-content: center;
-}
-
+/* 카테고리 필터 */
 .category-dropdown {
   height: 50px;
   padding: 0 2rem;
@@ -444,38 +605,7 @@ const onGroupCreated = () => {
 .category-dropdown:focus {
   outline: none;
   border-color: #3a3a3a;
-  box-shadow: 0 0 0 2px 3a3a3a;
-}
-
-/* 카테고리 색상 스타일 추가 */
-.category-family {
-  background-color: #e9fae9 !important;
-  color: #2c7a2c !important;
-}
-
-.category-couple {
-  background-color: #fae9e9 !important;
-  color: #7a2c2c !important;
-}
-
-.category-friend {
-  background-color: #e9eafa !important;
-  color: #2c2c7a !important;
-}
-
-.category-work {
-  background-color: #faf6e9 !important;
-  color: #7a672c !important;
-}
-
-.category-ssafy {
-  background-color: #f2e9fa !important;
-  color: #672c7a !important;
-}
-
-.category-etc {
-  background-color: #e9fafa !important;
-  color: #2c7a7a !important;
+  box-shadow: 0 0 0 2px rgba(58, 58, 58, 0.2);
 }
 
 /* 그룹 그리드 */
@@ -483,16 +613,64 @@ const onGroupCreated = () => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
-  /* padding: 0 2rem; */
   margin-bottom: 4rem;
 }
 
+/* 멤버 아바타 */
+.member-avatars {
+  display: flex;
+  align-items: center;
+}
+
+.member-avatar {
+  width: 40px;
+  border-radius: 30px;
+  border: 4px white solid;
+  margin: -5px;
+}
+
+.left-member-count {
+  margin-left: 10px;
+}
+
+/* 카테고리 색상 */
+.category-family {
+  background-color: #e9fae9;
+  color: #2c7a2c;
+}
+
+.category-couple {
+  background-color: #fae9e9;
+  color: #7a2c2c;
+}
+
+.category-friend {
+  background-color: #e9eafa;
+  color: #2c2c7a;
+}
+
+.category-work {
+  background-color: #faf6e9;
+  color: #7a672c;
+}
+
+.category-ssafy {
+  background-color: #f2e9fa;
+  color: #672c7a;
+}
+
+.category-etc {
+  background-color: #e9fafa;
+  color: #2c7a7a;
+}
+
+/* 그룹 카드 스타일 */
 .group-card {
   background: #ffffff;
-  overflow: hidden;
-  transition: transform 0.2s ease;
   border: 1px solid #e6e3e1;
   border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
 }
 
 .group-card:hover {
@@ -519,7 +697,6 @@ const onGroupCreated = () => {
   font-size: 0.8rem;
   font-weight: 500;
   border-radius: 4px;
-  /* 배경색과 텍스트 색상은 위의 카테고리 클래스에서 지정됨 */
 }
 
 .group-info {
@@ -554,10 +731,10 @@ const onGroupCreated = () => {
 
 .group-stats {
   display: flex;
-  gap: 2rem;
+  justify-content: space-between;
+  align-items: center;
   padding-top: 1rem;
   border-top: 1px solid #e6e3e1;
-  align-items: center;
 }
 
 .stats-item {
@@ -578,14 +755,6 @@ const onGroupCreated = () => {
   font-weight: 600;
 }
 
-/* 활동 배지 */
-.activity-badge {
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
 /* 모달 트랜지션 */
 .modal-enter-active,
 .modal-leave-active {
@@ -597,14 +766,31 @@ const onGroupCreated = () => {
   opacity: 0;
 }
 
-/* 반응형 디자인 */
+/* 링크 스타일 */
+a {
+  text-decoration: none;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 1200px) {
+  .movie-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .movie-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
-  .movie-card {
-    width: 150px;
+  .movie-section {
+    padding: 3rem 0;
   }
 
-  .movie-image-container {
-    height: 210px;
+  .section-title {
+    font-size: 1.6rem;
   }
 
   .search-container {
@@ -612,50 +798,39 @@ const onGroupCreated = () => {
     gap: 10px;
   }
 
-  .search-btn {
-    width: 100%;
-  }
-
+  .search-btn,
   .create-group-btn {
     width: 100%;
   }
 
-  .groups-grid {
-    grid-template-columns: 1fr;
-    padding: 0 1rem;
+  .carousel-button {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
   }
 
-  .group-image-container {
-    height: 180px;
-  }
-
-  .category-dropdown {
-    width: 90%;
-    max-width: 300px;
-  }
-
-  .filter-section {
-    padding: 0 1rem;
+  .movie-info h3 {
+    font-size: 1rem;
   }
 }
 
-a {
-  text-decoration: none;
-}
-.member-avatars {
-  display: flex;
-  align-items: center;
-
-  .left-member-count {
-    margin-left: 10px;
+@media (max-width: 480px) {
+  .movie-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
   }
-}
 
-.member-avatar {
-  width: 40px;
-  border-radius: 30px;
-  border: 4px white solid;
-  /* margin: 0px; */
-  margin: -5px;
+  .movie-info h3 {
+    font-size: 0.9rem;
+  }
+
+  .movie-meta {
+    font-size: 0.8rem;
+  }
+
+  .carousel-button {
+    width: 32px;
+    height: 32px;
+  }
 }
 </style>

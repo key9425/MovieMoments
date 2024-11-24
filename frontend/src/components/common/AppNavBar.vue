@@ -53,7 +53,6 @@ const logOut = function () {
   width: 100%;
   max-width: 1300px;
   margin: 0 auto;
-  padding: 0 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -114,24 +113,28 @@ const logOut = function () {
 }
 
 .profile-img {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .logout-btn {
+  /* height: 32px; */
   background-color: transparent;
-  border: none;
   color: rgb(71, 71, 71);
   font-size: 0.95rem;
   font-weight: 500;
-  padding: 8px 4px;
+  padding: 7px 10px;
   cursor: pointer;
   transition: color 0.2s ease;
+  border: 1px solid #828282;
+  border-radius: 6px;
+  color: #000;
+  transition: all 0.2s ease;
 }
 
 .logout-btn:hover {
-  color: #000;
+  background-color: #eaeaea;
 }
 </style>
