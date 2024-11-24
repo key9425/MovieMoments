@@ -83,38 +83,38 @@
 
       <!-- 좋아요한 영화 섹션 -->
       <section class="content-section">
-        <h2 class="section-title">좋아요한 영화</h2>
+        <h2 class="section-title">내가 찜한 영화</h2>
         <div class="row g-4">
-          <div class="col-md-3" v-for="n in 4" :key="n">
+          <div class="col-md-3" v-for="(likedMovie, index) in likedMovies" :key="index">
             <!-- ㅡmovie id 확인 후 주석 해제 -->
-            <!-- <RouterLink :to="{name: 'MovieDetailView', params: {movieId: movie.id}}"></RouterLink> -->
-
-            <div class="movie-card">
-              <div class="movie-poster">
-                <img src="https://via.placeholder.com/300x450" alt="Movie poster" />
-                <div class="movie-overlay">
-                  <button class="play-btn">
-                    <i class="fas fa-info-circle"></i>
-                  </button>
+            <RouterLink :to="{ name: 'MovieDetailView', params: { movieId: likedMovie.movie_id } }">
+              <div class="movie-card">
+                <div class="movie-poster">
+                  <img :src="'https://image.tmdb.org/t/p/original/' + likedMovie.poster_path" alt="Movie poster" />
+                  <div class="movie-overlay">
+                    <button class="play-btn">
+                      <i class="fas fa-info-circle"></i>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div class="movie-info">
-                <!-- <h3 class="movie-title">{{ profile.movie.content }}</h3> -->
-                <h3 class="movie-title">영화 제목</h3>
-                <div class="movie-meta">
+                <div class="movie-info">
+                  <!-- <h3 class="movie-title">{{ profile.movie.content }}</h3> -->
+                  <h3 class="movie-title">{{ likedMovie.title }}</h3>
+                  <!-- <div class="movie-meta"> -->
                   <!-- <span class="year">{{ profile.movie.year }}</span> -->
-                  <span class="year">2024</span>
+                  <!-- <span class="year">2024</span> -->
                   <!-- <i class="fas fa-star text-warning"></i>
                     {{ profile.movie.rating }} -> 평점 정보 받아오는지 확인
                   </span> -->
-                  <span class="rating">
-                    <i class="fas fa-star text-warning"></i>
-                    4.5
-                  </span>
+                  <!-- <span class="rating">
+                      <i class="fas fa-star text-warning"></i>
+                      4.5
+                    </span> -->
                   <!-- ******* 은영이한테 요청받는 변수명 확인하고 수정 ******* ==================================== -->
+                  <!-- </div> -->
                 </div>
               </div>
-            </div>
+            </RouterLink>
           </div>
         </div>
       </section>
@@ -151,6 +151,7 @@ const followings_count = ref(0);
 const is_following = ref(false);
 const articles_count = ref(0);
 const articles = ref([]);
+const likedMovies = ref([]);
 
 // 계산된 속성
 const showFollowButton = computed(() => {
@@ -247,6 +248,7 @@ const loadProfileData = () => {
   })
     .then((response) => {
       const data = response.data;
+
       id.value = data.id;
       name.value = data.name;
       username.value = data.username;
@@ -258,7 +260,7 @@ const loadProfileData = () => {
       articles_count.value = data.articles_count;
       articles.value = data.articles;
       isLoaded.value = true;
-
+      likedMovies.value = data.liked_movies;
       console.log(response.data);
     })
     .catch((error) => {
@@ -441,6 +443,10 @@ onMounted(() => {
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
+}
+a {
+  text-decoration: none;
+  color: black;
 }
 
 .review-excerpt {
