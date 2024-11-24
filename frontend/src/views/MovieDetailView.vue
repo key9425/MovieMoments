@@ -24,7 +24,7 @@
                 <i class="fas fa-star text-warning me-2"></i>
                 <span class="text-white">{{ formatVoteAverage(movie.vote_average) }}</span>
               </div>
-              <button @click="isLiked ? unlikeMovie() : likeMovie()" :class="['like-btn', isLiked ? 'liked' : '']">
+              <button @click="likeMovie()" :class="['like-btn', isLiked ? 'liked' : '']">
                 <i class="fas fa-heart"></i>
                 {{ isLiked ? "찜취소" : "찜하기" }}
               </button>
@@ -125,12 +125,14 @@ const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const checkLikeStatus = () => {
   axios({
     method: "get",
-    url: `${store.API_URL}/api/v1/movies/${props.movieId}/like/`,
+    url: `${store.API_URL}/api/v2/like/`,
+    params: { movie_id: movieId },
     headers: {
       Authorization: `Token ${store.token}`,
     },
   })
     .then((response) => {
+      console.log("response", response.data);
       isLiked.value = response.data.is_liked;
     })
     .catch((error) => {
@@ -142,33 +144,22 @@ const checkLikeStatus = () => {
 const likeMovie = () => {
   axios({
     method: "post",
-    url: `${store.API_URL}/api/v1/movies/${props.movieId}/like/`,
+    url: `${store.API_URL}/api/v2/like/`,
+    data: {
+      movie_id: movieId,
+      title: movie.value.title,
+      poster_path: movie.value.poster_path,
+    },
     headers: {
       Authorization: `Token ${store.token}`,
     },
   })
-    .then(() => {
-      isLiked.value = true;
+    .then((response) => {
+      console.log(response.data);
+      isLiked.value = response.data.is_liked;
     })
     .catch((error) => {
       console.error("찜하기 실패:", error);
-    });
-};
-
-// 찜취소
-const unlikeMovie = () => {
-  axios({
-    method: "delete",
-    url: `${store.API_URL}/api/v1/movies/${props.movieId}/like/`,
-    headers: {
-      Authorization: `Token ${store.token}`,
-    },
-  })
-    .then(() => {
-      isLiked.value = false;
-    })
-    .catch((error) => {
-      console.error("찜취소 실패:", error);
     });
 };
 
@@ -176,7 +167,6 @@ const unlikeMovie = () => {
 onMounted(() => {
   checkLikeStatus();
 });
-// ======================================================
 
 //  영화 상세정보 가져오기
 const getMovieDetails = () => {

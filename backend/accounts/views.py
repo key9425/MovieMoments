@@ -65,30 +65,39 @@ def follow(request, user_pk):
         return Response({'error': '자신을 팔로우할 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
     
 # 좋아요
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def like_movie(request):
-    movie_id = request.data.get('movie_id')
+    if request.method == 'GET':
+        movie_id = request.GET.get('movie_id')
+        if request.user.liked_movie.filter(movie_id=movie_id).exists():
+            is_liked = True
+        else:
+            is_liked = False
+        return Response({
+            'is_liked': is_liked,
+        })
 
-    # 1. LikeMovie 테이블에 영화가 이미 있는지 확인
-    if LikeMovie.objects.filter(movie_id=movie_id).exists():
-        movie = LikeMovie.objects.get(movie_id=movie_id)
-    else:
-        serializer = LikeMovieSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            movie = serializer.save()
+    elif request.method == 'POST':
+        movie_id = request.data.get('movie_id')
+        # 1. LikeMovie 테이블에 영화가 이미 있는지 확인
+        if LikeMovie.objects.filter(movie_id=movie_id).exists():
+            movie = LikeMovie.objects.get(movie_id=movie_id)
+        else:
+            serializer = LikeMovieSerializer(data=request.data)
+            if serializer.is_valid(raise_exception=True):
+                movie = serializer.save()
 
-    # 2. 사용자가 이미 찜한 영화인지 확인
-    if request.user.liked_movie.filter(movie_id=movie_id).exists():
-        request.user.liked_movie.remove(movie)
-        is_liked = False
-    else:
-        request.user.liked_movie.add(movie)
-        is_liked = True
-    
-    return Response({
-        'is_liked': is_liked,
-        'like_count': movie.liked_by_users.count()
-    })
+        # 2. 사용자가 이미 찜한 영화인지 확인
+        if request.user.liked_movie.filter(movie_id=movie_id).exists():
+            request.user.liked_movie.remove(movie)
+            is_liked = False
+        else:
+            request.user.liked_movie.add(movie)
+            is_liked = True
+        
+        return Response({
+            'is_liked': is_liked,
+        })
 
 
 # User 검색

@@ -75,9 +75,6 @@ class LikeMovie(models.Model):
     poster_path = models.CharField(max_length=200, null=True, blank=True)
 
 
-
-
-################################################
 class Comment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,  related_name='comment')
     article = models.ForeignKey(Article, on_delete=models.CASCADE,  related_name='comments')

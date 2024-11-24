@@ -178,8 +178,10 @@ const editArticle = (article) => {
     id: article.id,
     content: article.content,
     images: article.images.map((img) => ({
-      ...img,
+      id: img.id, // 이미지 ID 추가
+      image: img.image, // 이미지 경로
       isExisting: true, // 기존 이미지 표시
+      url: store.API_URL + img.image, // 미리보기 URL
     })),
   };
   activeMenu.value = null;
@@ -210,10 +212,10 @@ const handleEditImageUpload = (event) => {
 const removeEditImage = (index) => {
   const removedImage = editingArticle.value.images[index];
 
-  if (!removedImage.isNew && removedImage.id) {
-    // 기존 이미지인 경우 삭제할 이미지 ID 목록에 추가
-    editingArticle.value.removedImages.push(removedImage.id);
-  }
+  // if (!removedImage.isNew && removedImage.id) {
+  //   // 기존 이미지인 경우 삭제할 이미지 ID 목록에 추가
+  //   editingArticle.value.removedImages.push(removedImage.id);
+  // }
   // 화면에서 이미지 제거
   editingArticle.value.images.splice(index, 1);
 };
@@ -221,14 +223,18 @@ const removeEditImage = (index) => {
 // 4. 저장
 const updateArticle = (articleId) => {
   if (!editingArticle.value?.content.trim() && !editingArticle.value?.images.length) return;
+
   // FormData 객체 생성
   const formData = new FormData();
   // 수정된 게시글 내용 추가
   formData.append("content", editingArticle.value.content);
-  // 새로 추가된 이미지들 추가
-  editingArticle.value.images.forEach((file) => {
-    formData.append(`images`, file);
-  });
+
+  // 새로 추가된 이미지만 전송
+  editingArticle.value.images
+    .filter((image) => !image.isExisting) // 새로운 이미지만 필터링
+    .forEach((image) => {
+      formData.append("images", image.file); // 파일 추가
+    });
 
   // 삭제할 이미지 ID 목록 추가
   // if (editingArticle.value.removedImages.length > 0) {
@@ -248,21 +254,13 @@ const updateArticle = (articleId) => {
       console.log(response);
       // const updatedArticle = response.data;
       // const index = articles.value.findIndex((a) => a.id === articleId);
-
       // if (index !== -1) {
-      //   articles.value[index] = {
-      //     ...articles.value[index],
-      //     content: updatedArticle.content,
-      //     images: updatedArticle.images,
-      //   };
+      //   articles.value[index] = updatedArticle;
       // }
-
       // editingArticle.value = null;
-      // alert("게시글이 수정되었습니다.");
     })
     .catch((error) => {
       console.error("게시글 수정 실패:", error);
-      alert("게시글 수정에 실패했습니다.");
     });
 };
 
@@ -331,7 +329,6 @@ const submitArticle = () => {
 
       emit("update:articles-images", newArticleData.images);
       newArticle.value = { content: "", images: [] };
-      alert("게시글이 성공적으로 등록되었습니다.");
     })
     .catch((error) => {
       console.error("게시글 등록 실패:", error);

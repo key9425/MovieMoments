@@ -52,8 +52,6 @@
               <h3>{{ movie.title }}</h3>
               <div class="movie-meta">
                 <span>{{ movie.release_date?.substring(0, 4) }}</span>
-                <span class="separator">•</span>
-                <span>{{ movie.genre }}</span>
               </div>
             </div>
           </RouterLink>

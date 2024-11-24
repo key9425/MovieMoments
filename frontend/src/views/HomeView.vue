@@ -18,7 +18,6 @@
         </div>
         <div v-else class="movies-scroll">
           <div class="movies-row">
-            <!--  ******* 장르 모델 경로 변경 후 확인 *******-->
             <div v-for="movie in recommendedMovies" :key="movie.id" class="movie-card">
               <RouterLink :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }">
                 <div class="movie-image-container">
@@ -26,12 +25,6 @@
                 </div>
                 <div class="movie-info">
                   <h3 class="movie-title">{{ movie.title }}</h3>
-                  <div class="movie-meta">
-                    <span>{{ movie.release_date.substring(0, 4) }}</span>
-                    <span class="dot">·</span>
-                    <!--  ******* 장르 데이터 속성으로 적용 필요 *******-->
-                    <span>{{ movie.genre }}</span>
-                  </div>
                 </div>
               </RouterLink>
             </div>

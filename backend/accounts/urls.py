@@ -7,4 +7,4 @@ urlpatterns = [
     path('like/', views.like_movie),
     path('delete/', views.user_delete),
     path('search/', views.search_users),
-] 
+]
