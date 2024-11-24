@@ -51,7 +51,8 @@
           <!-- 검색 결과 -->
           <div class="search-results" v-if="searchResults.length">
             <div v-for="user in searchResults" :key="user.id" class="user-item" :class="{ 'user-selected': isUserSelected(user) }" @click="toggleUserSelection(user)">
-              <div class="user-icon">👤</div>
+              <!-- 은영이에게 유저별 프로필 이미지 부탁드리기 -->
+              <div class="user-icon">{{ user.profile_image }}</div>
               <div class="user-info">
                 <div class="user-name">{{ user.name }}</div>
                 <div class="user-email">{{ user.email }}</div>
@@ -513,6 +514,7 @@ watch(searchQuery, (newQuery) => {
   })
     .then((response) => {
       searchResults.value = response.data.filter((user) => user.id !== store.currentUser.id);
+      console.log("사용자", searchResults.value);
     })
     .catch((error) => {
       console.error("사용자 검색 실패:", error);

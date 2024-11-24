@@ -38,19 +38,18 @@
     </nav>
 
     <!-- 탭 컨텐츠 -->
-    <main class="main-content">
+    <main v-if="movie" class="main-content">
       <!-- 타임라인 탭 -->
-      <Timeline :currentTab="currentTab" />
+      <Timeline :currentTab="currentTab" :timelineData="movie.timeline" />
 
       <!-- 한줄평 탭 -->
-      <OneLineReview :currentTab="currentTab" />
+      <OneLineReview :currentTab="currentTab" :oneLineReviewData="movie.review" />
 
       <!-- 게시글 탭 -->
-      <!-- <Article :currentTab="currentTab" /> -->
-      <Article :currentTab="currentTab" />
+      <Article :currentTab="currentTab" :articlesData="movie.article" />
 
       <!-- 갤러리 탭 -->
-      <Gallery :currentTab="currentTab" />
+      <Gallery :currentTab="currentTab" :galleryData="movie.article_img" />
     </main>
 
     <!-- 채팅 패널 -->
@@ -155,7 +154,7 @@ const getGroupWatchedMovie = () => {
     },
   })
     .then((response) => {
-      console.log(response.data);
+      console.log("getGroupWatchedMovie", response.data);
       movie.value = response.data;
     })
     .catch((error) => {

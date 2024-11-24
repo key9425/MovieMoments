@@ -119,7 +119,7 @@
 
 <script setup>
 import axios from "axios";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRouter, RouterLink } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import GroupCreateModal from "@/components/GroupCreateModal.vue";
@@ -233,17 +233,18 @@ const getGroupData = () => {
     });
 };
 
-const handleSearchGroups = (event) => {
-  groupKeyword.value = event.currentTarget.value;
-
+const filterGroups = () => {
   // 그룹 필터링
   filteredGroups.value = allGroups.value.filter((group) => {
     const nameMatches = group.group_name.toLowerCase().includes(groupKeyword.value.toLowerCase());
     const categoryMatches = selectedCategory.value === "0" || group.category === selectedCategory.value;
     return nameMatches && categoryMatches;
   });
+};
 
-  console.log(filteredGroups.value);
+const handleSearchGroups = (event) => {
+  groupKeyword.value = event.currentTarget.value;
+  filterGroups();
 };
 
 onMounted(() => {
@@ -262,7 +263,24 @@ const onGroupCreated = () => {
 .home-container {
   max-width: 1300px;
   margin: 0 auto;
-  /* padding: 20px; */
+  /* padding: 0 auto; */
+}
+
+.main-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #3a3a3a;
+  position: relative;
+  margin-bottom: 1rem;
+}
+.main-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.5rem;
+  width: 50px;
+  height: 3px;
+  background: #dc3545;
 }
 
 /* 추천 영화 섹션 */
@@ -397,7 +415,7 @@ const onGroupCreated = () => {
 /* 메인 컨텐츠 영역 */
 .main-content {
   padding-top: 64px;
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
 }
 
@@ -472,7 +490,7 @@ const onGroupCreated = () => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
-  padding: 0 2rem;
+  /* padding: 0 2rem; */
   margin-bottom: 4rem;
 }
 

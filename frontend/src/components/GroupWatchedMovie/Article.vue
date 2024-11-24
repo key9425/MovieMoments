@@ -24,44 +24,75 @@
         </div>
 
         <button type="submit" class="add-article-btn" :disabled="isSubmitting || (!newArticle.content.trim() && !newArticle.images.length)">등록</button>
-
-        <!-- <button @click="submitArticle" class="submit-button">게시하기</button> -->
       </form>
     </div>
 
     <!-- 게시글 목록 -->
     <div class="articles-list">
+      <!-- 게시글 아이템 반복 -->
       <div v-for="article in articles" :key="article.id" class="article-card">
         <div class="article-header">
+          <!-- 유저 프로필 -->
           <div class="user-info">
-            <img :src="article.userAvatar" alt="User avatar" class="user-avatar" />
-            <span class="username">{{ article.username }}</span>
+            <img :src="store.API_URL + article.user.profile_img" alt="User avatar" class="user-avatar" />
+            <span class="username">{{ article.user.name }}</span>
           </div>
-          <span class="article-date">{{ formatDate(article.createdAt) }}</span>
-        </div>
-
-        <p class="article-content">{{ article.content }}</p>
-
-        <!-- 이미지 그리드 -->
-        <div v-if="article.images.length" class="image-grid">
-          <template v-if="article.images.length <= 3">
-            <div v-for="(image, index) in article.images" :key="index" class="grid-image-wrapper">
-              <img :src="image.url" @click="openImageModal(article.images, index)" class="grid-image" />
-            </div>
-          </template>
-
-          <template v-else>
-            <div v-for="(image, index) in article.images.slice(0, 3)" :key="index" class="grid-image-wrapper">
-              <img :src="image.url" @click="openImageModal(article.images, index)" class="grid-image" />
-            </div>
-            <div class="grid-image-wrapper more-images" @click="openImageModal(article.images, 2)">
-              <img :src="article.images[2].url" class="grid-image background-image" />
-              <div class="more-overlay">
-                <span>+{{ article.images.length - 2 }}</span>
+          <!-- 날짜 정보 + 더보기 버튼(for 수정, 삭제) -->
+          <div class="article-actions">
+            <span class="article-date">{{ formatDate(article.created_at) }}</span>
+            <!-- 현재 사용자가 작성한 글인 경우에만 더보기 버튼 표시 -->
+            <div v-if="article.user.id === store.currentUser.id" class="article-menu">
+              <button @click="toggleMenu(article.id)" class="menu-button">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+              <!-- 더보기 버튼 선택된 경우에 수정 및 삭제 버튼 표시 -->
+              <div v-if="activeMenu === article.id" class="menu-dropdown">
+                <button @click="editArticle(article)" class="menu-item">
+                  <i class="fas fa-edit"></i>
+                  수정
+                </button>
+                <button @click="deleteArticle(article.id)" class="menu-item">
+                  <i class="fas fa-trash"></i>
+                  삭제
+                </button>
               </div>
             </div>
-          </template>
+          </div>
         </div>
+
+        <!-- 수정 모드일 때 -->
+        <div v-if="editingArticle?.id === article.id">
+          <textarea v-model="editingArticle.content" class="article-textarea"></textarea>
+          <div class="edit-buttons">
+            <button @click="updateArticle(article.id)" class="save-btn">저장</button>
+            <button @click="cancelEdit" class="cancel-btn">취소</button>
+          </div>
+        </div>
+        <!-- 일반 모드일 때 -->
+        <template v-else>
+          <!-- 게시물 내용 -->
+          <p class="article-content">{{ article.content }}</p>
+          <!-- 이미지 그리드 -->
+          <div v-if="article.images.length" class="image-grid">
+            <template v-if="article.images.length <= 3">
+              <div v-for="(image, index) in article.images" :key="index" class="grid-image-wrapper">
+                <img :src="store.API_URL + image.image" @click="openImageModal(article.images, index)" class="grid-image" />
+              </div>
+            </template>
+
+            <template v-else>
+              <div v-for="(image, index) in article.images.slice(0, 3)" :key="index" class="grid-image-wrapper">
+                <img :src="store.API_URL + image.image" @click="openImageModal(article.images, index)" class="grid-image" />
+              </div>
+              <div class="grid-image-wrapper more-images" @click="openImageModal(article.images, 2)">
+                <img :src="store.API_URL + article.images[2].image" class="grid-image background-image" />
+                <div class="more-overlay">
+                  <span>+{{ article.images.length - 2 }}</span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -70,7 +101,7 @@
       <div class="modal-content" @click.stop>
         <button class="modal-close" @click="closeModal">×</button>
         <div class="modal-images">
-          <img :src="modalImages[currentImageIndex].url" class="modal-image" />
+          <img :src="store.API_URL + modalImages[currentImageIndex].image" class="modal-image" />
         </div>
         <div class="modal-controls">
           <button @click="previousImage" :disabled="currentImageIndex === 0" class="modal-nav-button">←</button>
@@ -83,12 +114,21 @@
 </template>
 
 <script setup>
+import axios from "axios";
+import { useCounterStore } from "@/stores/counter";
 import { ref, defineProps } from "vue";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
 
 const props = defineProps({
   currentTab: {
     type: String,
     required: true,
+  },
+  articlesData: {
+    type: Array,
+    default: () => [], // 기본값으로 빈 배열 설정
   },
 });
 
@@ -97,21 +137,92 @@ const newArticle = ref({
   content: "",
   images: [],
 });
+const isSubmitting = ref(false); // 제출 중 상태 관리를 위한 ref 추가
+const store = useCounterStore();
+const activeMenu = ref(null);
+const editingArticle = ref(null);
 
-const articles = ref([
-  {
-    id: 1,
-    username: "사용자1",
-    userAvatar: "/api/placeholder/40/40",
-    content: "오늘 영화 너무 재미있었어요!",
-    createdAt: new Date(),
-    images: [{ url: "/api/placeholder/800/600" }, { url: "/api/placeholder/800/600" }, { url: "/api/placeholder/800/600" }, { url: "/api/placeholder/800/600" }],
-  },
-]);
+const articles = ref(
+  [...props.articlesData].sort((a, b) => {
+    return new Date(b.created_at) - new Date(a.created_at);
+  })
+);
 
 const showModal = ref(false);
 const modalImages = ref([]);
 const currentImageIndex = ref(0);
+
+// 메뉴 토글
+const toggleMenu = (articleId) => {
+  activeMenu.value = activeMenu.value === articleId ? null : articleId;
+};
+
+// 수정 모드 시작
+const editArticle = (article) => {
+  editingArticle.value = { ...article };
+  activeMenu.value = null;
+};
+
+// 수정 취소
+const cancelEdit = () => {
+  editingArticle.value = null;
+};
+
+// 게시글 수정
+const updateArticle = (articleId) => {
+  if (!editingArticle.value?.content.trim()) return;
+
+  axios({
+    method: "put",
+    url: `${store.API_URL}group/movie/article/${articleId}/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+    data: {
+      content: editingArticle.value.content,
+    },
+  })
+    .then((response) => {
+      // 성공적으로 수정된 경우
+      const updatedArticle = response.data;
+
+      // 게시글 목록 업데이트
+      const index = articles.value.findIndex((a) => a.id === articleId);
+      if (index !== -1) {
+        articles.value[index].content = editingArticle.value.content;
+      }
+
+      // 수정 모드 종료
+      editingArticle.value = null;
+      alert("게시글이 수정되었습니다.");
+    })
+    .catch((error) => {
+      console.error("게시글 수정 실패:", error);
+      alert("게시글 수정에 실패했습니다.");
+    });
+};
+
+// 게시글 삭제
+const deleteArticle = (articleId) => {
+  if (!confirm("정말 이 게시글을 삭제하시겠습니까?")) return;
+
+  axios({
+    method: "delete",
+    url: `${store.API_URL}group/movie/article/${articleId}/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then(() => {
+      // 게시글 목록에서 제거
+      articles.value = articles.value.filter((article) => article.id !== articleId);
+      alert("게시글이 삭제되었습니다.");
+    })
+    .catch((error) => {
+      console.error("게시글 삭제 실패:", error);
+      alert("게시글 삭제에 실패했습니다.");
+    });
+};
 
 // 이미지 업로드 처리
 const handleImageUpload = (event) => {
@@ -134,24 +245,63 @@ const removeImage = (index) => {
   newArticle.value.images.splice(index, 1);
 };
 
-// 게시글 제출
+// 게시글 등록(생성)
 const submitArticle = () => {
   if (!newArticle.value.content.trim() && !newArticle.value.images.length) return;
+  if (isSubmitting.value) return;
 
-  articles.value.unshift({
-    id: Date.now(),
-    username: "사용자",
-    userAvatar: "/api/placeholder/40/40",
-    content: newArticle.value.content,
-    createdAt: new Date(),
-    images: [...newArticle.value.images],
+  isSubmitting.value = true;
+  const formData = new FormData();
+  formData.append("content", newArticle.value.content);
+
+  // 이미지 파일들 추가
+  newArticle.value.images.forEach((image, index) => {
+    formData.append(`images`, image.file);
   });
 
-  // 폼 초기화
-  newArticle.value = {
-    content: "",
-    images: [],
-  };
+  axios({
+    method: "post",
+    url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/articles/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+      "Content-Type": "multipart/form-data",
+    },
+    data: formData,
+  })
+    .then((response) => {
+      // 성공적으로 게시글이 생성된 경우
+      const newArticleData = response.data;
+
+      // 게시글 목록 최상단에 새 게시글 추가
+      articles.value = [
+        {
+          id: newArticleData.id,
+          user: {
+            id: newArticleData.user.id,
+            name: newArticleData.user.name,
+            profile_img: newArticleData.user.profile_img,
+          },
+          content: newArticleData.content,
+          created_at: newArticleData.created_at,
+          images: newArticleData.images.map((img) => ({ image: img.image })),
+        },
+        ...articles.value,
+      ];
+
+      // 폼 초기화
+      newArticle.value = {
+        content: "",
+        images: [],
+      };
+      // 성공 메시지 표시
+      alert("게시글이 성공적으로 등록되었습니다.");
+    })
+    .catch((error) => {
+      console.error("게시글 등록 실패:", error);
+    })
+    .finally(() => {
+      isSubmitting.value = false;
+    });
 };
 
 // 모달 컨트롤
@@ -513,5 +663,88 @@ const formatDate = (date) => {
   .modal-image {
     max-height: 70vh;
   }
+}
+
+.article-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.article-menu {
+  position: relative;
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #333;
+}
+
+.menu-item:hover {
+  background: #f8f9fa;
+}
+
+.menu-item i {
+  font-size: 0.9rem;
+}
+
+.edit-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.save-btn,
+.cancel-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.save-btn {
+  background: #666;
+  color: white;
+}
+
+.cancel-btn {
+  background: #f8f9fa;
+  color: #666;
+  border: 1px solid #e1e1e1;
+}
+
+.save-btn:hover {
+  background: #555;
+}
+
+.cancel-btn:hover {
+  background: #f1f3f5;
 }
 </style>
