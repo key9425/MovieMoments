@@ -23,7 +23,7 @@ class CustomRegisterSerializer(RegisterSerializer):
 class UserLoginSerializer(serializers.ModelSerializer):
         class Meta:
             model = get_user_model()
-            fields = ('id', 'name', 'email')
+            fields = ('id', 'name', 'email', 'profile_img')
 
 # 로그인 시 token 외 유저 기본 정보 제공 커스텀
 class CustomTokenSerializer(TokenSerializer):
