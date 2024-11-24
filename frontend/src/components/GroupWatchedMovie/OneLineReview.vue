@@ -13,10 +13,16 @@
     <div class="review-card" v-for="review in reviews" :key="review.id">
       <div class="review-header">
         <div class="user-info">
-          <img :src="review.userProfile" :alt="review.name" class="user-avatar" />
+          <img :src="store.API_URL + review.user.profile_img" :alt="review.name" class="user-avatar" />
           <span class="user-name">{{ review.user.name }}</span>
         </div>
-        <span class="review-date">{{ review.created_at }}</span>
+        <div class="review-actions">
+          <span class="review-date">{{ formatDate(review.created_at) }}</span>
+          <!-- 본인이 작성한 리뷰에만 삭제 버튼 표시 -->
+          <button v-if="review.user.id === store.currentUser?.id" @click="deleteReview(review.id)" class="delete-btn">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
       </div>
       <p class="review-text">{{ review.review }}</p>
     </div>
@@ -29,12 +35,20 @@ import { useCounterStore } from "@/stores/counter";
 import axios from "axios";
 import { useRoute } from "vue-router";
 
-const props = defineProps(["currentTab"]);
+const props = defineProps({
+  currentTab: {
+    type: String,
+    required: true,
+  },
+  oneLineReviewData: {
+    default: () => [], // 기본값으로 빈 배열 설정
+  },
+});
 const store = useCounterStore();
 const route = useRoute();
 
 // 기존에 작성한 리뷰데이터 받아오기
-const reviews = ref([]);
+const reviews = ref([...props.oneLineReviewData]);
 const getReview = () => {
   axios({
     method: "get",
@@ -92,6 +106,36 @@ const submitReview = () => {
 onMounted(() => {
   getReview();
 });
+
+// 날짜 포맷
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+// 리뷰 삭제 함수 추가
+const deleteReview = (reviewId) => {
+  if (!confirm("이 리뷰를 삭제하시겠습니까?")) return;
+
+  axios({
+    method: "delete",
+    url: `${store.API_URL}/api/v1/group/movie/review/${reviewId}/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then(() => {
+      // 성공적으로 삭제되면 목록에서 제거
+      reviews.value = reviews.value.filter((review) => review.id !== reviewId);
+    })
+    .catch((error) => {
+      console.error("리뷰 삭제 실패:", error);
+      alert("리뷰 삭제에 실패했습니다.");
+    });
+};
 </script>
 
 <style scoped>
@@ -114,6 +158,8 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .user-info {
@@ -218,5 +264,35 @@ onMounted(() => {
   .review-input-form {
     padding: 1rem;
   }
+  .review-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+
+  .delete-btn {
+    padding: 0.5rem 0;
+  }
+}
+
+.review-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  color: #dc3545;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 </style>

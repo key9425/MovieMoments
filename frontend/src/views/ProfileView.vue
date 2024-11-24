@@ -10,6 +10,7 @@
             <div class="profile-image-container">
               <!-- 이미지 없으면 기본이미지로 -->
               <img :src="profile_img || '/default-profile.png'" :alt="name" class="profile-image" />
+              <!-- <img :src="store.API_URL + image.image" :alt="image.description" /> -->
               <!-- 이미지 편집 -->
               <div v-if="showEditButton" class="image-overlay">
                 <label for="profile-image-input" class="edit-image-btn">
@@ -53,11 +54,11 @@
 
     <!-- 메인 컨텐츠 -->
     <div class="container py-5">
-      <!-- 최근 작성한 글 섹션 -->
+      <!-- 내가 작성한 글 섹션 -->
       <section class="content-section mb-5">
         <h2 class="section-title">내가 작성한 글</h2>
         <div class="row g-4">
-          <!-- ******* 은영이한테 요청받는 변수명 확인하고 수정 ******* -->
+          <!-- ******* 은영이한테 요청받는 변수명 확인하고 수정 ******* ==================================== -->
           <!-- 
             { 
               article-title: "인센션",
@@ -71,10 +72,10 @@
             <!-- <RouterLink :to="{name:'GroupWatchedMovie' , params: {group_id: article.group-id, group_movie_id: article.group-movie-id}}"></RouterLink> -->
             <div class="review-card">
               <div class="review-header">
-                <!-- <h3 class="movie-title">{{article.title}}</h3> -->
+                <!-- <h3 class="movie-title">{{profile.article.title}}</h3> -->
                 <h3 class="movie-title">인셉션</h3>
               </div>
-              <!-- <p class="review-excerpt">{{ article.content }}</p> -->
+              <!-- <p class="review-excerpt">{{ profile.article.content }}</p> -->
               <p class="review-excerpt">놀라운 연출과 흥미로운 스토리를 가진 영화입니다. 놀라운 연출과 흥미로운 스토리...</p>
             </div>
           </div>
@@ -86,6 +87,7 @@
         <h2 class="section-title">좋아요한 영화</h2>
         <div class="row g-4">
           <div class="col-md-3" v-for="n in 4" :key="n">
+            <!-- ㅡmovie id 확인 후 주석 해제 -->
             <!-- <RouterLink :to="{name: 'MovieDetailView', params: {movieId: movie.id}}"></RouterLink> -->
 
             <div class="movie-card">
@@ -98,13 +100,19 @@
                 </div>
               </div>
               <div class="movie-info">
+                <!-- <h3 class="movie-title">{{ profile.movie.content }}</h3> -->
                 <h3 class="movie-title">영화 제목</h3>
                 <div class="movie-meta">
+                  <!-- <span class="year">{{ profile.movie.year }}</span> -->
                   <span class="year">2024</span>
+                  <!-- <i class="fas fa-star text-warning"></i>
+                    {{ profile.movie.rating }} -> 평점 정보 받아오는지 확인
+                  </span> -->
                   <span class="rating">
                     <i class="fas fa-star text-warning"></i>
                     4.5
                   </span>
+                  <!-- ******* 은영이한테 요청받는 변수명 확인하고 수정 ******* ==================================== -->
                 </div>
               </div>
             </div>
@@ -176,6 +184,7 @@ const handleImageChange = (event) => {
   const formData = new FormData();
   formData.append("profile_img", file);
 
+  // 이미지 수정 요청
   axios({
     method: "put",
     url: `http://127.0.0.1:8000/api/v2/${route.params.user_id}/profile/`,
@@ -226,7 +235,7 @@ const deleteAccount = async () => {
   }
 };
 
-// 프로필 데이터 로드
+// 프로필 데이터 로드 : 설정해둔 프로필 이미지 조회
 const loadProfileData = async () => {
   try {
     const response = await axios({

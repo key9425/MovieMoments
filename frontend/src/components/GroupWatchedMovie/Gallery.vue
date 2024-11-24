@@ -1,10 +1,21 @@
 <script setup>
 import { ref } from "vue";
+import { useCounterStore } from "@/stores/counter";
 
-const props = defineProps(["currentTab"]);
+const props = defineProps({
+  currentTab: {
+    type: String,
+    required: true,
+  },
+  galleryData: {
+    type: Array,
+    default: () => [], // 기본값으로 빈 배열 설정
+  },
+});
+
+const galleryImages = ref([...props.galleryData]);
 const fileInput = ref(null); // ref 정의
-
-const galleryImages = ref([]);
+const store = useCounterStore();
 
 // 파일 선택 트리거
 const triggerFileInput = () => {
@@ -44,17 +55,17 @@ const handleImageUpload = (event) => {
     <div class="gallery-grid">
       <!-- 기존 이미지들 -->
       <div v-for="image in galleryImages" :key="image.id" class="gallery-item" @click="openImage(image)">
-        <img :src="image.url" :alt="image.description" />
+        <img :src="store.API_URL + image.image" :alt="image.description" />
       </div>
 
       <!-- 이미지 추가 버튼 -->
-      <div class="gallery-item add-image-item">
+      <!-- <div class="gallery-item add-image-item">
         <input type="file" ref="fileInput" @change="handleImageUpload" accept="image/*" class="file-input" hidden />
         <button class="add-image-btn" @click="triggerFileInput" type="button">
           <div class="add-icon">+</div>
           <span>사진 추가하기</span>
         </button>
-      </div>
+      </div> -->
     </div>
   </section>
 </template>

@@ -119,7 +119,7 @@
 
 <script setup>
 import axios from "axios";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRouter, RouterLink } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import GroupCreateModal from "@/components/GroupCreateModal.vue";
@@ -233,17 +233,18 @@ const getGroupData = () => {
     });
 };
 
-const handleSearchGroups = (event) => {
-  groupKeyword.value = event.currentTarget.value;
-
+const filterGroups = () => {
   // 그룹 필터링
   filteredGroups.value = allGroups.value.filter((group) => {
     const nameMatches = group.group_name.toLowerCase().includes(groupKeyword.value.toLowerCase());
     const categoryMatches = selectedCategory.value === "0" || group.category === selectedCategory.value;
     return nameMatches && categoryMatches;
   });
+};
 
-  console.log(filteredGroups.value);
+const handleSearchGroups = (event) => {
+  groupKeyword.value = event.currentTarget.value;
+  filterGroups();
 };
 
 onMounted(() => {
