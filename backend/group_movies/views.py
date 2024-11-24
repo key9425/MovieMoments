@@ -10,9 +10,9 @@ from django.contrib.auth import get_user_model
 
 from .serializers import (GroupSerializer, MovieSerializer, GroupMovieSerializer, 
     CommentSerializer, GroupDetailSerializer, GroupWhatMovieSerializer, 
-    GroupMovieDetailSerializer, ArticleCreateSerializer, ArticleImageCreateSerializer, ReviewCreateSerializer, ReviewSerializer, TimelineCreateSerializer, ArticleSerializer, TimelineSerializer)
+    GroupMovieDetailSerializer, ArticleCreateSerializer, ArticleImageCreateSerializer, ReviewCreateSerializer, ReviewSerializer, TimeLineCreateSerializer, ArticleSerializer, TimeLineSerializer)
 
-from .models import Movie, GroupMovie, Group, Article, Comment, ArticleImage
+from .models import Movie, GroupMovie, Group, Article, Comment, ArticleImage, Review, TimeLine
 import random
 from django.http import JsonResponse
 
@@ -222,6 +222,28 @@ def article_create(request, group_movie_id):
         # 생성된 게시글 반환
         return Response(ArticleSerializer(article).data, status=status.HTTP_201_CREATED)
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def article(request, article_id):
+    article = Article.objects.get(id=article_id)
+    article.delete()
+    return Response({"message": "게시글이 삭제되었습니다."}, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def review(request, review_id):
+    review = Review.objects.get(id=review_id)
+    review.delete()
+    return Response({"message": "리뷰가 삭제되었습니다."}, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def timeline(request, timeline_id):
+    timeline = TimeLine.objects.get(id=timeline_id)
+    timeline.delete()
+    return Response({"message": "타임라인이 삭제되었습니다."}, status=status.HTTP_200_OK)
+
+
 # 한줄평 생성
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
@@ -241,7 +263,7 @@ def timeline_create(request, group_movie_id):
     # 그룹 무비 조회
     group_movie = GroupMovie.objects.get(pk=group_movie_id)
     # 타임라인 생성
-    serializer = TimelineCreateSerializer(data=request.data)
+    serializer = TimeLineCreateSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
         serializer.save(group_movie=group_movie)
         
@@ -250,4 +272,4 @@ def timeline_create(request, group_movie_id):
 
         # 해당 그룹 무비의 모든 타임라인 가져오기 및 반환
         timelines = group_movie.timeline.all()  # related_name 사용
-        return Response(TimelineSerializer(timelines, many=True).data, status=status.HTTP_201_CREATED)
+        return Response(TimeLineSerializer(timelines, many=True).data, status=status.HTTP_201_CREATED)

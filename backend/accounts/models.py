@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from group_movies.models import LikeMovie
 
 
 # Create your models here.
@@ -12,3 +13,4 @@ class User(AbstractUser):
         symmetrical=False,  # 맞팔로우가 자동으로 되지 않도록
         related_name='followers'  # 상대방 입장에서는 나를 팔로워로 보게 됨
     )
+    liked_movie = models.ManyToManyField(LikeMovie, related_name='liked_by_users')

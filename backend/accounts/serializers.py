@@ -2,6 +2,8 @@ from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import UserDetailsSerializer, TokenSerializer
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from group_movies.serializers import LikeMovieSerializer, ArticleSerializer
+
 
 # 회원가입 시 DB에 추가된 필드 저장 커스텀
 class CustomRegisterSerializer(RegisterSerializer):
@@ -30,25 +32,34 @@ class CustomTokenSerializer(TokenSerializer):
     class Meta(TokenSerializer.Meta):
         fields = TokenSerializer.Meta.fields + ('user',)
 
+# 프로필 이미지 수정
+class UserImageUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ('profile_img',)
 
-# 프로필 상세 정보 조회
+# 프로필 조회
 class CustomUserDetailsSerializer(UserDetailsSerializer):
-    followers_count = serializers.SerializerMethodField()
-    followings_count = serializers.SerializerMethodField()
-    is_following = serializers.SerializerMethodField()  
+    followers_count = serializers.IntegerField(source='followers.count', read_only=True)
+    followings_count = serializers.IntegerField(source='followings.count', read_only=True)
+    is_following = serializers.SerializerMethodField() # request 객체가 필요해서 method field 사용
+    liked_movies = LikeMovieSerializer(source='liked_movie', many=True, read_only=True)  
+    liked_movies_count = serializers.IntegerField(source='liked_movie.count', read_only=True)  
+    articles = ArticleSerializer(source='article', many=True, read_only=True)  # related_name으로 연결된 게시글들
+    articles_count = serializers.IntegerField(source='article.count', read_only=True)
 
     class Meta(UserDetailsSerializer.Meta):
         model = get_user_model()
-        fields = ('id','username', 'email', 'name', 'profile_img', 'followers_count','followings_count', 'is_following')
-        read_only_fields = ('email', 'username', 'followers_count','followings_count', 'is_following')
-
-    def get_followers_count(self, obj):
-        return obj.followers.count()
-
-    def get_followings_count(self, obj):
-        return obj.followings.count()
+        fields = (
+            'id', 'username', 'email', 'name', 'profile_img',
+            'followers_count', 'followings_count', 'is_following',
+            'liked_movies', 'liked_movies_count',
+            'articles', 'articles_count'
+        )
+        read_only_fields = ('email', 'username')
     
     def get_is_following(self, obj):
         request = self.context.get('request')
         return obj.followers.filter(pk=request.user.pk).exists()
-    
+
+  

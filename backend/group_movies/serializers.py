@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Movie, Group, GroupMovie, Article, Comment, Timeline, ArticleImage, Review
+from .models import Movie, Group, GroupMovie, LikeMovie, Article, Comment, TimeLine, ArticleImage, Review
 from django.contrib.auth import get_user_model
 
 
@@ -72,6 +72,12 @@ class GroupWhatMovieSerializer(serializers.ModelSerializer):
 #         fields = '__all__'
 #         read_only_fields = ('user', 'group_movie', 'like_users')
 
+#############################
+# 좋아요
+class LikeMovieSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LikeMovie
+        fields = '__all__'
 
 
 
@@ -81,6 +87,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
         read_only_fields = ('user', 'article')
+
 
 ##############################################################
 # 사용자 정보
@@ -108,10 +115,10 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
         fields = ['review']
 
 # 타임라인 생성
-class TimelineCreateSerializer(serializers.ModelSerializer):
+class TimeLineCreateSerializer(serializers.ModelSerializer):
     time = serializers.TimeField(format='%H:%M', input_formats=['%H:%M'])
     class Meta:
-        model = Timeline
+        model = TimeLine
         fields = ['id', 'time', 'title']
 
 class ArticleImageSerializer(serializers.ModelSerializer):
@@ -133,18 +140,18 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ['id', 'review', 'user', 'created_at']
 
 # 타임라인 조회
-class TimelineSerializer(serializers.ModelSerializer):
+class TimeLineSerializer(serializers.ModelSerializer):
      # 시간을 "HH:MM" 형식으로 반환
     time = serializers.TimeField(format='%H:%M')
     class Meta:
-        model = Timeline
+        model = TimeLine
         fields = ['id', 'time', 'title']
 
 # 그룹 무비 상세페이지 (영화, 게시글(사용자), 타임라인(사용자), 갤러리)-조회
 class GroupMovieDetailSerializer(serializers.ModelSerializer):    
     article = ArticleSerializer(many=True, read_only=True)
     review = ReviewSerializer(many=True, read_only=True)
-    timeline = TimelineSerializer(many=True, read_only=True)
+    timeline = TimeLineSerializer(many=True, read_only=True)
     article_img = ArticleImageSerializer(many=True, read_only=True)
     movie = MovieSerializer(read_only=True)
     class Meta:
