@@ -85,7 +85,7 @@
                 <img :src="store.API_URL + image.image" @click="openImageModal(article.images, index)" class="grid-image" />
               </div>
               <div class="grid-image-wrapper more-images" @click="openImageModal(article.images, 2)">
-                <img :src="store.API_URL + article.images[2].image" class="grid-image background-image" />
+                <img :src="store.API_URL + article.images[3].image" class="grid-image background-image" />
                 <div class="more-overlay">
                   <span>+{{ article.images.length - 2 }}</span>
                 </div>
@@ -131,6 +131,8 @@ const props = defineProps({
     default: () => [], // 기본값으로 빈 배열 설정
   },
 });
+
+const emit = defineEmits(["update:articles-images"]);
 
 // 상태 관리
 const newArticle = ref({
@@ -287,6 +289,8 @@ const submitArticle = () => {
         },
         ...articles.value,
       ];
+
+      emit("update:articles-images", newArticleData.images);
 
       // 폼 초기화
       newArticle.value = {

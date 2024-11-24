@@ -46,7 +46,7 @@
       <OneLineReview :currentTab="currentTab" :oneLineReviewData="movie.review" />
 
       <!-- 게시글 탭 -->
-      <Article :currentTab="currentTab" :articlesData="movie.article" />
+      <Article :currentTab="currentTab" :articlesData="movie.article" @update:articles-images="updateArticlesImages" />
 
       <!-- 갤러리 탭 -->
       <Gallery :currentTab="currentTab" :galleryData="movie.article_img" />
@@ -107,6 +107,15 @@ const tabs = [
   { id: "article", name: "게시글" },
   { id: "gallery", name: "갤러리" },
 ];
+
+const updateArticlesImages = (newImages) => {
+  if (!movie.value) return;
+
+  movie.value = {
+    ...movie.value,
+    article_img: [...movie.value.article_img, ...newImages],
+  };
+};
 
 // 스크롤 이벤트 핸들러
 // const handleScroll = () => {
