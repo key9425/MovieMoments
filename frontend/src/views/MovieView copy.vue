@@ -9,7 +9,6 @@
           <input type="text" v-model="searchKeyword" @input="handleSearch" placeholder="영화 제목을 입력해주세요." class="search-input" @focus="isSearchFocused = true" @blur="handleSearchBlur" />
           <!-- 검색 결과 드롭다운 -->
           <div v-if="isSearchFocused && (searchResults.length > 0 || searchKeyword)" class="search-results-dropdown">
-            <!-- <div v-if="searchResults.length > 0 || searchKeyword" class="search-results-dropdown"> -->
             <div v-if="searchResults.length > 0" class="search-results">
               <RouterLink v-for="movie in searchResults" :key="movie.id" :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }" class="search-movie-item">
                 <div class="search-movie-poster">
@@ -30,7 +29,7 @@
     <!-- 추천 영화 섹션 -->
     <section class="movie-section">
       <div class="content-wrapper">
-        <h2 class="section-title">오늘의 추천 영화</h2>
+        <h2 class="section-title">추천 영화</h2>
         <div v-if="loadingMovies" class="loading-state">
           <div class="spinner"></div>
           <p>영화를 불러오는 중...</p>
@@ -42,13 +41,12 @@
           <RouterLink v-for="movie in recommendedMovies" :key="movie.id" :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }" class="movie-card">
             <div class="poster-wrapper">
               <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-poster" />
-              <div class="movie-overlay">
-                <div class="movie-info">
-                  <h3>{{ movie.title }}</h3>
-                  <div class="movie-meta">
-                    <span>{{ movie.release_date?.substring(0, 4) }}년</span>
-                  </div>
-                </div>
+              <div class="movie-overlay"></div>
+            </div>
+            <div class="movie-info">
+              <h3>{{ movie.title }}</h3>
+              <div class="movie-meta">
+                <span>{{ movie.release_date?.substring(0, 4) }}년</span>
               </div>
             </div>
           </RouterLink>
@@ -57,7 +55,7 @@
     </section>
 
     <!-- 박스오피스 섹션 -->
-    <section class="movie-section" v-if="carouselConfig != null">
+    <section class="movie-section">
       <div class="content-wrapper">
         <h2 class="section-title">박스오피스</h2>
         <div class="carousel-container" :style="{ width: `${carouselConfig.totalWidth}px`, margin: '0 auto' }">
@@ -83,7 +81,7 @@
     </section>
 
     <!-- 현재 상영작 섹션 -->
-    <section class="movie-section" v-if="carouselConfig != null">
+    <section class="movie-section">
       <div class="content-wrapper">
         <h2 class="section-title">현재 상영작</h2>
         <div class="carousel-container" :style="{ width: `${carouselConfig.totalWidth}px`, margin: '0 auto' }">
@@ -109,7 +107,7 @@
     </section>
 
     <!-- 개봉 예정작 섹션 -->
-    <section class="movie-section" v-if="carouselConfig != null">
+    <section class="movie-section">
       <div class="content-wrapper">
         <h2 class="section-title">개봉 예정작</h2>
         <div class="carousel-container" :style="{ width: `${carouselConfig.totalWidth}px`, margin: '0 auto' }">
@@ -154,11 +152,11 @@ const upComingMovies = ref([]);
 const recommendedMovies = ref([]);
 const loadingMovies = ref(true);
 const movieError = ref(null);
-const carouselConfig = ref(null);
 
 // 케러셀 관련 상수
 const CARD_WIDTH = 224; // 카드 기본 너비
 const CARD_GAP = 20; // 카드 간격
+const BUTTON_SPACE = 80; // 좌우 버튼 공간 (40px * 2)
 const CONTAINER_PADDING = 32; // 컨테이너 좌우 패딩
 
 // 케러셀 상태
@@ -169,7 +167,7 @@ const currentSlide = ref({
 });
 
 // 화면 크기에 따른 카드 수와 너비 계산
-const calculateArea = () => {
+const carouselConfig = computed(() => {
   const containerWidth = Math.min(window.innerWidth - CONTAINER_PADDING, 1300);
 
   // 표시 가능한 최대 카드 수 계산
@@ -185,9 +183,7 @@ const calculateArea = () => {
     cardWidth: CARD_WIDTH, // 고정된 카드 너비 사용
     totalWidth: carouselWidth, // 케러셀에 필요한 정확한 너비
   };
-};
-
-// carouselConfig = computed(calculateArea);
+});
 
 // 각 섹션의 총 슬라이드 수 계산
 const totalSlides = computed(() => ({
@@ -220,7 +216,12 @@ const slide = (type, direction) => {
 
 // 화면 크기 변경 감지
 const handleResize = debounce(() => {
-  carouselConfig.value = calculateArea();
+  // 현재 슬라이드 위치 재조정
+  Object.keys(currentSlide.value).forEach((key) => {
+    if (currentSlide.value[key] > totalSlides.value[key]) {
+      currentSlide.value[key] = totalSlides.value[key];
+    }
+  });
 }, 200);
 
 // 검색 관련 상태와 함수
@@ -355,7 +356,6 @@ onMounted(() => {
   getPopularMovies();
   getnowPlayingMovies();
   getupComingMovies();
-  carouselConfig.value = calculateArea();
 });
 
 onBeforeUnmount(() => {
@@ -464,17 +464,13 @@ onBeforeUnmount(() => {
   margin: 0.25rem 0 0;
   font-size: 0.875rem;
   color: #6c757d;
-  text-align: left;
-}
-
-.no-results {
-  padding: 1rem;
 }
 
 /* 섹션 공통 스타일 */
 .content-wrapper {
   max-width: 1300px;
   margin: 0 auto;
+  /* padding: 0 1rem; */
 }
 
 .movie-section {
@@ -516,6 +512,7 @@ onBeforeUnmount(() => {
 
 .carousel-wrapper {
   overflow: hidden;
+  /* margin: 0 40px; */
 }
 
 .movie-carousel {
@@ -536,8 +533,8 @@ onBeforeUnmount(() => {
   transition: transform 0.2s ease;
 }
 
-.movie-card:hover {
-  transform: translateY(-5px);
+.movie-grid .movie-card {
+  width: 100%;
 }
 
 .movie-card:hover {
@@ -672,69 +669,31 @@ onBeforeUnmount(() => {
   color: #dc3545;
 }
 
-/* 추천 영화 섹션 스타일 */
+/* 섹션별 스타일 */
 .movie-section:nth-child(2) {
   background-color: #1a1a1a;
   margin: -2rem 0 0 0;
-  padding: 4rem 0;
 }
 
 .movie-section:nth-child(2) .section-title {
   color: white;
-  font-size: 1.8rem;
 }
 
 .movie-section:nth-child(2) .section-title::after {
   background: #ffd700;
-  width: 60px;
-  height: 4px;
 }
 
 .movie-section:nth-child(2) .movie-card {
   background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transform-origin: center bottom;
-  transition: all 0.3s ease;
-}
-
-.movie-section:nth-child(2) .movie-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  border-color: rgba(255, 215, 0, 0.3);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-}
-
-.movie-section:nth-child(2) .poster-wrapper {
-  position: relative;
-  padding-top: 150%;
-}
-
-.movie-section:nth-child(2) .movie-poster {
-  transition: transform 0.3s ease;
-}
-
-.movie-section:nth-child(2) .movie-card:hover .movie-poster {
-  transform: scale(1.05);
-}
-
-.movie-section:nth-child(2) .movie-overlay {
-  background: linear-gradient(to bottom, transparent 30%, rgba(0, 0, 0, 0.8) 100%);
-}
-
-.movie-section:nth-child(2) .movie-info {
-  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .movie-section:nth-child(2) .movie-info h3 {
-  color: #ffd700;
-  font-size: 1.1rem;
-  font-weight: 700;
-  text-wrap: auto;
+  color: white;
 }
 
 .movie-section:nth-child(2) .movie-meta {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.9rem;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* 반응형 스타일 */
@@ -766,18 +725,6 @@ onBeforeUnmount(() => {
   .carousel-button {
     width: 36px;
     height: 36px;
-    font-size: 1rem;
-  }
-
-  .movie-section:nth-child(2) {
-    padding: 3rem 0;
-  }
-
-  .movie-section:nth-child(2) .section-title {
-    font-size: 1.6rem;
-  }
-
-  .movie-section:nth-child(2) .movie-info h3 {
     font-size: 1rem;
   }
 }

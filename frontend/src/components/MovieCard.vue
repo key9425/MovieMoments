@@ -20,7 +20,7 @@
     <div class="movie-info">
       <h3>{{ movie.title }}</h3>
       <div class="movie-meta">
-        <span>{{ movie.release_date?.substring(0, 4) }}</span>
+        <span>{{ movie.release_date?.substring(0, 4) }}년</span>
         <!-- 장르가 있을 경우에만 표시 -->
         <template v-if="mainGenre">
           <span class="separator">•</span>
@@ -99,9 +99,9 @@ const mainGenre = computed(() => {
   text-decoration: none;
   color: inherit;
   background: white;
-  border-radius: 12px;
+  border-radius: 5px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); */
   transition: transform 0.2s;
   scroll-snap-align: start;
   flex-shrink: 0;
@@ -146,8 +146,8 @@ const mainGenre = computed(() => {
 /* 박스오피스 순위 배지 */
 .rank-badge {
   position: absolute;
-  bottom: 12px;
-  left: 12px;
+  top: 8px;
+  left: 8px;
   color: white;
   font-size: 3.5rem;
   font-weight: 600;
@@ -183,25 +183,27 @@ const mainGenre = computed(() => {
 }
 
 .movie-info {
-  padding: 1rem;
+  padding: 0.7rem 1rem;
 }
 
 .movie-info h3 {
   margin: 0;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .movie-meta {
-  margin-top: 0.25rem;
-  font-size: 0.875rem;
+  /* margin-top: 0.25rem; */
+  /* font-size: 0.875rem; */
+
+  font-size: 0.7rem;
   color: #6c757d;
 }
 
 .separator {
-  margin: 0 0.5rem;
+  margin: 0 0.1rem;
 }
 </style>
