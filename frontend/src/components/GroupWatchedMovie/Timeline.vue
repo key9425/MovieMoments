@@ -53,6 +53,7 @@ const props = defineProps({
 });
 const store = useCounterStore();
 const route = useRoute();
+
 //=====================================================================
 
 // 사용자가 기존에 입력한 타임라인 데이터 채워질 곳
@@ -81,6 +82,7 @@ const getTimelineEvent = () => {
       timelineEvents.value = response.data.timeline;
     })
     .catch((error) => {
+      console.log("에러 상세 정보:", error.response);
       console.log(error);
       console.log("타임라인 받아오기 실패");
     });
@@ -145,8 +147,9 @@ const deleteTimelineEvent = (eventId) => {
     },
   })
     .then((response) => {
-      // 서버에서 업데이트된 타임라인 목록을 반환한다고 가정
-      timelineEvents.value = response.data;
+      // 서버에서 업데이트된 타임라인 목록을 반환
+      // timelineEvents.value = response.data;
+      getTimelineEvent();
     })
     .catch((error) => {
       console.error("타임라인 삭제 실패:", error);

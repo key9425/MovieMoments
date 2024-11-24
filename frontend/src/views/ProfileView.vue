@@ -27,9 +27,8 @@
 
             <div class="d-flex gap-4 mb-4">
               <div class="stat-badge">
-                <!--  ******* 은영이가 보내주는 게시글 개수 변수명 확인해보고 수정 *******-->
                 <!-- <span class="stat-value">{{ articles.count }}</span> -->
-                <span class="stat-value">42</span>
+                <span class="stat-value">{{ articles_count }}</span>
                 <span class="stat-label">게시글</span>
               </div>
               <div class="stat-badge">
@@ -150,6 +149,8 @@ const profile_img = ref(null);
 const followers_count = ref(0);
 const followings_count = ref(0);
 const is_following = ref(false);
+const articles_count = ref(0);
+const articles = ref([]);
 
 // 계산된 속성
 const showFollowButton = computed(() => {
@@ -196,7 +197,7 @@ const handleImageChange = (event) => {
     data: formData,
   })
     .then((response) => {
-      profile_img.value = response.data.profile_img;
+      profile_img.value = store.API_URL + response.data.profile_img;
       alert("프로필 이미지가 업데이트되었습니다.");
     })
     .catch((error) => {
@@ -236,29 +237,33 @@ const deleteAccount = async () => {
 };
 
 // 프로필 데이터 로드 : 설정해둔 프로필 이미지 조회
-const loadProfileData = async () => {
-  try {
-    const response = await axios({
-      method: "get",
-      url: `http://127.0.0.1:8000/api/v2/${route.params.user_id}/profile/`,
-      headers: {
-        Authorization: `Token ${store.token}`,
-      },
-    });
+const loadProfileData = () => {
+  axios({
+    method: "get",
+    url: `http://127.0.0.1:8000/api/v2/${route.params.user_id}/profile/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then((response) => {
+      const data = response.data;
+      id.value = data.id;
+      name.value = data.name;
+      username.value = data.username;
+      email.value = data.email;
+      profile_img.value = data.profile_img;
+      followers_count.value = data.followers_count;
+      followings_count.value = data.followings_count;
+      is_following.value = data.is_following;
+      articles_count.value = data.articles_count;
+      articles.value = data.articles;
+      isLoaded.value = true;
 
-    const data = response.data;
-    id.value = data.id;
-    name.value = data.name;
-    username.value = data.username;
-    email.value = data.email;
-    profile_img.value = data.profile_img;
-    followers_count.value = data.followers_count;
-    followings_count.value = data.followings_count;
-    is_following.value = data.is_following;
-    isLoaded.value = true;
-  } catch (error) {
-    console.error("프로필 데이터 로드 실패:", error);
-  }
+      console.log(response.data);
+    })
+    .catch((error) => {
+      console.error("프로필 데이터 로드 실패:", error);
+    });
 };
 
 onMounted(() => {

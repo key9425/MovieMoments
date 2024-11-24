@@ -1,4 +1,3 @@
-<!-- Template 부분 -->
 <template>
   <div v-if="currentTab === 'article'" class="article-container">
     <!-- 게시글 작성 폼 -->
@@ -30,20 +29,23 @@
 
     <!-- 게시글 목록 -->
     <div class="articles-list">
+      <!-- 게시글 아이템 반복 -->
       <div v-for="article in articles" :key="article.id" class="article-card">
-        <!-- 게시글 헤더 -->
         <div class="article-header">
+          <!-- 유저 프로필 -->
           <div class="user-info">
             <img :src="store.API_URL + article.user.profile_img" alt="User avatar" class="user-avatar" />
             <span class="username">{{ article.user.name }}</span>
           </div>
+          <!-- 날짜 정보 + 더보기 버튼(for 수정, 삭제) -->
           <div class="article-actions">
             <span class="article-date">{{ formatDate(article.created_at) }}</span>
-            <!-- 수정/삭제 메뉴 -->
+            <!-- 현재 사용자가 작성한 글인 경우에만 더보기 버튼 표시 -->
             <div v-if="article.user.id === store.currentUser.id" class="article-menu">
               <button @click="toggleMenu(article.id)" class="menu-button">
                 <i class="fas fa-ellipsis-v"></i>
               </button>
+              <!-- 더보기 버튼 선택된 경우에 수정 및 삭제 버튼 표시 -->
               <div v-if="activeMenu === article.id" class="menu-dropdown">
                 <button @click="editArticle(article)" class="menu-item">
                   <i class="fas fa-edit"></i>
@@ -58,10 +60,10 @@
           </div>
         </div>
 
-        <!-- 수정 모드 -->
-        <div v-if="editingArticle?.id === article.id" class="edit-form">
+        <!-- 수정 모드일 때 -->
+        <div v-if="editingArticle?.id === article.id">
           <textarea v-model="editingArticle.content" class="article-textarea"></textarea>
-          <!-- 이미지 수정 영역 -->
+          <!-- 이미지 수정 영역 추가 -->
           <div class="image-upload-area">
             <label for="edit-image-upload" class="image-upload-label">
               <div class="upload-icon">+</div>
@@ -69,7 +71,7 @@
             </label>
             <input type="file" id="edit-image-upload" multiple accept="image/*" @change="handleEditImageUpload" class="hidden" />
 
-            <!-- 이미지 미리보기 -->
+            <!-- 기존 이미지 및 새로 추가된 이미지 미리보기 -->
             <div class="preview-images" v-if="editingArticle.images.length">
               <div v-for="(image, index) in editingArticle.images" :key="index" class="preview-image-container">
                 <img :src="getImageUrl(image)" class="preview-image" />
@@ -78,15 +80,14 @@
             </div>
           </div>
 
-          <!-- 수정 버튼 -->
           <div class="edit-buttons">
             <button @click="updateArticle(article.id)" class="save-btn">저장</button>
             <button @click="cancelEdit" class="cancel-btn">취소</button>
           </div>
         </div>
-
-        <!-- 일반 모드 -->
+        <!-- 일반 모드일 때 -->
         <template v-else>
+          <!-- 게시물 내용 -->
           <p class="article-content">{{ article.content }}</p>
           <!-- 이미지 그리드 -->
           <div v-if="article.images.length" class="image-grid">
@@ -95,6 +96,7 @@
                 <img :src="store.API_URL + image.image" @click="openImageModal(article.images, index)" class="grid-image" />
               </div>
             </template>
+
             <template v-else>
               <div v-for="(image, index) in article.images.slice(0, 3)" :key="index" class="grid-image-wrapper">
                 <img :src="store.API_URL + image.image" @click="openImageModal(article.images, index)" class="grid-image" />
@@ -128,7 +130,6 @@
   </div>
 </template>
 
-<!-- Script 부분 -->
 <script setup>
 import axios from "axios";
 import { useCounterStore } from "@/stores/counter";
@@ -136,7 +137,6 @@ import { ref, defineProps } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
-const store = useCounterStore();
 
 const props = defineProps({
   currentTab: {
@@ -145,7 +145,7 @@ const props = defineProps({
   },
   articlesData: {
     type: Array,
-    default: () => [],
+    default: () => [], // 기본값으로 빈 배열 설정
   },
 });
 
@@ -156,109 +156,64 @@ const newArticle = ref({
   content: "",
   images: [],
 });
-const isSubmitting = ref(false);
+const isSubmitting = ref(false); // 제출 중 상태 관리를 위한 ref 추가
+const store = useCounterStore();
 const activeMenu = ref(null);
 const editingArticle = ref(null);
-const showModal = ref(false);
-const modalImages = ref([]);
-const currentImageIndex = ref(0);
 
 const articles = ref(
   [...props.articlesData].sort((a, b) => {
     return new Date(b.created_at) - new Date(a.created_at);
   })
 );
-console.log("articles:", articles.value);
 
-// 수정 관련 함수들
-// 1. 수정 버튼 클릭시 실행
+const showModal = ref(false);
+const modalImages = ref([]);
+const currentImageIndex = ref(0);
+
+// 메뉴 토글
+const toggleMenu = (articleId) => {
+  activeMenu.value = activeMenu.value === articleId ? null : articleId;
+};
+
+// 수정 모드 시작
 const editArticle = (article) => {
-  // 수정할 게시글의 정보 저장
-  editingArticle.value = {
-    id: article.id,
-    content: article.content,
-    images: article.images.map((img) => ({
-      ...img,
-      isExisting: true, // 기존 이미지 표시
-    })),
-  };
+  editingArticle.value = { ...article };
   activeMenu.value = null;
 };
 
+// 수정 취소
 const cancelEdit = () => {
   editingArticle.value = null;
 };
-// 2. 이미지 추가
-const handleEditImageUpload = (event) => {
-  const files = Array.from(event.target.files);
 
-  files.forEach((file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      // 이미지 미리보기용 URL과 파일 정보 저장
-      editingArticle.value.images.push({
-        url: e.target.result, // 미리보기용 URL
-        file: file, // 서버 전송용 파일
-        isExisting: false, // 새로운 이미지 표시
-      });
-    };
-    reader.readAsDataURL(file);
-  });
-};
-
-// 3. 이미지 삭제
-const removeEditImage = (index) => {
-  const removedImage = editingArticle.value.images[index];
-
-  if (!removedImage.isNew && removedImage.id) {
-    // 기존 이미지인 경우 삭제할 이미지 ID 목록에 추가
-    editingArticle.value.removedImages.push(removedImage.id);
-  }
-  // 화면에서 이미지 제거
-  editingArticle.value.images.splice(index, 1);
-};
-
-// 4. 저장
+// 게시글 수정
 const updateArticle = (articleId) => {
-  if (!editingArticle.value?.content.trim() && !editingArticle.value?.images.length) return;
-  // FormData 객체 생성
-  const formData = new FormData();
-  // 수정된 게시글 내용 추가
-  formData.append("content", editingArticle.value.content);
-  // 새로 추가된 이미지들 추가
-  editingArticle.value.images.forEach((file) => {
-    formData.append(`images`, file);
-  });
-
-  // 삭제할 이미지 ID 목록 추가
-  // if (editingArticle.value.removedImages.length > 0) {
-  //   formData.append("removed_images", JSON.stringify(editingArticle.value.removedImages));
-  // }
+  if (!editingArticle.value?.content.trim()) return;
 
   axios({
     method: "put",
-    url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/articles/${articleId}/`,
+    url: `${store.API_URL}group/movie/article/${articleId}/`,
     headers: {
       Authorization: `Token ${store.token}`,
-      "Content-Type": "multipart/form-data",
     },
-    data: formData,
+    data: {
+      content: editingArticle.value.content,
+    },
   })
     .then((response) => {
-      console.log(response);
-      // const updatedArticle = response.data;
-      // const index = articles.value.findIndex((a) => a.id === articleId);
+      // 성공적으로 수정된 경우
+      const updatedArticle = response.data;
 
-      // if (index !== -1) {
-      //   articles.value[index] = {
-      //     ...articles.value[index],
-      //     content: updatedArticle.content,
-      //     images: updatedArticle.images,
-      //   };
-      // }
+      // 게시글 목록 업데이트
+      const index = articles.value.findIndex((a) => a.id === articleId);
+      if (index !== -1) {
+        articles.value[index].content = editingArticle.value.content;
+      }
 
-      // editingArticle.value = null;
-      // alert("게시글이 수정되었습니다.");
+      // 수정 모드 종료
+      editingArticle.value = null;
+      alert("게시글이 수정되었습니다.");
     })
     .catch((error) => {
       console.error("게시글 수정 실패:", error);
@@ -266,11 +221,39 @@ const updateArticle = (articleId) => {
     });
 };
 
-// 일반 게시글 관련 함수들
-const getImageUrl = (image) => {
-  return image.url ? image.url : store.API_URL + image.image;
+// 게시글 삭제
+const deleteArticle = (articleId) => {
+  if (!confirm("정말 이 게시글을 삭제하시겠습니까?")) return;
+
+  axios({
+    method: "delete",
+    url: `${store.API_URL}group/movie/article/${articleId}/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then(() => {
+      // 게시글 목록에서 제거
+      articles.value = articles.value.filter((article) => article.id !== articleId);
+      alert("게시글이 삭제되었습니다.");
+    })
+    .catch((error) => {
+      console.error("게시글 삭제 실패:", error);
+      alert("게시글 삭제에 실패했습니다.");
+    });
 };
 
+// 이미지 URL 생성 함수
+const getImageUrl = (image) => {
+  // 새로 추가된 이미지인 경우
+  if (image.url) {
+    return image.url;
+  }
+  // 기존 이미지인 경우
+  return store.API_URL + image.image;
+};
+
+// 이미지 업로드 처리
 const handleImageUpload = (event) => {
   const files = Array.from(event.target.files);
 
@@ -286,14 +269,59 @@ const handleImageUpload = (event) => {
   });
 };
 
+// 수정 모드 시작 - 이미지 포함
+const editArticle = (article) => {
+  editingArticle.value = {
+    ...article,
+    originalImages: [...article.images], // 기존 이미지 백업
+    images: [...article.images], // 수정할 이미지 배열
+    newImages: [], // 새로 추가할 이미지 파일들
+    removedImages: [], // 삭제된 기존 이미지 ID들
+  };
+  activeMenu.value = null;
+};
+
+// 수정 취소
+const cancelEdit = () => {
+  editingArticle.value = null;
+};
+
+// 수정 모드에서 이미지 업로드 처리
+const handleEditImageUpload = (event) => {
+  const files = Array.from(event.target.files);
+
+  files.forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      editingArticle.value.images.push({
+        url: e.target.result,
+        file: file,
+        isNew: true, // 새로 추가된 이미지 표시
+      });
+      editingArticle.value.newImages.push(file);
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+// 수정 모드에서 이미지 제거
+const removeEditImage = (index) => {
+  const removedImage = editingArticle.value.images[index];
+
+  // 기존 이미지인 경우 삭제 목록에 추가
+  if (!removedImage.isNew && removedImage.id) {
+    editingArticle.value.removedImages.push(removedImage.id);
+  }
+
+  editingArticle.value.images.splice(index, 1);
+};
+
+// 이미지 제거
 const removeImage = (index) => {
   newArticle.value.images.splice(index, 1);
 };
 
-const toggleMenu = (articleId) => {
-  activeMenu.value = activeMenu.value === articleId ? null : articleId;
-};
-
+// 게시글 등록(생성)
 const submitArticle = () => {
   if (!newArticle.value.content.trim() && !newArticle.value.images.length) return;
   if (isSubmitting.value) return;
@@ -302,7 +330,8 @@ const submitArticle = () => {
   const formData = new FormData();
   formData.append("content", newArticle.value.content);
 
-  newArticle.value.images.forEach((image) => {
+  // 이미지 파일들 추가
+  newArticle.value.images.forEach((image, index) => {
     formData.append(`images`, image.file);
   });
 
@@ -316,53 +345,44 @@ const submitArticle = () => {
     data: formData,
   })
     .then((response) => {
+      // 성공적으로 게시글이 생성된 경우
       const newArticleData = response.data;
-      articles.value.unshift({
-        id: newArticleData.id,
-        user: {
-          id: newArticleData.user.id,
-          name: newArticleData.user.name,
-          profile_img: newArticleData.user.profile_img,
+
+      // 게시글 목록 최상단에 새 게시글 추가
+      articles.value = [
+        {
+          id: newArticleData.id,
+          user: {
+            id: newArticleData.user.id,
+            name: newArticleData.user.name,
+            profile_img: newArticleData.user.profile_img,
+          },
+          content: newArticleData.content,
+          created_at: newArticleData.created_at,
+          images: newArticleData.images.map((img) => ({ image: img.image })),
         },
-        content: newArticleData.content,
-        created_at: newArticleData.created_at,
-        images: newArticleData.images.map((img) => ({ image: img.image })),
-      });
+        ...articles.value,
+      ];
 
       emit("update:articles-images", newArticleData.images);
-      newArticle.value = { content: "", images: [] };
+
+      // 폼 초기화
+      newArticle.value = {
+        content: "",
+        images: [],
+      };
+      // 성공 메시지 표시
       alert("게시글이 성공적으로 등록되었습니다.");
     })
     .catch((error) => {
       console.error("게시글 등록 실패:", error);
-      alert("게시글 등록에 실패했습니다.");
     })
     .finally(() => {
       isSubmitting.value = false;
     });
 };
 
-const deleteArticle = (articleId) => {
-  if (!confirm("정말 이 게시글을 삭제하시겠습니까?")) return;
-
-  axios({
-    method: "delete",
-    url: `${store.API_URL}group/movie/article/${articleId}/`,
-    headers: {
-      Authorization: `Token ${store.token}`,
-    },
-  })
-    .then(() => {
-      articles.value = articles.value.filter((article) => article.id !== articleId);
-      alert("게시글이 삭제되었습니다.");
-    })
-    .catch((error) => {
-      console.error("게시글 삭제 실패:", error);
-      alert("게시글 삭제에 실패했습니다.");
-    });
-};
-
-// 모달 관련 함수들
+// 모달 컨트롤
 const openImageModal = (images, startIndex) => {
   modalImages.value = images;
   currentImageIndex.value = startIndex;
@@ -374,13 +394,18 @@ const closeModal = () => {
 };
 
 const previousImage = () => {
-  if (currentImageIndex.value > 0) currentImageIndex.value--;
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value--;
+  }
 };
 
 const nextImage = () => {
-  if (currentImageIndex.value < modalImages.value.length - 1) currentImageIndex.value++;
+  if (currentImageIndex.value < modalImages.value.length - 1) {
+    currentImageIndex.value++;
+  }
 };
 
+// 날짜 포맷
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -402,14 +427,6 @@ const formatDate = (date) => {
   margin-bottom: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
-
-.edit-form {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 16px;
-  margin-top: 12px;
-}
-
 .char-count {
   text-align: right;
   font-size: 0.8rem;
@@ -509,6 +526,16 @@ const formatDate = (date) => {
   cursor: not-allowed;
 }
 
+/* .submit-button {
+  width: 100%;
+  padding: 12px;
+  background: #3a3a3a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+} */
+
 .articles-list {
   display: flex;
   flex-direction: column;
@@ -545,58 +572,9 @@ const formatDate = (date) => {
   font-weight: 500;
 }
 
-.article-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
 .article-date {
   color: #666;
   font-size: 0.9em;
-}
-
-.article-menu {
-  position: relative;
-}
-
-.menu-button {
-  background: none;
-  border: none;
-  padding: 0.5rem;
-  cursor: pointer;
-  color: #666;
-}
-
-.menu-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 100;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: none;
-  background: none;
-  cursor: pointer;
-  white-space: nowrap;
-  color: #333;
-}
-
-.menu-item:hover {
-  background: #f8f9fa;
-}
-
-.menu-item i {
-  font-size: 0.9rem;
 }
 
 .article-content {
@@ -609,10 +587,9 @@ const formatDate = (date) => {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 8px;
 }
-
 .grid-image-wrapper {
   position: relative;
-  padding-bottom: 100%;
+  padding-bottom: 100%; /* 정사각형 비율 생성 */
   overflow: hidden;
 }
 
@@ -652,6 +629,19 @@ const formatDate = (date) => {
   color: white;
   font-size: 24px;
   font-weight: bold;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 
 .modal-overlay {
@@ -731,6 +721,77 @@ const formatDate = (date) => {
   font-size: 14px;
 }
 
+@media (max-width: 768px) {
+  .image-grid {
+    grid-template-columns: 1fr;
+  }
+  .grid-image-wrapper {
+    padding-bottom: 100%; /* 모바일에서도 정사각형 유지 */
+  }
+
+  .grid-image {
+    height: 250px;
+  }
+
+  .modal-content {
+    width: 100%;
+    padding: 0 20px;
+  }
+
+  .modal-image {
+    max-height: 70vh;
+  }
+}
+
+.article-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.article-menu {
+  position: relative;
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #333;
+}
+
+.menu-item:hover {
+  background: #f8f9fa;
+}
+
+.menu-item i {
+  font-size: 0.9rem;
+}
+
 .edit-buttons {
   display: flex;
   gap: 0.5rem;
@@ -763,28 +824,5 @@ const formatDate = (date) => {
 
 .cancel-btn:hover {
   background: #f1f3f5;
-}
-
-@media (max-width: 768px) {
-  .image-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .grid-image-wrapper {
-    padding-bottom: 100%;
-  }
-
-  .grid-image {
-    height: 250px;
-  }
-
-  .modal-content {
-    width: 100%;
-    padding: 0 20px;
-  }
-
-  .modal-image {
-    max-height: 70vh;
-  }
 }
 </style>
