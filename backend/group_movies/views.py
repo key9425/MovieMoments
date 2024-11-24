@@ -20,20 +20,20 @@ from django.http import JsonResponse
 
 User = get_user_model()
 
-#  Create your views here.
 # @api_view(['GET', 'POST'])
-# # @permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 # def group_list(request):
-#     # GET 요청: 로그인한 유저가 속한 그룹 (메인페이지)
+#     # GET 요청: 로그인한 유저가 속한 그룹
 #     if request.method == 'GET':
 #         groups = request.user.include_groups.all()
 #         serializer = GroupSerializer(groups, many=True)
 #         return Response(serializer.data)
-#     # POST 요청: 새 그룹 생성
+#     # POST 요청: 그룹 생성
 #     elif request.method == 'POST':
 #         serializer = GroupSerializer(data=request.data)
 #         if serializer.is_valid(raise_exception=True):
 #             group = serializer.save()  # 새 그룹 생성
+
 #             # 'members'는 사용자가 그룹에 추가될 사용자들의 ID 목록
 #             members = request.data.get('members')
 #             group.include_members.add(*members)
@@ -222,12 +222,25 @@ def article_create(request, group_movie_id):
         # 생성된 게시글 반환
         return Response(ArticleSerializer(article).data, status=status.HTTP_201_CREATED)
 
-@api_view(['DELETE'])
+@api_view(['DELETE', 'PUT'])
 @permission_classes([IsAuthenticated])
 def article(request, article_id):
     article = Article.objects.get(id=article_id)
-    article.delete()
-    return Response({"message": "게시글이 삭제되었습니다."}, status=status.HTTP_200_OK)
+    if request.method == "DELETE":
+        article.delete()
+        return Response({"message": "게시글이 삭제되었습니다."}, status=status.HTTP_200_OK)
+    elif request.method == "PUT":
+        serializer = ArticleSerializer(article, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            article = serializer.save()
+            article.images.all().delete()
+            images = request.FILES.getlist('images')
+            for image in images:
+                image_serializer = ArticleImageCreateSerializer(data={'image': image})
+                if image_serializer.is_valid(raise_exception=True):
+                    image_serializer.save(article=article, group_movie=article.group_movie)
+            return Response(ArticleSerializer(article).data, status=status.HTTP_201_CREATED)
+
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])

@@ -91,21 +91,14 @@ def like_movie(request):
     })
 
 
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def search_users(request):
-#     email_query = request.GET.get('email', '')
-#     users = User.objects.filter(email__icontains=email_query)[:5]  # 최대 5명까지만
-#     serializer = UserLoginSerializer(users, many=True)
-#     return Response(serializer.data)
 # User 검색
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def search_users(request):
-    query = request.GET.get('query', '')  # 'email' 대신 'query'로 변경
+    query = request.GET.get('query', '')  # query
     users = User.objects.filter(
-        Q(email__icontains=query) |  # email 포함
-        Q(name__icontains=query)     # name 포함
+        Q(email__icontains=query) |  # query가 포함된 email
+        Q(name__icontains=query)     # query가 포함된 name
     )
     serializer = UserLoginSerializer(users, many=True)
     return Response(serializer.data)
