@@ -132,7 +132,6 @@ def movie_list(request):
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
 def group_movie_create(request, group_id):
-   print('abc')
    group = get_object_or_404(Group, pk=group_id)
    
    # TMDB API에서 받은 영화 정보로 Movie 모델 생성 또는 조회
@@ -202,25 +201,32 @@ def group_movie_detail(request, group_movie_id):
 
 
 # 게시글 생성(갤러리 저장)
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def article_create(request, group_movie_id):
     # 그룹 무비 조회
     group_movie = GroupMovie.objects.get(pk=group_movie_id)
-    # 게시글 생성
-    serializer = ArticleCreateSerializer(data=request.data)
-    if serializer.is_valid(raise_exception=True):
-        article = serializer.save(user=request.user, group_movie=group_movie)
+    if request.method == "GET":
+        # get 대신 filter 사용
+        articles = Article.objects.filter(group_movie=group_movie).order_by('-created_at')  # 최신순 정렬
+        # many=True 옵션 추가
+        serializer = ArticleSerializer(articles, many=True)
+        return Response(serializer.data)
+    elif request.method == "POST":
+        # 게시글 생성
+        serializer = ArticleCreateSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            article = serializer.save(user=request.user, group_movie=group_movie)
 
-        # 이미지 파일들 처리
-        images = request.FILES.getlist('images')
-        for image in images:
-            image_serializer = ArticleImageCreateSerializer(data={'image': image})
-            if image_serializer.is_valid(raise_exception=True):
-                image_serializer.save(article=article, group_movie=group_movie)
-        
-        # 생성된 게시글 반환
-        return Response(ArticleSerializer(article).data, status=status.HTTP_201_CREATED)
+            # 이미지 파일들 처리
+            images = request.FILES.getlist('images')
+            for image in images:
+                image_serializer = ArticleImageCreateSerializer(data={'image': image})
+                if image_serializer.is_valid(raise_exception=True):
+                    image_serializer.save(article=article, group_movie=group_movie)
+            
+            # 생성된 게시글 반환
+            return Response(ArticleSerializer(article).data, status=status.HTTP_201_CREATED)
 
 @api_view(['DELETE', 'PUT'])
 @permission_classes([IsAuthenticated])
@@ -233,13 +239,19 @@ def article(request, article_id):
         serializer = ArticleSerializer(article, data=request.data, partial=True)
         if serializer.is_valid(raise_exception=True):
             article = serializer.save()
-            article.images.all().delete()
-            images = request.FILES.getlist('images')
-            for image in images:
-                image_serializer = ArticleImageCreateSerializer(data={'image': image})
-                if image_serializer.is_valid(raise_exception=True):
-                    image_serializer.save(article=article, group_movie=article.group_movie)
-            return Response(ArticleSerializer(article).data, status=status.HTTP_201_CREATED)
+            
+       # 삭제할 이미지 처리
+        removed_image_ids = request.data.getlist('removed_image_ids')
+        if removed_image_ids:
+            ArticleImage.objects.filter(article=article, id__in=removed_image_ids).delete()
+        # 새 이미지 저장
+        images = request.FILES.getlist('images')
+        for image in images:
+            image_serializer = ArticleImageCreateSerializer(data={'image': image})
+            if image_serializer.is_valid(raise_exception=True):
+                image_serializer.save(article=article, group_movie=article.group_movie)
+        
+        return Response(ArticleSerializer(article).data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['DELETE'])

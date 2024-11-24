@@ -1,11 +1,10 @@
-<!-- Template 부분 -->
 <template>
   <div v-if="currentTab === 'article'" class="article-container">
     <!-- 게시글 작성 폼 -->
     <div class="article-form">
       <form @submit.prevent="submitArticle">
-        <textarea v-model="newArticle.content" placeholder="게시글을 작성해주세요..." class="article-textarea"></textarea>
-        <div class="char-count">{{ newArticle.content.length }}/2000</div>
+        <textarea v-model="content" placeholder="게시글을 작성해주세요..." class="article-textarea"></textarea>
+        <div class="char-count">{{ content.length }}/2000</div>
 
         <!-- 이미지 업로드 영역 -->
         <div class="image-upload-area">
@@ -16,15 +15,15 @@
           <input type="file" id="image-upload" multiple accept="image/*" @change="handleImageUpload" class="hidden" />
 
           <!-- 미리보기 이미지 -->
-          <div class="preview-images" v-if="newArticle.images.length">
-            <div v-for="(image, index) in newArticle.images" :key="index" class="preview-image-container">
-              <img :src="image.url" class="preview-image" />
-              <button @click="removeImage(index)" class="remove-image">×</button>
+          <div class="preview-images" v-if="images.length">
+            <div v-for="(image, index) in imagePreviews" :key="index" class="preview-image-container">
+              <img :src="image" class="preview-image" />
+              <button @click.prevent="removeImage(index)" class="remove-image">×</button>
             </div>
           </div>
         </div>
 
-        <button type="submit" class="add-article-btn" :disabled="isSubmitting || (!newArticle.content.trim() && !newArticle.images.length)">등록</button>
+        <button type="submit" class="add-article-btn" :disabled="isSubmitting || !content.trim()">등록</button>
       </form>
     </div>
 
@@ -59,8 +58,8 @@
         </div>
 
         <!-- 수정 모드 -->
-        <div v-if="editingArticle?.id === article.id" class="edit-form">
-          <textarea v-model="editingArticle.content" class="article-textarea"></textarea>
+        <div v-if="editingId === article.id" class="edit-form">
+          <textarea v-model="editingContent" class="article-textarea"></textarea>
           <!-- 이미지 수정 영역 -->
           <div class="image-upload-area">
             <label for="edit-image-upload" class="image-upload-label">
@@ -70,17 +69,17 @@
             <input type="file" id="edit-image-upload" multiple accept="image/*" @change="handleEditImageUpload" class="hidden" />
 
             <!-- 이미지 미리보기 -->
-            <div class="preview-images" v-if="editingArticle.images.length">
-              <div v-for="(image, index) in editingArticle.images" :key="index" class="preview-image-container">
-                <img :src="getImageUrl(image)" class="preview-image" />
-                <button @click="removeEditImage(index)" class="remove-image">×</button>
+            <div class="preview-images" v-if="editingImagePreviews.length">
+              <div v-for="(image, index) in editingImagePreviews" :key="index" class="preview-image-container">
+                <img :src="image" class="preview-image" />
+                <button @click.prevent="removeEditImage(index)" class="remove-image">×</button>
               </div>
             </div>
           </div>
 
           <!-- 수정 버튼 -->
           <div class="edit-buttons">
-            <button @click="updateArticle(article.id)" class="save-btn">저장</button>
+            <button @click="updateArticle" class="save-btn">저장</button>
             <button @click="cancelEdit" class="cancel-btn">취소</button>
           </div>
         </div>
@@ -88,21 +87,21 @@
         <!-- 일반 모드 -->
         <template v-else>
           <p class="article-content">{{ article.content }}</p>
-          <!-- 이미지 그리드 -->
+          <!-- 수정된 이미지 그리드 -->
           <div v-if="article.images.length" class="image-grid">
-            <template v-if="article.images.length <= 3">
+            <template v-if="article.images.length <= 5">
               <div v-for="(image, index) in article.images" :key="index" class="grid-image-wrapper">
                 <img :src="store.API_URL + image.image" @click="openImageModal(article.images, index)" class="grid-image" />
               </div>
             </template>
             <template v-else>
-              <div v-for="(image, index) in article.images.slice(0, 3)" :key="index" class="grid-image-wrapper">
+              <div v-for="(image, index) in article.images.slice(0, 4)" :key="index" class="grid-image-wrapper">
                 <img :src="store.API_URL + image.image" @click="openImageModal(article.images, index)" class="grid-image" />
               </div>
-              <div class="grid-image-wrapper more-images" @click="openImageModal(article.images, 2)">
-                <img :src="store.API_URL + article.images[3].image" class="grid-image background-image" />
+              <div class="grid-image-wrapper more-images" @click="openImageModal(article.images, 4)">
+                <img :src="store.API_URL + article.images[4].image" class="grid-image background-image" />
                 <div class="more-overlay">
-                  <span>+{{ article.images.length - 2 }}</span>
+                  <span>+{{ article.images.length - 4 }}</span>
                 </div>
               </div>
             </template>
@@ -128,182 +127,106 @@
   </div>
 </template>
 
-<!-- Script 부분 -->
 <script setup>
 import axios from "axios";
-import { useCounterStore } from "@/stores/counter";
-import { ref, defineProps } from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { useCounterStore } from "@/stores/counter";
+const props = defineProps({
+  currentTab: {
+    type: String,
+    required: true, // 이 prop은 반드시 전달되어야 함
+  }
+});
 
 const route = useRoute();
 const store = useCounterStore();
 
-const props = defineProps({
-  currentTab: {
-    type: String,
-    required: true,
-  },
-  articlesData: {
-    type: Array,
-    default: () => [],
-  },
-});
-
-const emit = defineEmits(["update:articles-images"]);
-
-// 상태 관리
-const newArticle = ref({
-  content: "",
-  images: [],
-});
+const articles = ref([]);
+const content = ref('');
+const images = ref([]);
+const imagePreviews = ref([]);
 const isSubmitting = ref(false);
 const activeMenu = ref(null);
-const editingArticle = ref(null);
+const editingId = ref(null);
+const editingContent = ref('');
+const editingImages = ref([]);
+const editingImagePreviews = ref([]);
 const showModal = ref(false);
 const modalImages = ref([]);
 const currentImageIndex = ref(0);
+const removedImageIds = ref([]); // 삭제된 이미지 id 저장
 
-const articles = ref(
-  [...props.articlesData].sort((a, b) => {
-    return new Date(b.created_at) - new Date(a.created_at);
-  })
-);
-console.log("articles:", articles.value);
 
-// 수정 관련 함수들
-// 1. 수정 버튼 클릭시 실행
-const editArticle = (article) => {
-  // 수정할 게시글의 정보 저장
-  editingArticle.value = {
-    id: article.id,
-    content: article.content,
-    images: article.images.map((img) => ({
-      id: img.id, // 이미지 ID 추가
-      image: img.image, // 이미지 경로
-      isExisting: true, // 기존 이미지 표시
-      url: store.API_URL + img.image, // 미리보기 URL
-    })),
-  };
-  activeMenu.value = null;
-};
-
-const cancelEdit = () => {
-  editingArticle.value = null;
-};
-// 2. 이미지 추가
-const handleEditImageUpload = (event) => {
-  const files = Array.from(event.target.files);
-
-  files.forEach((file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      // 이미지 미리보기용 URL과 파일 정보 저장
-      editingArticle.value.images.push({
-        url: e.target.result, // 미리보기용 URL
-        file: file, // 서버 전송용 파일
-        isExisting: false, // 새로운 이미지 표시
-      });
-    };
-    reader.readAsDataURL(file);
-  });
-};
-
-// 3. 이미지 삭제
-const removeEditImage = (index) => {
-  const removedImage = editingArticle.value.images[index];
-
-  // if (!removedImage.isNew && removedImage.id) {
-  //   // 기존 이미지인 경우 삭제할 이미지 ID 목록에 추가
-  //   editingArticle.value.removedImages.push(removedImage.id);
-  // }
-  // 화면에서 이미지 제거
-  editingArticle.value.images.splice(index, 1);
-};
-
-// 4. 저장
-const updateArticle = (articleId) => {
-  if (!editingArticle.value?.content.trim() && !editingArticle.value?.images.length) return;
-
-  // FormData 객체 생성
-  const formData = new FormData();
-  // 수정된 게시글 내용 추가
-  formData.append("content", editingArticle.value.content);
-
-  // 새로 추가된 이미지만 전송
-  editingArticle.value.images
-    .filter((image) => !image.isExisting) // 새로운 이미지만 필터링
-    .forEach((image) => {
-      formData.append("images", image.file); // 파일 추가
-    });
-
-  // 삭제할 이미지 ID 목록 추가
-  // if (editingArticle.value.removedImages.length > 0) {
-  //   formData.append("removed_images", JSON.stringify(editingArticle.value.removedImages));
-  // }
-
+// 게시글 조회 
+const getArticles = () => {
   axios({
-    method: "put",
-    url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/articles/${articleId}/`,
+    method: "get",
+    url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/articles/`,
     headers: {
       Authorization: `Token ${store.token}`,
-      "Content-Type": "multipart/form-data",
     },
-    data: formData,
   })
     .then((response) => {
-      console.log(response);
-      // const updatedArticle = response.data;
-      // const index = articles.value.findIndex((a) => a.id === articleId);
-      // if (index !== -1) {
-      //   articles.value[index] = updatedArticle;
-      // }
-      // editingArticle.value = null;
+      console.log(response.data)
+      articles.value = response.data
     })
     .catch((error) => {
-      console.error("게시글 수정 실패:", error);
+      console.error("게시글 조회 실패:", error);
     });
 };
 
-// 일반 게시글 관련 함수들
-const getImageUrl = (image) => {
-  return image.url ? image.url : store.API_URL + image.image;
-};
-
+// 이미지 업로드 처리
 const handleImageUpload = (event) => {
   const files = Array.from(event.target.files);
-
-  files.forEach((file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      newArticle.value.images.push({
-        url: e.target.result,
-        file: file,
-      });
-    };
-    reader.readAsDataURL(file);
-  });
+  // 기존 이미지에 새로운 이미지 추가
+  images.value = [...images.value, ...files];
+  // 기존 미리보기에 새로운 미리보기 추가
+  imagePreviews.value = [
+    ...imagePreviews.value,
+    ...files.map(file => URL.createObjectURL(file))
+  ];
 };
 
-const removeImage = (index) => {
-  newArticle.value.images.splice(index, 1);
+const handleEditImageUpload = (event) => {
+  const files = Array.from(event.target.files);
+  // 새 파일 추가
+  editingImages.value = [
+    ...editingImages.value,
+    ...files.map(file => ({
+      file,
+      isExisting: false
+    }))
+  ];
+  // 미리보기 추가
+  editingImagePreviews.value = [
+    ...editingImagePreviews.value,
+    ...files.map(file => URL.createObjectURL(file))
+  ];
 };
 
-const toggleMenu = (articleId) => {
-  activeMenu.value = activeMenu.value === articleId ? null : articleId;
+// 이미지 삭제 시 id 저장
+const removeEditImage = (index) => {
+  const removedImage = editingImages.value[index];
+  if (removedImage.isExisting) {
+    removedImageIds.value.push(removedImage.id);
+  }
+  editingImages.value = editingImages.value.filter((_, i) => i !== index);
+  editingImagePreviews.value = editingImagePreviews.value.filter((_, i) => i !== index);
 };
 
+// 게시글 생성
 const submitArticle = () => {
-  if (!newArticle.value.content.trim() && !newArticle.value.images.length) return;
+  if (!content.value.trim()) return;
   if (isSubmitting.value) return;
 
   isSubmitting.value = true;
   const formData = new FormData();
-  formData.append("content", newArticle.value.content);
-
-  newArticle.value.images.forEach((image) => {
-    formData.append(`images`, image.file);
+  formData.append("content", content.value);
+  
+  images.value.forEach(file => {
+    formData.append("images", file);
   });
-
   axios({
     method: "post",
     url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/articles/`,
@@ -311,47 +234,93 @@ const submitArticle = () => {
       Authorization: `Token ${store.token}`,
       "Content-Type": "multipart/form-data",
     },
-    data: formData,
+    data: formData
   })
     .then((response) => {
-      const newArticleData = response.data;
-      articles.value.unshift({
-        id: newArticleData.id,
-        user: {
-          id: newArticleData.user.id,
-          name: newArticleData.user.name,
-          profile_img: newArticleData.user.profile_img,
-        },
-        content: newArticleData.content,
-        created_at: newArticleData.created_at,
-        images: newArticleData.images.map((img) => ({ image: img.image })),
-      });
-
-      emit("update:articles-images", newArticleData.images);
-      newArticle.value = { content: "", images: [] };
+      articles.value.unshift(response.data);
+      content.value = '';
+      images.value = [];
+      imagePreviews.value = [];
+      isSubmitting.value = false;
     })
     .catch((error) => {
-      console.error("게시글 등록 실패:", error);
+      console.error("게시글 생성 실패:", error);
       alert("게시글 등록에 실패했습니다.");
-    })
-    .finally(() => {
-      isSubmitting.value = false;
     });
 };
 
+// 게시글 수정 관련 함수들
+const editArticle = (article) => {
+  editingId.value = article.id;
+  editingContent.value = article.content;
+  editingImages.value = article.images.map(img => ({
+    id: img.id,
+    image: img.image,
+    isExisting: true
+  }));
+  editingImagePreviews.value = article.images.map(img => store.API_URL + img.image);
+  activeMenu.value = null;
+  removedImageIds.value = []; // 수정 모드 진입시 초기화
+};
+
+const updateArticle = () => {
+  if (!editingContent.value.trim()) return;
+
+  const formData = new FormData();
+  formData.append("content", editingContent.value);
+  
+  // 새로운 이미지만 필터링하여 추가
+  const newImages = editingImages.value.filter(image => !image.isExisting);
+  newImages.forEach(image => {
+    formData.append("images", image.file);
+  });
+
+  // 삭제할 이미지 ID 추가
+  removedImageIds.value.forEach(id => {
+    formData.append("removed_image_ids", id);
+  });
+
+
+  axios({
+    method: "put",
+    url: `${store.API_URL}/api/v1/group/movie/article/${editingId.value}/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+      "Content-Type": "multipart/form-data",
+    },
+    data: formData
+  })
+    .then((response) => {
+      console.log(response)
+      const index = articles.value.findIndex((a) => a.id === editingId.value);
+      if (index !== -1) {
+        articles.value[index] = response.data;
+      }
+      editingId.value = null;
+      editingContent.value = '';
+      editingImages.value = [];
+      editingImagePreviews.value = [];
+    })
+    .catch((error) => {
+      console.error("게시글 수정 실패:", error);
+      alert("게시글 수정에 실패했습니다.");
+    });
+};
+
+// 게시글 삭제
 const deleteArticle = (articleId) => {
   if (!confirm("정말 이 게시글을 삭제하시겠습니까?")) return;
 
   axios({
     method: "delete",
-    url: `${store.API_URL}group/movie/article/${articleId}/`,
+    url: `${store.API_URL}/api/v1/group/movie/article/${articleId}/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },
   })
     .then(() => {
       articles.value = articles.value.filter((article) => article.id !== articleId);
-      alert("게시글이 삭제되었습니다.");
+      // alert("게시글이 삭제되었습니다.");
     })
     .catch((error) => {
       console.error("게시글 삭제 실패:", error);
@@ -385,8 +354,22 @@ const formatDate = (date) => {
     day: "numeric",
   });
 };
-</script>
 
+const toggleMenu = (articleId) => {
+  activeMenu.value = activeMenu.value === articleId ? null : articleId;
+};
+
+const cancelEdit = () => {
+  editingId.value = null;
+  editingContent.value = '';
+  editingImages.value = [];
+  editingImagePreviews.value = [];
+};
+
+onMounted(() => {
+  getArticles();
+});
+</script>
 <style scoped>
 .article-container {
   margin: 32px auto 0;
@@ -603,7 +586,7 @@ const formatDate = (date) => {
 
 .image-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
 }
 
@@ -624,15 +607,13 @@ const formatDate = (date) => {
   cursor: pointer;
 }
 
+
 .more-images {
   position: relative;
   cursor: pointer;
 }
 
 .background-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   filter: brightness(0.7);
 }
 
