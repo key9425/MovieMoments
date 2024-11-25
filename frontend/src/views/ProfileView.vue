@@ -71,11 +71,9 @@
               <div class="review-card">
                 <div class="review-header">
                   <h3 class="movie-title">{{ article.group_movie.movie_title }}</h3>
+                  <span class="created-at">{{ getRelativeTime(article.created_at) }}</span>
                 </div>
                 <p class="review-excerpt">{{ article.content }}</p>
-                <div class="review-meta">
-                  <small class="text-muted">{{ new Date(article.created_at).toLocaleDateString() }}</small>
-                </div>
               </div>
             </RouterLink>
           </div>
@@ -122,8 +120,14 @@ import axios from "axios";
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
-import GroupWatchedMovie from "./GroupWatchedMovie.vue";
-import MovieDetailView from "./MovieDetailView.vue";
+// 상대적 시간 표시 라이브러리 ------
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/ko"; // 한국어 로케일
+
+dayjs.extend(relativeTime);
+dayjs.locale("ko");
+// ------------------------------
 
 // 상태 관리
 const route = useRoute();
@@ -163,6 +167,30 @@ const sortedArticles = computed(() => {
     return new Date(b.created_at) - new Date(a.created_at);
   });
 });
+
+// 상대 시간 계산 함수
+const getRelativeTime = (date) => {
+  const now = dayjs();
+  const createdDate = dayjs(date);
+
+  // 24시간 이내인 경우
+  if (now.diff(createdDate, "day") === 0) {
+    if (now.diff(createdDate, "hour") === 0) {
+      return `${now.diff(createdDate, "minute")}분 전`;
+    }
+    return `${now.diff(createdDate, "hour")}시간 전`;
+  }
+  // 어제인 경우
+  else if (now.diff(createdDate, "day") === 1) {
+    return "어제";
+  }
+  // 7일 이내인 경우
+  else if (now.diff(createdDate, "day") < 7) {
+    return `${now.diff(createdDate, "day")}일 전`;
+  }
+  // 그 외의 경우 날짜 표시
+  return createdDate.format("YYYY.MM.DD");
+};
 
 // 이미지 업로드 처리
 const handleImageChange = (event) => {
@@ -543,6 +571,27 @@ a {
   color: white;
 }
 
+/* 상대 시간 관련 css */
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.created-at {
+  font-size: 0.85rem;
+  color: #666;
+  white-space: nowrap;
+}
+
+.movie-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+  margin-right: 1rem;
+}
 /* 모바일 반응형 스타일 */
 @media (max-width: 768px) {
   .profile-hero {
