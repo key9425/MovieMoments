@@ -56,8 +56,9 @@
       <!-- 내가 작성한 글 섹션 -->
       <section class="content-section mb-5">
         <h2 class="section-title">최근 작성한 글</h2>
-        <div class="row g-4">
-          <div class="col-md-4" v-for="article in articles" :key="article.id">
+        <!-- v-if -->
+        <div v-if="sortedArticles.length > 0" class="row g-4">
+          <div class="col-md-4" v-for="article in sortedArticles" :key="article.id">
             <RouterLink
               :to="{
                 name: 'GroupWatchedMovie',
@@ -79,14 +80,15 @@
             </RouterLink>
           </div>
         </div>
+        <!-- v-else는 v-if와 같은 수준에 위치 -->
+        <div v-else class="text-center text-muted py-5">아직 작성한 게시글이 없습니다.</div>
       </section>
 
-      <!-- 좋아요한 영화 섹션 -->
+      <!-- 찜한 영화 섹션 -->
       <section class="content-section">
         <h2 class="section-title">찜한 영화 목록</h2>
-        <div class="row g-4">
+        <div v-if="likedMovies.length > 0" class="row g-4">
           <div class="col-md-3" v-for="(likedMovie, index) in likedMovies" :key="index">
-            <!-- ㅡmovie id 확인 후 주석 해제 -->
             <RouterLink :to="{ name: 'MovieDetailView', params: { movieId: likedMovie.movie_id } }">
               <div class="movie-card">
                 <div class="movie-poster">
@@ -98,13 +100,13 @@
                   </div>
                 </div>
                 <div class="movie-info">
-                  <!-- <h3 class="movie-title">{{ profile.movie.content }}</h3> -->
                   <h3 class="movie-title">{{ likedMovie.title }}</h3>
                 </div>
               </div>
             </RouterLink>
           </div>
         </div>
+        <div v-else class="text-center text-muted py-5">아직 찜한 영화가 없습니다.</div>
       </section>
 
       <!-- 회원탈퇴 버튼 -->
@@ -153,6 +155,13 @@ const showDeleteButton = computed(() => {
 
 const showEditButton = computed(() => {
   return id.value && store.currentUser?.id && id.value === store.currentUser.id;
+});
+
+// 최근에 쓴 글이 제일 앞에 오도록
+const sortedArticles = computed(() => {
+  return [...articles.value].sort((a, b) => {
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
 });
 
 // 이미지 업로드 처리
