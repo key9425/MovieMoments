@@ -136,20 +136,20 @@ const props = defineProps({
   currentTab: {
     type: String,
     required: true, // 이 prop은 반드시 전달되어야 함
-  }
+  },
 });
 
 const route = useRoute();
 const store = useCounterStore();
 
 const articles = ref([]);
-const content = ref('');
+const content = ref("");
 const images = ref([]);
 const imagePreviews = ref([]);
 const isSubmitting = ref(false);
 const activeMenu = ref(null);
 const editingId = ref(null);
-const editingContent = ref('');
+const editingContent = ref("");
 const editingImages = ref([]);
 const editingImagePreviews = ref([]);
 const showModal = ref(false);
@@ -157,8 +157,7 @@ const modalImages = ref([]);
 const currentImageIndex = ref(0);
 const removedImageIds = ref([]); // 삭제된 이미지 id 저장
 
-
-// 게시글 조회 
+// 게시글 조회
 const getArticles = () => {
   axios({
     method: "get",
@@ -168,8 +167,8 @@ const getArticles = () => {
     },
   })
     .then((response) => {
-      console.log(response.data)
-      articles.value = response.data
+      console.log(response.data);
+      articles.value = response.data;
     })
     .catch((error) => {
       console.error("게시글 조회 실패:", error);
@@ -182,10 +181,7 @@ const handleImageUpload = (event) => {
   // 기존 이미지에 새로운 이미지 추가
   images.value = [...images.value, ...files];
   // 기존 미리보기에 새로운 미리보기 추가
-  imagePreviews.value = [
-    ...imagePreviews.value,
-    ...files.map(file => URL.createObjectURL(file))
-  ];
+  imagePreviews.value = [...imagePreviews.value, ...files.map((file) => URL.createObjectURL(file))];
 };
 
 const handleEditImageUpload = (event) => {
@@ -193,16 +189,13 @@ const handleEditImageUpload = (event) => {
   // 새 파일 추가
   editingImages.value = [
     ...editingImages.value,
-    ...files.map(file => ({
+    ...files.map((file) => ({
       file,
-      isExisting: false
-    }))
+      isExisting: false,
+    })),
   ];
   // 미리보기 추가
-  editingImagePreviews.value = [
-    ...editingImagePreviews.value,
-    ...files.map(file => URL.createObjectURL(file))
-  ];
+  editingImagePreviews.value = [...editingImagePreviews.value, ...files.map((file) => URL.createObjectURL(file))];
 };
 
 // 이미지 삭제 시 id 저장
@@ -223,8 +216,8 @@ const submitArticle = () => {
   isSubmitting.value = true;
   const formData = new FormData();
   formData.append("content", content.value);
-  
-  images.value.forEach(file => {
+
+  images.value.forEach((file) => {
     formData.append("images", file);
   });
   axios({
@@ -234,11 +227,11 @@ const submitArticle = () => {
       Authorization: `Token ${store.token}`,
       "Content-Type": "multipart/form-data",
     },
-    data: formData
+    data: formData,
   })
     .then((response) => {
       articles.value.unshift(response.data);
-      content.value = '';
+      content.value = "";
       images.value = [];
       imagePreviews.value = [];
       isSubmitting.value = false;
@@ -253,12 +246,12 @@ const submitArticle = () => {
 const editArticle = (article) => {
   editingId.value = article.id;
   editingContent.value = article.content;
-  editingImages.value = article.images.map(img => ({
+  editingImages.value = article.images.map((img) => ({
     id: img.id,
     image: img.image,
-    isExisting: true
+    isExisting: true,
   }));
-  editingImagePreviews.value = article.images.map(img => store.API_URL + img.image);
+  editingImagePreviews.value = article.images.map((img) => store.API_URL + img.image);
   activeMenu.value = null;
   removedImageIds.value = []; // 수정 모드 진입시 초기화
 };
@@ -268,18 +261,17 @@ const updateArticle = () => {
 
   const formData = new FormData();
   formData.append("content", editingContent.value);
-  
+
   // 새로운 이미지만 필터링하여 추가
-  const newImages = editingImages.value.filter(image => !image.isExisting);
-  newImages.forEach(image => {
+  const newImages = editingImages.value.filter((image) => !image.isExisting);
+  newImages.forEach((image) => {
     formData.append("images", image.file);
   });
 
   // 삭제할 이미지 ID 추가
-  removedImageIds.value.forEach(id => {
+  removedImageIds.value.forEach((id) => {
     formData.append("removed_image_ids", id);
   });
-
 
   axios({
     method: "put",
@@ -288,16 +280,16 @@ const updateArticle = () => {
       Authorization: `Token ${store.token}`,
       "Content-Type": "multipart/form-data",
     },
-    data: formData
+    data: formData,
   })
     .then((response) => {
-      console.log(response)
+      console.log(response);
       const index = articles.value.findIndex((a) => a.id === editingId.value);
       if (index !== -1) {
         articles.value[index] = response.data;
       }
       editingId.value = null;
-      editingContent.value = '';
+      editingContent.value = "";
       editingImages.value = [];
       editingImagePreviews.value = [];
     })
@@ -361,7 +353,7 @@ const toggleMenu = (articleId) => {
 
 const cancelEdit = () => {
   editingId.value = null;
-  editingContent.value = '';
+  editingContent.value = "";
   editingImages.value = [];
   editingImagePreviews.value = [];
 };
@@ -606,7 +598,6 @@ onMounted(() => {
   border-radius: 4px;
   cursor: pointer;
 }
-
 
 .more-images {
   position: relative;

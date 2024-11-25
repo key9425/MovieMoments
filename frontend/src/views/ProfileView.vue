@@ -127,6 +127,7 @@ import "dayjs/locale/ko"; // 한국어 로케일
 
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
+// ** npm install dayjs 필요 **
 // ------------------------------
 
 // 상태 관리
@@ -546,7 +547,21 @@ a {
 }
 
 .movie-info {
-  padding: 1rem;
+  padding: 0.7rem 1rem;
+}
+
+.movie-info h3 {
+  margin: 0;
+  font-size: 0.9rem; /* 1.25rem에서 0.9rem으로 축소 */
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.movie-info .movie-title {
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .movie-meta {

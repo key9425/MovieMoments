@@ -2,13 +2,6 @@
 <template>
   <div class="home-container">
     <br />
-    <!-- 상단 제목 -->
-    <!-- <section>
-      <div class="header-section">
-        <h2 class="main-title">오늘의 추천 영화</h2>
-      </div>
-    </section> -->
-
     <!-- 추천영화 섹션 -->
     <section class="movie-section">
       <div class="content-wrapper">
@@ -57,8 +50,9 @@
     <!-- 검색창 영역 -->
     <div class="search-section">
       <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
         <!-- 검색창 -->
-        <input type="text" :value="groupKeyword" @input="handleSearchGroups" placeholder="그룹명을 입력하세요." class="search-btn" />
+        <input type="text" :value="groupKeyword" @input="handleSearchGroups" placeholder="그룹명을 입력해주세요." class="search-btn" />
         <!-- 그룹 필터 -->
         <select v-model="selectedCategory" class="category-dropdown" @change="filterGroups">
           <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -236,6 +230,8 @@ const getGroupData = () => {
         })
           .then((response) => {
             allGroups.value.push(response.data);
+            // 데이터가 추가될 때마다 정렬
+            allGroups.value.sort((a, b) => a.id - b.id); // ID 기준 오름차순 정렬
             filteredGroups.value = allGroups.value;
           })
           .catch((error) => {
@@ -470,7 +466,7 @@ onBeforeUnmount(() => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(220, 53, 69, 0.9);
+  background: #dc3545e6;
   border: none;
   color: white;
   font-size: 1.2rem;
@@ -530,6 +526,7 @@ onBeforeUnmount(() => {
 }
 
 /* 검색 섹션 */
+
 .search-section {
   max-width: 1200px;
   margin: 20px auto 0;
@@ -537,9 +534,20 @@ onBeforeUnmount(() => {
 }
 
 .search-container {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #74747b;
+  font-size: 0.9rem;
+  z-index: 1; /* 추가 */
 }
 
 .search-btn {
@@ -548,7 +556,7 @@ onBeforeUnmount(() => {
   border: none;
   border-radius: 10px;
   text-align: left;
-  padding-left: 20px;
+  padding-left: 36px; /* 20px에서 36px로 수정 - 아이콘 공간 확보 */
   background-color: #ebebeb;
 }
 
