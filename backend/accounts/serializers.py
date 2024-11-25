@@ -21,10 +21,10 @@ class CustomRegisterSerializer(RegisterSerializer):
 
 # 유저 기본 정보 (이미지 수정)
 class UserSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = get_user_model()
-            fields = ('id', 'name', 'email', 'profile_img')
-            read_only_fields = ('id', 'name', 'email',)
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'name', 'email', 'profile_img')
+        read_only_fields = ('id', 'name', 'email',)
 
 
 # 로그인 시 token 외 유저 기본 정보 제공 커스텀

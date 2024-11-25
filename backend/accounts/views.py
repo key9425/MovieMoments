@@ -9,13 +9,13 @@ from group_movies.models import LikeMovie
 from django.db.models import Q
 
 
-# 프로필
-@api_view(['GET', 'PUT'])
+# 프로필 (조회, 수정, 탈퇴)
+@api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def profile(request, user_pk):
+    person = get_user_model().objects.get(pk=user_pk)
     # 프로필 조회
     if request.method == 'GET':
-        person = get_user_model().objects.get(pk=user_pk)
         serializer = CustomUserDetailsSerializer(person, context={'request': request})
         return Response(serializer.data)
     # 프로필 이미지 수정
@@ -28,14 +28,11 @@ def profile(request, user_pk):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
-     
-# 회원탈퇴
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def user_delete(request):
-    if request.method == "DELETE":
-        request.user.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    elif request.method == "DELETE":
+        if request.user == person:
+            request.user.delete()
+            return Response({"message": "회원 탈퇴가 성공적으로 완료되었습니다."}, status=status.HTTP_200_OK)
+        return Response({"message": "해당 작업을 수행할 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
 
 # follow
