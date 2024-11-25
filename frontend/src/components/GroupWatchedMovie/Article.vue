@@ -120,7 +120,12 @@ import axios from "axios";
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRoute } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
-import VueEasyLightbox from "vue-easy-lightbox";
+const props = defineProps({
+  currentTab: {
+    type: String,
+    required: true, // 이 prop은 반드시 전달되어야 함
+  }
+});
 
 const route = useRoute();
 const store = useCounterStore();
@@ -136,26 +141,11 @@ const editingId = ref(null);
 const editingContent = ref("");
 const editingImages = ref([]);
 const editingImagePreviews = ref([]);
-const removedImageIds = ref([]);
+const showModal = ref(false);
+const modalImages = ref([]);
+const currentImageIndex = ref(0);
+const removedImageIds = ref([]); // 삭제된 이미지 id 저장
 
-// 라이트박스 상태
-const visible = ref(false);
-const imgs = ref([]);
-const index = ref(0);
-
-// 라이트박스 메서드
-const showLightbox = (images, startIndex) => {
-  imgs.value = images.map((img) => ({
-    src: store.API_URL + img.image,
-    title: img.title || "",
-  }));
-  index.value = startIndex;
-  visible.value = true;
-};
-
-const handleHide = () => {
-  visible.value = false;
-};
 
 // 게시글 조회
 const getArticles = () => {
@@ -167,7 +157,8 @@ const getArticles = () => {
     },
   })
     .then((response) => {
-      articles.value = response.data;
+      console.log(response.data)
+      articles.value = response.data
     })
     .catch((error) => {
       console.error("게시글 조회 실패:", error);
@@ -178,7 +169,11 @@ const getArticles = () => {
 const handleImageUpload = (event) => {
   const files = Array.from(event.target.files);
   images.value = [...images.value, ...files];
-  imagePreviews.value = [...imagePreviews.value, ...files.map((file) => URL.createObjectURL(file))];
+  // 기존 미리보기에 새로운 미리보기 추가
+  imagePreviews.value = [
+    ...imagePreviews.value,
+    ...files.map(file => URL.createObjectURL(file))
+  ];
 };
 
 const handleEditImageUpload = (event) => {
@@ -190,7 +185,11 @@ const handleEditImageUpload = (event) => {
       isExisting: false,
     })),
   ];
-  editingImagePreviews.value = [...editingImagePreviews.value, ...files.map((file) => URL.createObjectURL(file))];
+  // 미리보기 추가
+  editingImagePreviews.value = [
+    ...editingImagePreviews.value,
+    ...files.map(file => URL.createObjectURL(file))
+  ];
 };
 
 const removeImage = (index) => {
@@ -232,7 +231,10 @@ const submitArticle = () => {
   })
     .then((response) => {
       articles.value.unshift(response.data);
-      resetForm();
+      content.value = '';
+      images.value = [];
+      imagePreviews.value = [];
+      isSubmitting.value = false;
     })
     .catch((error) => {
       console.error("게시글 생성 실패:", error);
@@ -261,13 +263,15 @@ const updateArticle = () => {
 
   const formData = new FormData();
   formData.append("content", editingContent.value);
-
-  const newImages = editingImages.value.filter((image) => !image.isExisting);
-  newImages.forEach((image) => {
+  
+  // 새로운 이미지만 필터링하여 추가
+  const newImages = editingImages.value.filter(image => !image.isExisting);
+  newImages.forEach(image => {
     formData.append("images", image.file);
   });
 
-  removedImageIds.value.forEach((id) => {
+  // 삭제할 이미지 ID 추가
+  removedImageIds.value.forEach(id => {
     formData.append("removed_image_ids", id);
   });
 
@@ -281,11 +285,15 @@ const updateArticle = () => {
     data: formData,
   })
     .then((response) => {
+      console.log(response)
       const index = articles.value.findIndex((a) => a.id === editingId.value);
       if (index !== -1) {
         articles.value[index] = response.data;
       }
-      cancelEdit();
+      editingId.value = null;
+      editingContent.value = '';
+      editingImages.value = [];
+      editingImagePreviews.value = [];
     })
     .catch((error) => {
       console.error("게시글 수정 실패:", error);

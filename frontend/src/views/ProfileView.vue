@@ -56,37 +56,37 @@
       <!-- 내가 작성한 글 섹션 -->
       <section class="content-section mb-5">
         <h2 class="section-title">최근 작성한 글</h2>
-        <div class="row g-4">
-          <!-- ******* 은영이한테 요청받는 변수명 확인하고 수정 ******* ==================================== -->
-          <!-- 
-            { 
-              article-title: "인센션",
-              article-content: "놀라운..",
-              group-id: 1,
-              group-movie-id: 1,
-            }
-           -->
-          <!-- <div class="col-md-4" v-for="article in articles" :key="n"> -->
-          <div class="col-md-4" v-for="n in 3" :key="n">
-            <!-- <RouterLink :to="{name:'GroupWatchedMovie' , params: {group_id: article.group-id, group_movie_id: article.group-movie-id}}"></RouterLink> -->
-            <div class="review-card">
-              <div class="review-header">
-                <!-- <h3 class="movie-title">{{profile.article.title}}</h3> -->
-                <h3 class="movie-title">인셉션</h3>
+        <!-- v-if -->
+        <div v-if="sortedArticles.length > 0" class="row g-4">
+          <div class="col-md-4" v-for="article in sortedArticles" :key="article.id">
+            <RouterLink
+              :to="{
+                name: 'GroupWatchedMovie',
+                params: {
+                  group_id: article.group_movie.group_id,
+                  group_movie_id: article.group_movie.id,
+                },
+              }"
+            >
+              <div class="review-card">
+                <div class="review-header">
+                  <h3 class="movie-title">{{ article.group_movie.movie_title }}</h3>
+                  <span class="created-at">{{ getRelativeTime(article.created_at) }}</span>
+                </div>
+                <p class="review-excerpt">{{ article.content }}</p>
               </div>
-              <!-- <p class="review-excerpt">{{ profile.article.content }}</p> -->
-              <p class="review-excerpt">놀라운 연출과 흥미로운 스토리를 가진 영화입니다. 놀라운 연출과 흥미로운 스토리...</p>
-            </div>
+            </RouterLink>
           </div>
         </div>
+        <!-- v-else는 v-if와 같은 수준에 위치 -->
+        <div v-else class="text-center text-muted py-5">아직 작성한 게시글이 없습니다.</div>
       </section>
 
-      <!-- 좋아요한 영화 섹션 -->
+      <!-- 찜한 영화 섹션 -->
       <section class="content-section">
         <h2 class="section-title">찜한 영화 목록</h2>
-        <div class="row g-4">
+        <div v-if="likedMovies.length > 0" class="row g-4">
           <div class="col-md-3" v-for="(likedMovie, index) in likedMovies" :key="index">
-            <!-- ㅡmovie id 확인 후 주석 해제 -->
             <RouterLink :to="{ name: 'MovieDetailView', params: { movieId: likedMovie.movie_id } }">
               <div class="movie-card">
                 <div class="movie-poster">
@@ -98,25 +98,13 @@
                   </div>
                 </div>
                 <div class="movie-info">
-                  <!-- <h3 class="movie-title">{{ profile.movie.content }}</h3> -->
                   <h3 class="movie-title">{{ likedMovie.title }}</h3>
-                  <!-- <div class="movie-meta"> -->
-                  <!-- <span class="year">{{ profile.movie.year }}</span> -->
-                  <!-- <span class="year">2024</span> -->
-                  <!-- <i class="fas fa-star text-warning"></i>
-                    {{ profile.movie.rating }} -> 평점 정보 받아오는지 확인
-                  </span> -->
-                  <!-- <span class="rating">
-                      <i class="fas fa-star text-warning"></i>
-                      4.5
-                    </span> -->
-                  <!-- ******* 은영이한테 요청받는 변수명 확인하고 수정 ******* ==================================== -->
-                  <!-- </div> -->
                 </div>
               </div>
             </RouterLink>
           </div>
         </div>
+        <div v-else class="text-center text-muted py-5">아직 찜한 영화가 없습니다.</div>
       </section>
 
       <!-- 회원탈퇴 버튼 -->
@@ -132,8 +120,15 @@ import axios from "axios";
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
-import GroupWatchedMovie from "./GroupWatchedMovie.vue";
-import MovieDetailView from "./MovieDetailView.vue";
+// 상대적 시간 표시 라이브러리 ------
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/ko"; // 한국어 로케일
+
+dayjs.extend(relativeTime);
+dayjs.locale("ko");
+// ** npm install dayjs 필요 **
+// ------------------------------
 
 // 상태 관리
 const route = useRoute();
@@ -151,6 +146,7 @@ const followings_count = ref(0);
 const is_following = ref(false);
 const articles_count = ref(0);
 const articles = ref([]);
+const group_movie = ref(null);
 const likedMovies = ref([]);
 
 // 계산된 속성
@@ -165,6 +161,37 @@ const showDeleteButton = computed(() => {
 const showEditButton = computed(() => {
   return id.value && store.currentUser?.id && id.value === store.currentUser.id;
 });
+
+// 최근에 쓴 글이 제일 앞에 오도록
+const sortedArticles = computed(() => {
+  return [...articles.value].sort((a, b) => {
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+});
+
+// 상대 시간 계산 함수
+const getRelativeTime = (date) => {
+  const now = dayjs();
+  const createdDate = dayjs(date);
+
+  // 24시간 이내인 경우
+  if (now.diff(createdDate, "day") === 0) {
+    if (now.diff(createdDate, "hour") === 0) {
+      return `${now.diff(createdDate, "minute")}분 전`;
+    }
+    return `${now.diff(createdDate, "hour")}시간 전`;
+  }
+  // 어제인 경우
+  else if (now.diff(createdDate, "day") === 1) {
+    return "어제";
+  }
+  // 7일 이내인 경우
+  else if (now.diff(createdDate, "day") < 7) {
+    return `${now.diff(createdDate, "day")}일 전`;
+  }
+  // 그 외의 경우 날짜 표시
+  return createdDate.format("YYYY.MM.DD");
+};
 
 // 이미지 업로드 처리
 const handleImageChange = (event) => {
@@ -256,7 +283,10 @@ const loadProfileData = () => {
       articles_count.value = data.articles_count;
       articles.value = data.articles;
       isLoaded.value = true;
+      group_movie.value = data.group_movie;
       likedMovies.value = data.liked_movies;
+      articles.value = data.articles; // articles 데이터 할당
+      console.log("Loaded articles:", articles.value); // 데이터가 제대로 로드되었는지 확인
       console.log(response.data);
     })
     .catch((error) => {
@@ -517,7 +547,21 @@ a {
 }
 
 .movie-info {
-  padding: 1rem;
+  padding: 0.7rem 1rem;
+}
+
+.movie-info h3 {
+  margin: 0;
+  font-size: 0.9rem; /* 1.25rem에서 0.9rem으로 축소 */
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.movie-info .movie-title {
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .movie-meta {
@@ -542,6 +586,27 @@ a {
   color: white;
 }
 
+/* 상대 시간 관련 css */
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.created-at {
+  font-size: 0.85rem;
+  color: #666;
+  white-space: nowrap;
+}
+
+.movie-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+  margin-right: 1rem;
+}
 /* 모바일 반응형 스타일 */
 @media (max-width: 768px) {
   .profile-hero {

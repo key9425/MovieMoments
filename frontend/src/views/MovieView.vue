@@ -1,32 +1,6 @@
 <template>
   <div class="movie-container">
-    <!-- 히어로 섹션 -->
-    <section class="hero-section">
-      <div class="hero-content container">
-        <h1 class="main-title">영화 검색</h1>
-        <!-- 검색창 -->
-        <div class="search-wrapper">
-          <input type="text" v-model="searchKeyword" @input="handleSearch" placeholder="영화 제목을 입력해주세요." class="search-input" @focus="isSearchFocused = true" @blur="handleSearchBlur" />
-          <!-- 검색 결과 드롭다운 -->
-          <div v-if="isSearchFocused && (searchResults.length > 0 || searchKeyword)" class="search-results-dropdown">
-            <!-- <div v-if="searchResults.length > 0 || searchKeyword" class="search-results-dropdown"> -->
-            <div v-if="searchResults.length > 0" class="search-results">
-              <RouterLink v-for="movie in searchResults" :key="movie.id" :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }" class="search-movie-item">
-                <div class="search-movie-poster">
-                  <img :src="movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : '/no-poster.jpg'" :alt="movie.title" />
-                </div>
-                <div class="search-movie-info">
-                  <h3>{{ movie.title }}</h3>
-                  <p>{{ new Date(movie.release_date).getFullYear() }}</p>
-                </div>
-              </RouterLink>
-            </div>
-            <div v-else class="no-results">"{{ searchKeyword }}" 에 대한 검색 결과가 없습니다.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
+    <br />
     <!-- 추천영화 섹션 -->
     <section class="movie-section">
       <div class="content-wrapper">
@@ -50,14 +24,7 @@
                 gap: `${CARD_GAP}px`,
               }"
             >
-              <RouterLink
-                v-for="movie in recommendedMovies"
-                :key="movie.id"
-                :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }"
-                class="movie-card"
-                :style="{ width: `${CARD_WIDTH}px` }"
-                type="recommend"
-              >
+              <RouterLink v-for="movie in recommendedMovies" :key="movie.id" :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }" class="movie-card" :style="{ width: `${CARD_WIDTH}px` }">
                 <div class="poster-wrapper">
                   <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" class="movie-poster" />
                   <div class="movie-overlay">
@@ -78,6 +45,31 @@
         </div>
       </div>
     </section>
+
+    <!-- 검색창 영역 -->
+    <div class="search-section">
+      <!-- 검색창 -->
+      <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" v-model="searchKeyword" @input="handleSearch" placeholder="영화 제목을 입력해주세요." class="search-btn" @focus="isSearchFocused = true" @blur="handleSearchBlur" />
+        <!-- 검색 결과 드롭다운 -->
+        <div v-if="isSearchFocused && (searchResults.length > 0 || searchKeyword)" class="search-results-dropdown">
+          <!-- <div v-if="searchResults.length > 0 || searchKeyword" class="search-results-dropdown"> -->
+          <div v-if="searchResults.length > 0" class="search-results">
+            <RouterLink v-for="movie in searchResults" :key="movie.id" :to="{ name: 'MovieDetailView', params: { movieId: movie.id } }" class="search-movie-item">
+              <div class="search-movie-poster">
+                <img :src="movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : '/no-poster.jpg'" :alt="movie.title" />
+              </div>
+              <div class="search-movie-info">
+                <h3>{{ movie.title }}</h3>
+                <p>{{ new Date(movie.release_date).getFullYear() }}</p>
+              </div>
+            </RouterLink>
+          </div>
+          <div v-else class="no-results">"{{ searchKeyword }}" 에 대한 검색 결과가 없습니다.</div>
+        </div>
+      </div>
+    </div>
 
     <!-- 박스오피스 섹션 -->
     <section class="movie-section" v-if="carouselConfig != null">
@@ -406,49 +398,62 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-.main-title {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 2rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
 /* 검색 관련 스타일 */
-.search-wrapper {
-  max-width: 800px;
-  margin: 0 auto;
-  position: relative;
+/* 검색 섹션 */
+.search-section {
+  max-width: 1200px;
+  margin: 20px auto 0;
+  padding: 20px;
 }
 
-.search-input {
-  width: 100%;
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
+.search-container {
+  position: relative; /* 추가 */
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #74747b;
+  font-size: 0.9rem;
+  z-index: 1; /* 추가 */
+}
+
+.search-btn {
+  flex: 1;
+  height: 50px;
   border: none;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
+  border-radius: 10px;
+  text-align: left;
+  padding-left: 36px; /* 20px에서 36px로 수정 - 아이콘 공간 확보 */
+  background-color: #ebebeb;
+}
+
+.search-btn:hover {
+  background-color: #d8d8d8;
+}
+
+.search-btn:focus {
+  outline: none;
+  background-color: #d8d8d8; /* 기존 스타일 대신 그룹 검색창과 동일하게 */
 }
 
 .search-input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: #666666; /* placeholder 색상을 더 진하게 수정 */
 }
 
-.search-input:focus {
-  background-color: rgba(255, 255, 255, 0.15);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-}
-
+/* 검색 결과 드롭다운 스타일 유지 */
 .search-results-dropdown {
   position: absolute;
   top: calc(100% + 0.5rem);
   left: 0;
   right: 0;
   background: white;
-  border-radius: 12px;
+  border-radius: 10px; /* 검색창과 동일한 radius */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   max-height: 400px;
@@ -497,7 +502,6 @@ onBeforeUnmount(() => {
 .no-results {
   padding: 1rem;
 }
-
 /* 섹션 공통 스타일 */
 .content-wrapper {
   max-width: 1300px;
@@ -785,10 +789,6 @@ onBeforeUnmount(() => {
     padding: 2rem 0;
   }
 
-  .main-title {
-    font-size: 2rem;
-  }
-
   .movie-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -816,6 +816,10 @@ onBeforeUnmount(() => {
   .movie-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+  }
+
+  .main-title {
+    font-size: 2rem;
   }
 
   .movie-info h3 {
