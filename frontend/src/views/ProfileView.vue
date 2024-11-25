@@ -57,26 +57,26 @@
       <section class="content-section mb-5">
         <h2 class="section-title">최근 작성한 글</h2>
         <div class="row g-4">
-          <!-- ******* 은영이한테 요청받는 변수명 확인하고 수정 ******* ==================================== -->
-          <!-- 
-            { 
-              article-title: "인센션",
-              article-content: "놀라운..",
-              group-id: 1,
-              group-movie-id: 1,
-            }
-           -->
-          <!-- <div class="col-md-4" v-for="article in articles" :key="n"> -->
-          <div class="col-md-4" v-for="n in 3" :key="n">
-            <!-- <RouterLink :to="{name:'GroupWatchedMovie' , params: {group_id: article.group-id, group_movie_id: article.group-movie-id}}"></RouterLink> -->
-            <div class="review-card">
-              <div class="review-header">
-                <!-- <h3 class="movie-title">{{profile.article.title}}</h3> -->
-                <h3 class="movie-title">인셉션</h3>
+          <div class="col-md-4" v-for="article in articles" :key="article.id">
+            <RouterLink
+              :to="{
+                name: 'GroupWatchedMovie',
+                params: {
+                  group_id: article.group_movie.group_id,
+                  group_movie_id: article.group_movie.id,
+                },
+              }"
+            >
+              <div class="review-card">
+                <div class="review-header">
+                  <h3 class="movie-title">{{ article.group_movie.movie_title }}</h3>
+                </div>
+                <p class="review-excerpt">{{ article.content }}</p>
+                <div class="review-meta">
+                  <small class="text-muted">{{ new Date(article.created_at).toLocaleDateString() }}</small>
+                </div>
               </div>
-              <!-- <p class="review-excerpt">{{ profile.article.content }}</p> -->
-              <p class="review-excerpt">놀라운 연출과 흥미로운 스토리를 가진 영화입니다. 놀라운 연출과 흥미로운 스토리...</p>
-            </div>
+            </RouterLink>
           </div>
         </div>
       </section>
@@ -100,18 +100,6 @@
                 <div class="movie-info">
                   <!-- <h3 class="movie-title">{{ profile.movie.content }}</h3> -->
                   <h3 class="movie-title">{{ likedMovie.title }}</h3>
-                  <!-- <div class="movie-meta"> -->
-                  <!-- <span class="year">{{ profile.movie.year }}</span> -->
-                  <!-- <span class="year">2024</span> -->
-                  <!-- <i class="fas fa-star text-warning"></i>
-                    {{ profile.movie.rating }} -> 평점 정보 받아오는지 확인
-                  </span> -->
-                  <!-- <span class="rating">
-                      <i class="fas fa-star text-warning"></i>
-                      4.5
-                    </span> -->
-                  <!-- ******* 은영이한테 요청받는 변수명 확인하고 수정 ******* ==================================== -->
-                  <!-- </div> -->
                 </div>
               </div>
             </RouterLink>
@@ -151,6 +139,7 @@ const followings_count = ref(0);
 const is_following = ref(false);
 const articles_count = ref(0);
 const articles = ref([]);
+const group_movie = ref(null);
 const likedMovies = ref([]);
 
 // 계산된 속성
@@ -256,7 +245,10 @@ const loadProfileData = () => {
       articles_count.value = data.articles_count;
       articles.value = data.articles;
       isLoaded.value = true;
+      group_movie.value = data.group_movie;
       likedMovies.value = data.liked_movies;
+      articles.value = data.articles; // articles 데이터 할당
+      console.log("Loaded articles:", articles.value); // 데이터가 제대로 로드되었는지 확인
       console.log(response.data);
     })
     .catch((error) => {
