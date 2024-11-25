@@ -28,6 +28,7 @@ class Movie(models.Model):
     cast = models.JSONField()
     trailer = models.CharField(max_length=255, null=True)
 
+
 # 그룹에서 본 영화
 class GroupMovie(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='watched_movies')
@@ -75,10 +76,10 @@ class LikeMovie(models.Model):
     poster_path = models.CharField(max_length=200, null=True, blank=True)
 
 
+# 게시글의 댓글
 class Comment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,  related_name='comment')
     article = models.ForeignKey(Article, on_delete=models.CASCADE,  related_name='comments')
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-

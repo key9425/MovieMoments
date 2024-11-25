@@ -298,3 +298,24 @@ def timeline_create(request, group_movie_id):
         # 해당 그룹 무비의 모든 타임라인 가져오기 및 반환
         timelines = group_movie.timeline.all()  # related_name 사용
         return Response(TimeLineSerializer(timelines, many=True).data, status=status.HTTP_201_CREATED)
+    
+@api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def comment(request, article_id):
+    article = Article.objects.get(pk=article_id)
+    if request.method == "GET":
+        comments = Comment.objects.filter(article=article)
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+    elif request.method == "POST":
+        serializer = CommentSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save(user=request.user, article=article)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    elif request.method == "DELETE":
+        comment_id = request.data.get('comment_id') # data에 comment_id를 담아서 요청
+        comment = Comment.objects.get(pk=comment_id)
+        if comment.user == request.user:
+            comment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Movie, Group, GroupMovie, LikeMovie, Article, Comment, TimeLine, ArticleImage, Review
+from .models import Movie, Group, GroupMovie, LikeMovie, Article, Comment, TimeLine, ArticleImage, Review, Comment
 from django.contrib.auth import get_user_model
 
 
@@ -126,12 +126,20 @@ class ArticleImageSerializer(serializers.ModelSerializer):
         model = ArticleImage
         fields = ['id', 'image']
 
+class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    class Meta:
+        model = Comment
+        fields = '__all__'
+        read_only_fields = ('article',)
+
 class ArticleSerializer(serializers.ModelSerializer):
     user = GroupMovieUserSerializer(read_only=True)
     images = ArticleImageSerializer(many=True, read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
     class Meta:
         model = Article
-        fields = ['id', 'user', 'content', 'created_at', 'updated_at', 'images']
+        fields = ['id', 'user', 'content', 'created_at', 'updated_at', 'images', 'comments']
 
 class ReviewSerializer(serializers.ModelSerializer):
     user = GroupMovieUserSerializer(read_only=True)
@@ -160,3 +168,4 @@ class GroupMovieDetailSerializer(serializers.ModelSerializer):
             'id', 'movie', 'watched_date',
             'article', 'timeline', 'article_img', 'review'
         ]
+

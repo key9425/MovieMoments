@@ -15,4 +15,5 @@ urlpatterns = [
     path('group/movie/article/<int:article_id>/', views.article), # 게시글 수정, 삭제
     path('group/movie/review/<int:review_id>/', views.review), # 한줄평 삭제
     path('group/movie/timeline/<int:timeline_id>/', views.timeline), # 타임라인 삭제
+    path('group/movie/<int:article_id>/comments/', views.comment) # 댓글 조회, 생성, 삭제, 수정
 ]

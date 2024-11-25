@@ -106,6 +106,59 @@
               </div>
             </template>
           </div>
+          <!-- 댓글 섹션 -->
+          <div class="article-interactions">
+            <!-- 댓글 토글 버튼 -->
+            <button 
+              @click="toggleComments(article.id)" 
+              class="comment-toggle-btn"
+            >
+              <i class="fas fa-comment"></i>
+              댓글 {{ article.comments ? article.comments.length : 0 }}개
+            </button>
+
+            <!-- 댓글 영역 -->
+            <div v-if="activeComments === article.id" class="comments-section">
+              <!-- 댓글 입력 -->
+              <div class="comment-form">
+                <textarea 
+                  v-model="commentContent[article.id]" 
+                  placeholder="댓글을 입력하세요..."
+                  class="comment-textarea"
+                  @keyup.enter.exact="submitComment(article.id)"
+                ></textarea>
+                <button 
+                  @click="submitComment(article.id)"
+                  :disabled="!commentContent[article.id]?.trim()"
+                  class="comment-submit-btn"
+                >
+                  등록
+                </button>
+              </div>
+
+              <!-- 댓글 목록 -->
+              <div class="comments-list">
+                <div v-for="comment in article.comments" :key="comment.id" class="comment-item">
+                  <div class="comment-header">
+                    <div class="comment-user-info">
+                      <img :src="store.API_URL + comment.user.profile_img" alt="Commenter avatar" class="comment-avatar" />
+                      <span class="comment-username">{{ comment.user.name }}</span>
+                      <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
+                    </div>
+                    <!-- 댓글 삭제 버튼 -->
+                    <button 
+                      v-if="comment.user.id === store.currentUser.id"
+                      @click="deleteComment(article.id, comment.id)"
+                      class="comment-delete-btn"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <p class="comment-content">{{ comment.content }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </template>
       </div>
     </div>
@@ -146,6 +199,9 @@ const modalImages = ref([]);
 const currentImageIndex = ref(0);
 const removedImageIds = ref([]); // 삭제된 이미지 id 저장
 
+// 댓글 관련 새로운 상태 관리 변수들
+const activeComments = ref(null);  // 현재 열린 댓글 섹션의 게시글 ID
+const commentContent = ref({});    // 게시글별 댓글 입력 내용
 
 // 게시글 조회
 const getArticles = () => {
@@ -164,6 +220,8 @@ const getArticles = () => {
       console.error("게시글 조회 실패:", error);
     });
 };
+
+
 
 // 이미지 처리
 const handleImageUpload = (event) => {
@@ -320,7 +378,99 @@ const deleteArticle = (articleId) => {
     });
 };
 
-// 유틸리티 함수
+// 댓글 토글
+const toggleComments = (articleId) => {
+  if (activeComments.value === articleId) {
+    activeComments.value = null;
+  } else {
+    activeComments.value = articleId;
+    if (!articles.value.find(a => a.id === articleId).comments) {
+      loadComments(articleId);
+    }
+  }
+};
+
+// 댓글 로드
+const loadComments = (articleId) => {
+  axios({
+    method: "get",
+    url: `${store.API_URL}/api/v1/group/movie/${articleId}/comments/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then((response) => {
+      const articleIndex = articles.value.findIndex(a => a.id === articleId);
+      if (articleIndex !== -1) {
+        articles.value[articleIndex] = {
+          ...articles.value[articleIndex],
+          comments: response.data
+        };
+      }
+    })
+    .catch((error) => {
+      console.error("댓글 로드 실패:", error);
+    });
+};
+
+// 댓글 작성
+const submitComment = (articleId) => {
+  if (!commentContent.value[articleId]?.trim()) return;
+
+  axios({
+    method: "post",
+    url: `${store.API_URL}/api/v1/group/movie/${articleId}/comments/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+      "Content-Type": "application/json",
+    },
+    data: {
+      content: commentContent.value[articleId],
+    },
+  })
+    .then((response) => {
+      const articleIndex = articles.value.findIndex(a => a.id === articleId);
+      if (articleIndex !== -1) {
+        if (!articles.value[articleIndex].comments) {
+          articles.value[articleIndex].comments = [];
+        }
+        articles.value[articleIndex].comments.push(response.data);
+      }
+      commentContent.value[articleId] = "";
+    })
+    .catch((error) => {
+      console.error("댓글 작성 실패:", error);
+      alert("댓글 작성에 실패했습니다.");
+    });
+};
+
+// 댓글 삭제
+const deleteComment = (articleId, commentId) => {
+  if (!confirm("댓글을 삭제하시겠습니까?")) return;
+
+  axios({
+    method: "delete",
+    url: `${store.API_URL}/api/v1/group/movie/${articleId}/comments/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+    data: { comment_id: commentId }
+  })
+    .then(() => {
+      const articleIndex = articles.value.findIndex(a => a.id === articleId);
+      if (articleIndex !== -1 && articles.value[articleIndex].comments) {
+        articles.value[articleIndex].comments = articles.value[articleIndex].comments.filter(
+          c => c.id !== commentId
+        );
+      }
+    })
+    .catch((error) => {
+      console.error("댓글 삭제 실패:", error);
+      alert("댓글 삭제에 실패했습니다.");
+    });
+};
+
+// 날짜 포맷
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -349,11 +499,12 @@ const resetForm = () => {
   imagePreviews.value = [];
 };
 
-// 라이프사이클 훅
+// 컴포넌트 마운트 시
 onMounted(() => {
   getArticles();
 });
 
+// 컴포넌트 언마운트 시
 onUnmounted(() => {
   // Object URL 정리
   imagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
@@ -753,6 +904,137 @@ onUnmounted(() => {
 
   .modal-image {
     max-height: 70vh;
+  }
+}
+.article-interactions {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e1e1e1;
+}
+
+.comment-toggle-btn {
+  background: none;
+  border: none;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.comment-toggle-btn:hover {
+  color: #333;
+}
+
+.comments-section {
+  margin-top: 12px;
+}
+
+.comment-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.comment-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e1e1e1;
+  border-radius: 4px;
+  resize: none;
+  min-height: 40px;
+  font-size: 0.9rem;
+}
+
+.comment-textarea:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.comment-submit-btn {
+  padding: 8px 16px;
+  background: #666;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  align-self: flex-start;
+}
+
+.comment-submit-btn:hover:not(:disabled) {
+  background: #555;
+}
+
+.comment-submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.comment-item {
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comment-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comment-user-info img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.comment-username {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.comment-date {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.comment-delete-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+}
+
+.comment-delete-btn:hover {
+  color: #dc3545;
+}
+
+.comment-content {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .comment-form {
+    flex-direction: column;
+  }
+
+  .comment-submit-btn {
+    width: 100%;
   }
 }
 </style>
