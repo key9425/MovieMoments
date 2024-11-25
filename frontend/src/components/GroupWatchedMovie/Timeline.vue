@@ -1,6 +1,5 @@
 <template>
-  <!-- 타임라인 탭 -->
-  <section v-if="currentTab === 'timeline'" class="timeline-section">
+  <section class="timeline-section">
     <!-- 타임라인 입력 폼 -->
     <div class="timeline-input-form">
       <div class="input-group">
@@ -21,14 +20,15 @@
         <button @click="addTimelineEvent" class="add-event-btn">등록</button>
       </div>
     </div>
-    <!-- timelineEvents를 시간순으로 정렬(sortedTimelineEvents)한 걸 v-for로 하나씩 event -->
+
+    <!-- 타임라인 이벤트 표시 -->
     <div class="timeline-event" v-for="event in sortedTimelineEvents" :key="event.time">
       <div class="event-time">{{ event.time }}</div>
       <div class="event-content">
         <h5>{{ event.title }}</h5>
         <p v-if="event.description">{{ event.description }}</p>
       </div>
-      <!-- 삭제 버튼 추가 -->
+      <!-- 삭제 버튼 -->
       <button @click="deleteTimelineEvent(event.id)" class="delete-event-btn">
         <i class="fas fa-times"></i>
       </button>
@@ -42,70 +42,53 @@ import axios from "axios";
 import { useRoute } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 
-const props = defineProps({
-  currentTab: {
-    type: String,
-    required: true,
-  },
-  timelineData: {
-    default: () => [], // 기본값으로 빈 배열 설정
-  },
-});
 const store = useCounterStore();
 const route = useRoute();
 
-//=====================================================================
+// 타임라인 데이터 초기화
+const timelineEvents = ref([]);
 
-// 사용자가 기존에 입력한 타임라인 데이터 채워질 곳
-const timelineEvents = ref([...props.timelineData]);
-
-// 시간순서대로 표시되도록 정렬
+// 시간순 정렬
 const sortedTimelineEvents = computed(() => {
   return [...timelineEvents.value].sort((a, b) => {
     return a.time.localeCompare(b.time);
   });
 });
 
-// 기존에 작성한 데이터 받아오기
+// 데이터 가져오기
 const getTimelineEvent = () => {
   axios({
     method: "get",
-    // url: `타임라인 요청 url`,
     url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/`,
     headers: {
       Authorization: `Token ${store.token}`,
     },
   })
     .then((response) => {
-      console.log("onMount 응답 결과 : ");
-      console.log(response);
-      timelineEvents.value = response.data.timeline;
+      if (response.data.timeline) {
+        timelineEvents.value = response.data.timeline;
+      }
     })
     .catch((error) => {
-      console.log("에러 상세 정보:", error.response);
-      console.log(error);
-      console.log("타임라인 받아오기 실패");
+      console.log("타임라인 받아오기 실패:", error);
     });
 };
 
-// 입력폼에 작성한 내용인 newEvent에 저장
+// 새 이벤트 상태
 const newEvent = ref({
   hours: "00",
   minutes: "00",
   title: "",
 });
 
-// 새로 타임라인 등록에 대한 요청
+// 타임라인 추가
 const addTimelineEvent = () => {
-  // 내용이 없다면 서버에 보내지 않겠다.
   if (!newEvent.value.title) return;
 
-  // 타임라인에 타임에 "17:30"으로 들어가게
   const formattedTime = `${newEvent.value.hours}:${newEvent.value.minutes}`;
 
   axios({
     method: "post",
-    // url: `타임라인 요청 url`,
     url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/timeline/`,
     headers: {
       Authorization: `Token ${store.token}`,
@@ -116,8 +99,8 @@ const addTimelineEvent = () => {
     },
   })
     .then((response) => {
-      console.log(response.data);
       timelineEvents.value = response.data;
+      // 입력 폼 초기화
       newEvent.value = {
         hours: "00",
         minutes: "00",
@@ -125,30 +108,22 @@ const addTimelineEvent = () => {
       };
     })
     .catch((error) => {
-      console.log(error);
+      console.log("타임라인 추가 실패:", error);
     });
 };
 
-onMounted(() => {
-  getTimelineEvent();
-});
-
 // 타임라인 삭제
 const deleteTimelineEvent = (eventId) => {
-  // 삭제 확인
   if (!confirm("정말 이 타임라인을 삭제하시겠습니까?")) return;
 
   axios({
     method: "delete",
     url: `${store.API_URL}/api/v1/group/movie/timeline/${eventId}/`,
-
     headers: {
       Authorization: `Token ${store.token}`,
     },
   })
-    .then((response) => {
-      // 서버에서 업데이트된 타임라인 목록을 반환
-      // timelineEvents.value = response.data;
+    .then(() => {
       getTimelineEvent();
     })
     .catch((error) => {
@@ -156,6 +131,10 @@ const deleteTimelineEvent = (eventId) => {
       alert("타임라인 삭제에 실패했습니다.");
     });
 };
+
+onMounted(() => {
+  getTimelineEvent();
+});
 </script>
 
 <style scoped>

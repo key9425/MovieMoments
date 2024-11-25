@@ -1,5 +1,5 @@
 <template>
-  <div v-if="currentTab === 'article'" class="article-container">
+  <div class="article-container">
     <!-- 게시글 작성 폼 -->
     <div class="article-form">
       <form @submit.prevent="submitArticle">
@@ -87,18 +87,18 @@
         <!-- 일반 모드 -->
         <template v-else>
           <p class="article-content">{{ article.content }}</p>
-          <!-- 수정된 이미지 그리드 -->
+          <!-- 이미지 그리드 -->
           <div v-if="article.images.length" class="image-grid">
             <template v-if="article.images.length <= 5">
               <div v-for="(image, index) in article.images" :key="index" class="grid-image-wrapper">
-                <img :src="store.API_URL + image.image" @click="openImageModal(article.images, index)" class="grid-image" />
+                <img :src="store.API_URL + image.image" @click="showLightbox(article.images, index)" class="grid-image" />
               </div>
             </template>
             <template v-else>
               <div v-for="(image, index) in article.images.slice(0, 4)" :key="index" class="grid-image-wrapper">
-                <img :src="store.API_URL + image.image" @click="openImageModal(article.images, index)" class="grid-image" />
+                <img :src="store.API_URL + image.image" @click="showLightbox(article.images, index)" class="grid-image" />
               </div>
-              <div class="grid-image-wrapper more-images" @click="openImageModal(article.images, 4)">
+              <div class="grid-image-wrapper more-images" @click="showLightbox(article.images, 4)">
                 <img :src="store.API_URL + article.images[4].image" class="grid-image background-image" />
                 <div class="more-overlay">
                   <span>+{{ article.images.length - 4 }}</span>
@@ -110,55 +110,54 @@
       </div>
     </div>
 
-    <!-- 이미지 모달 -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <button class="modal-close" @click="closeModal">×</button>
-        <div class="modal-images">
-          <img :src="store.API_URL + modalImages[currentImageIndex].image" class="modal-image" />
-        </div>
-        <div class="modal-controls">
-          <button @click="previousImage" :disabled="currentImageIndex === 0" class="modal-nav-button">←</button>
-          <span class="image-counter">{{ currentImageIndex + 1 }} / {{ modalImages.length }}</span>
-          <button @click="nextImage" :disabled="currentImageIndex === modalImages.length - 1" class="modal-nav-button">→</button>
-        </div>
-      </div>
-    </div>
+    <!-- Lightbox -->
+    <vue-easy-lightbox :visible="visible" :imgs="imgs" :index="index" @hide="handleHide"></vue-easy-lightbox>
   </div>
 </template>
 
 <script setup>
 import axios from "axios";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useRoute } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
-const props = defineProps({
-  currentTab: {
-    type: String,
-    required: true, // 이 prop은 반드시 전달되어야 함
-  }
-});
+import VueEasyLightbox from "vue-easy-lightbox";
 
 const route = useRoute();
 const store = useCounterStore();
 
+// 기본 상태 관리
 const articles = ref([]);
-const content = ref('');
+const content = ref("");
 const images = ref([]);
 const imagePreviews = ref([]);
 const isSubmitting = ref(false);
 const activeMenu = ref(null);
 const editingId = ref(null);
-const editingContent = ref('');
+const editingContent = ref("");
 const editingImages = ref([]);
 const editingImagePreviews = ref([]);
-const showModal = ref(false);
-const modalImages = ref([]);
-const currentImageIndex = ref(0);
-const removedImageIds = ref([]); // 삭제된 이미지 id 저장
+const removedImageIds = ref([]);
 
+// 라이트박스 상태
+const visible = ref(false);
+const imgs = ref([]);
+const index = ref(0);
 
-// 게시글 조회 
+// 라이트박스 메서드
+const showLightbox = (images, startIndex) => {
+  imgs.value = images.map((img) => ({
+    src: store.API_URL + img.image,
+    title: img.title || "",
+  }));
+  index.value = startIndex;
+  visible.value = true;
+};
+
+const handleHide = () => {
+  visible.value = false;
+};
+
+// 게시글 조회
 const getArticles = () => {
   axios({
     method: "get",
@@ -168,65 +167,60 @@ const getArticles = () => {
     },
   })
     .then((response) => {
-      console.log(response.data)
-      articles.value = response.data
+      articles.value = response.data;
     })
     .catch((error) => {
       console.error("게시글 조회 실패:", error);
     });
 };
 
-// 이미지 업로드 처리
+// 이미지 처리
 const handleImageUpload = (event) => {
   const files = Array.from(event.target.files);
-  // 기존 이미지에 새로운 이미지 추가
   images.value = [...images.value, ...files];
-  // 기존 미리보기에 새로운 미리보기 추가
-  imagePreviews.value = [
-    ...imagePreviews.value,
-    ...files.map(file => URL.createObjectURL(file))
-  ];
+  imagePreviews.value = [...imagePreviews.value, ...files.map((file) => URL.createObjectURL(file))];
 };
 
 const handleEditImageUpload = (event) => {
   const files = Array.from(event.target.files);
-  // 새 파일 추가
   editingImages.value = [
     ...editingImages.value,
-    ...files.map(file => ({
+    ...files.map((file) => ({
       file,
-      isExisting: false
-    }))
+      isExisting: false,
+    })),
   ];
-  // 미리보기 추가
-  editingImagePreviews.value = [
-    ...editingImagePreviews.value,
-    ...files.map(file => URL.createObjectURL(file))
-  ];
+  editingImagePreviews.value = [...editingImagePreviews.value, ...files.map((file) => URL.createObjectURL(file))];
 };
 
-// 이미지 삭제 시 id 저장
+const removeImage = (index) => {
+  URL.revokeObjectURL(imagePreviews.value[index]);
+  images.value = images.value.filter((_, i) => i !== index);
+  imagePreviews.value = imagePreviews.value.filter((_, i) => i !== index);
+};
+
 const removeEditImage = (index) => {
   const removedImage = editingImages.value[index];
   if (removedImage.isExisting) {
     removedImageIds.value.push(removedImage.id);
   }
+  URL.revokeObjectURL(editingImagePreviews.value[index]);
   editingImages.value = editingImages.value.filter((_, i) => i !== index);
   editingImagePreviews.value = editingImagePreviews.value.filter((_, i) => i !== index);
 };
 
-// 게시글 생성
+// 게시글 CRUD
 const submitArticle = () => {
-  if (!content.value.trim()) return;
-  if (isSubmitting.value) return;
+  if (!content.value.trim() || isSubmitting.value) return;
 
   isSubmitting.value = true;
   const formData = new FormData();
   formData.append("content", content.value);
-  
-  images.value.forEach(file => {
+
+  images.value.forEach((file) => {
     formData.append("images", file);
   });
+
   axios({
     method: "post",
     url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/articles/`,
@@ -234,33 +228,32 @@ const submitArticle = () => {
       Authorization: `Token ${store.token}`,
       "Content-Type": "multipart/form-data",
     },
-    data: formData
+    data: formData,
   })
     .then((response) => {
       articles.value.unshift(response.data);
-      content.value = '';
-      images.value = [];
-      imagePreviews.value = [];
-      isSubmitting.value = false;
+      resetForm();
     })
     .catch((error) => {
       console.error("게시글 생성 실패:", error);
       alert("게시글 등록에 실패했습니다.");
+    })
+    .finally(() => {
+      isSubmitting.value = false;
     });
 };
 
-// 게시글 수정 관련 함수들
 const editArticle = (article) => {
   editingId.value = article.id;
   editingContent.value = article.content;
-  editingImages.value = article.images.map(img => ({
+  editingImages.value = article.images.map((img) => ({
     id: img.id,
     image: img.image,
-    isExisting: true
+    isExisting: true,
   }));
-  editingImagePreviews.value = article.images.map(img => store.API_URL + img.image);
+  editingImagePreviews.value = article.images.map((img) => store.API_URL + img.image);
   activeMenu.value = null;
-  removedImageIds.value = []; // 수정 모드 진입시 초기화
+  removedImageIds.value = [];
 };
 
 const updateArticle = () => {
@@ -268,18 +261,15 @@ const updateArticle = () => {
 
   const formData = new FormData();
   formData.append("content", editingContent.value);
-  
-  // 새로운 이미지만 필터링하여 추가
-  const newImages = editingImages.value.filter(image => !image.isExisting);
-  newImages.forEach(image => {
+
+  const newImages = editingImages.value.filter((image) => !image.isExisting);
+  newImages.forEach((image) => {
     formData.append("images", image.file);
   });
 
-  // 삭제할 이미지 ID 추가
-  removedImageIds.value.forEach(id => {
+  removedImageIds.value.forEach((id) => {
     formData.append("removed_image_ids", id);
   });
-
 
   axios({
     method: "put",
@@ -288,18 +278,14 @@ const updateArticle = () => {
       Authorization: `Token ${store.token}`,
       "Content-Type": "multipart/form-data",
     },
-    data: formData
+    data: formData,
   })
     .then((response) => {
-      console.log(response)
       const index = articles.value.findIndex((a) => a.id === editingId.value);
       if (index !== -1) {
         articles.value[index] = response.data;
       }
-      editingId.value = null;
-      editingContent.value = '';
-      editingImages.value = [];
-      editingImagePreviews.value = [];
+      cancelEdit();
     })
     .catch((error) => {
       console.error("게시글 수정 실패:", error);
@@ -307,7 +293,6 @@ const updateArticle = () => {
     });
 };
 
-// 게시글 삭제
 const deleteArticle = (articleId) => {
   if (!confirm("정말 이 게시글을 삭제하시겠습니까?")) return;
 
@@ -320,7 +305,6 @@ const deleteArticle = (articleId) => {
   })
     .then(() => {
       articles.value = articles.value.filter((article) => article.id !== articleId);
-      // alert("게시글이 삭제되었습니다.");
     })
     .catch((error) => {
       console.error("게시글 삭제 실패:", error);
@@ -328,25 +312,7 @@ const deleteArticle = (articleId) => {
     });
 };
 
-// 모달 관련 함수들
-const openImageModal = (images, startIndex) => {
-  modalImages.value = images;
-  currentImageIndex.value = startIndex;
-  showModal.value = true;
-};
-
-const closeModal = () => {
-  showModal.value = false;
-};
-
-const previousImage = () => {
-  if (currentImageIndex.value > 0) currentImageIndex.value--;
-};
-
-const nextImage = () => {
-  if (currentImageIndex.value < modalImages.value.length - 1) currentImageIndex.value++;
-};
-
+// 유틸리티 함수
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -361,15 +327,32 @@ const toggleMenu = (articleId) => {
 
 const cancelEdit = () => {
   editingId.value = null;
-  editingContent.value = '';
+  editingContent.value = "";
   editingImages.value = [];
   editingImagePreviews.value = [];
 };
 
+const resetForm = () => {
+  content.value = "";
+  images.value.forEach((_, index) => {
+    URL.revokeObjectURL(imagePreviews.value[index]);
+  });
+  images.value = [];
+  imagePreviews.value = [];
+};
+
+// 라이프사이클 훅
 onMounted(() => {
   getArticles();
 });
+
+onUnmounted(() => {
+  // Object URL 정리
+  imagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
+  editingImagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
+});
 </script>
+
 <style scoped>
 .article-container {
   margin: 32px auto 0;
@@ -606,7 +589,6 @@ onMounted(() => {
   border-radius: 4px;
   cursor: pointer;
 }
-
 
 .more-images {
   position: relative;

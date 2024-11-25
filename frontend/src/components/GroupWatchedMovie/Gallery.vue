@@ -1,5 +1,24 @@
 <template>
-  <section v-if="currentTab === 'gallery'" class="gallery-section">
+  <section class="gallery-section">
+    <!-- 라이트박스 -->
+    <div v-if="selectedImage" class="lightbox" @click="closeLightbox">
+      <div class="lightbox-container" @click.stop>
+        <button class="close-button" @click="closeLightbox">&times;</button>
+
+        <!-- 이전 버튼 -->
+        <button class="nav-button prev" @click="navigateImage(-1)" :disabled="currentImageIndex === 0">&lt;</button>
+
+        <!-- 이미지 컨테이너 -->
+        <div class="image-container">
+          <img :src="store.API_URL + selectedImage.image" :alt="selectedImage.description" />
+        </div>
+
+        <!-- 다음 버튼 -->
+        <button class="nav-button next" @click="navigateImage(1)" :disabled="currentImageIndex === galleryImages.length - 1">&gt;</button>
+      </div>
+    </div>
+
+    <!-- 기존 갤러리 그리드 -->
     <div class="gallery-grid">
       <div v-for="image in galleryImages" :key="image.id" class="gallery-item" @click="openImage(image)">
         <img :src="store.API_URL + image.image" :alt="image.description" />
@@ -9,23 +28,56 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useCounterStore } from "@/stores/counter";
+import { useRoute } from "vue-router";
+import axios from "axios";
 
-const props = defineProps({
-  currentTab: {
-    type: String,
-    required: true,
-  },
-  galleryData: {
-    type: Array,
-    default: () => [], // 기본값으로 빈 배열 설정
-  },
-});
-
-const galleryImages = ref([...props.galleryData]);
-const fileInput = ref(null); // ref 정의
 const store = useCounterStore();
+const route = useRoute();
+
+// 갤러리 이미지 상태 관리
+const galleryImages = ref([]);
+const fileInput = ref(null);
+const selectedImage = ref(null);
+const currentImageIndex = ref(0);
+
+// 갤러리 데이터 가져오기
+const getGalleryImages = () => {
+  axios({
+    method: "get",
+    url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then((response) => {
+      if (response.data.article_img) {
+        galleryImages.value = response.data.article_img;
+      }
+    })
+    .catch((error) => {
+      console.error("갤러리 이미지 로드 실패:", error);
+    });
+};
+
+// 라이트박스 관련 함수들
+const openImage = (image) => {
+  selectedImage.value = image;
+  currentImageIndex.value = galleryImages.value.findIndex((img) => img.id === image.id);
+};
+
+const closeLightbox = () => {
+  selectedImage.value = null;
+};
+
+const navigateImage = (direction) => {
+  const newIndex = currentImageIndex.value + direction;
+  if (newIndex >= 0 && newIndex < galleryImages.value.length) {
+    currentImageIndex.value = newIndex;
+    selectedImage.value = galleryImages.value[newIndex];
+  }
+};
 
 // 파일 선택 트리거
 const triggerFileInput = () => {
@@ -37,32 +89,43 @@ const handleImageUpload = (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
-  // 이미지 파일 타입 체크
   if (!file.type.startsWith("image/")) {
     alert("이미지 파일만 업로드 가능합니다.");
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    galleryImages.value.push({
-      id: Date.now(),
-      url: e.target.result,
-      description: file.name,
-    });
-  };
-  reader.readAsDataURL(file);
+  const formData = new FormData();
+  formData.append("image", file);
 
-  // 파일 input 초기화
-  if (fileInput.value) {
-    fileInput.value.value = "";
-  }
+  axios({
+    method: "post",
+    url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/gallery/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+      "Content-Type": "multipart/form-data",
+    },
+    data: formData,
+  })
+    .then((response) => {
+      galleryImages.value.push(response.data);
+      if (fileInput.value) {
+        fileInput.value.value = "";
+      }
+    })
+    .catch((error) => {
+      console.error("이미지 업로드 실패:", error);
+      alert("이미지 업로드에 실패했습니다.");
+    });
 };
+
+// 컴포넌트 마운트 시 데이터 로드
+onMounted(() => {
+  getGalleryImages();
+});
 </script>
 
-
 <style scoped>
-/* 기존 갤러리 스타일 */
+/* 기존 갤러리 스타일 유지 */
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -87,6 +150,92 @@ const handleImageUpload = (event) => {
 
 .gallery-item:hover img {
   transform: scale(1.05);
+}
+
+/* 라이트박스 스타일 수정 */
+.lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.lightbox-container {
+  position: relative;
+  width: 90vw;
+  height: 90vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.image-container {
+  height: 100%;
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-container img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.close-button {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+  z-index: 1001;
+}
+
+.close-button:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.nav-button {
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 20px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.nav-button:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
+}
+
+.nav-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* 이미지 추가 버튼 스타일 */
