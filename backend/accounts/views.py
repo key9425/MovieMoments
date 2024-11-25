@@ -35,7 +35,7 @@ def profile(request, user_pk):
         return Response({"message": "해당 작업을 수행할 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
 
-# follow
+# 팔로우
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def follow(request, user_pk):

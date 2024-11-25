@@ -1,3 +1,13 @@
+<template>
+  <section v-if="currentTab === 'gallery'" class="gallery-section">
+    <div class="gallery-grid">
+      <div v-for="image in galleryImages" :key="image.id" class="gallery-item" @click="openImage(image)">
+        <img :src="store.API_URL + image.image" :alt="image.description" />
+      </div>
+    </div>
+  </section>
+</template>
+
 <script setup>
 import { ref } from "vue";
 import { useCounterStore } from "@/stores/counter";
@@ -50,25 +60,6 @@ const handleImageUpload = (event) => {
 };
 </script>
 
-<template>
-  <section v-if="currentTab === 'gallery'" class="gallery-section">
-    <div class="gallery-grid">
-      <!-- 기존 이미지들 -->
-      <div v-for="image in galleryImages" :key="image.id" class="gallery-item" @click="openImage(image)">
-        <img :src="store.API_URL + image.image" :alt="image.description" />
-      </div>
-
-      <!-- 이미지 추가 버튼 -->
-      <!-- <div class="gallery-item add-image-item">
-        <input type="file" ref="fileInput" @change="handleImageUpload" accept="image/*" class="file-input" hidden />
-        <button class="add-image-btn" @click="triggerFileInput" type="button">
-          <div class="add-icon">+</div>
-          <span>사진 추가하기</span>
-        </button>
-      </div> -->
-    </div>
-  </section>
-</template>
 
 <style scoped>
 /* 기존 갤러리 스타일 */
