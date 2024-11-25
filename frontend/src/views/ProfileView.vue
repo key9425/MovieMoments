@@ -247,6 +247,7 @@ const loadProfileData = () => {
     },
   })
     .then((response) => {
+      
       const data = response.data;
 
       id.value = data.id;

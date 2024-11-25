@@ -1,16 +1,13 @@
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import CustomUserDetailsSerializer, UserLoginSerializer, UserImageUpdateSerializer
-from group_movies.serializers import LikeMovieSerializer
-from group_movies.models import LikeMovie
 from django.contrib.auth import get_user_model
+from .serializers import CustomUserDetailsSerializer, UserSerializer, LikeMovieSerializer
+from group_movies.models import LikeMovie
 from django.db.models import Q
 
-User = get_user_model()
 
 # 프로필
 @api_view(['GET', 'PUT'])
@@ -18,19 +15,19 @@ User = get_user_model()
 def profile(request, user_pk):
     # 프로필 조회
     if request.method == 'GET':
-        person = User.objects.get(pk=user_pk)
+        person = get_user_model().objects.get(pk=user_pk)
         serializer = CustomUserDetailsSerializer(person, context={'request': request})
         return Response(serializer.data)
     # 프로필 이미지 수정
     elif request.method == "PUT":
-        serializer = UserImageUpdateSerializer(
-        request.user,
-        data={'profile_img': request.FILES['profile_img']},
-        partial=True
+        serializer = UserSerializer(
+            request.user,
+            data={'profile_img': request.FILES['profile_img']},
+            partial=True
         )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response(serializer.data) # 이미지 전체 경로가 가지 않을 수 있음
+            return Response(serializer.data)
      
 # 회원탈퇴
 @api_view(['DELETE'])
@@ -46,7 +43,7 @@ def user_delete(request):
 @permission_classes([IsAuthenticated])
 def follow(request, user_pk):
     if request.method == 'POST':
-        person = User.objects.get(pk=user_pk)
+        person = get_user_model().objects.get(pk=user_pk)
         # 자기자신을 팔로우하는지 확인
         if person != request.user:
             if person.followers.filter(pk=request.user.pk).exists():
@@ -105,9 +102,9 @@ def like_movie(request):
 @permission_classes([IsAuthenticated])
 def search_users(request):
     query = request.GET.get('query', '')  # query
-    users = User.objects.filter(
+    users = get_user_model().objects.filter(
         Q(email__icontains=query) |  # query가 포함된 email
         Q(name__icontains=query)     # query가 포함된 name
     )
-    serializer = UserLoginSerializer(users, many=True)
+    serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
