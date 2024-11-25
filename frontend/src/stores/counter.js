@@ -123,24 +123,23 @@ export const useCounterStore = defineStore(
     };
 
     // 회원탈퇴
-    const deleteAccount = function () {
+    const deleteAccount = function (user_pk) {
       if (confirm("정말 탈퇴하시겠습니까?")) {
-        router.push({ name: "LogInView" });
         axios({
           method: "delete",
-          url: `${API_URL}/api/v2/delete/`,
+          url: `${API_URL}/api/v2/${user_pk}/profile/`,
           headers: {
             Authorization: `Token ${token.value}`,
           },
         })
           .then((response) => {
-            console.log(response.data);
+            console.log("회원탈퇴", response.data);
             router.push({ name: "LogInView" });
             token.value = null;
             currentUser.value = null;
           })
           .catch((error) => {
-            console.log(error);
+            console.log("회원탈퇴 실패", error);
           });
       }
     };

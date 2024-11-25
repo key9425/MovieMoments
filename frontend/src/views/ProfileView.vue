@@ -227,13 +227,9 @@ const follow = async () => {
 };
 
 // 계정 삭제
-const deleteAccount = async () => {
-  if (window.confirm("정말 탈퇴하시겠습니까?")) {
-    try {
-      await store.deleteAccount();
-    } catch (error) {
-      console.error("계정 삭제 실패:", error);
-    }
+const deleteAccount = function () {
+  if (id.value === store.currentUser.id) {
+    store.deleteAccount(id.value);
   }
 };
 
