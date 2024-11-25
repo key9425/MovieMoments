@@ -36,13 +36,13 @@ class CustomTokenSerializer(TokenSerializer):
 
 
 # 프로필 조회 : CustomUserDetailsSerializer (source : related_name으로 연결된 model)
-## 게시글을 작성한 영화
+## 게시글을 작성한 영화f
 class GroupMovieSerializer(serializers.ModelSerializer):
     movie_title = serializers.CharField(source='movie.title', read_only=True)
-    
+    group_id = serializers.CharField(source='group.id', read_only=True)
     class Meta:
         model = GroupMovie
-        fields = ['id', 'movie_title']
+        fields = ['id', 'group_id', 'movie_title']
 
 
 ## 게시글 이미지
