@@ -31,29 +31,37 @@
     <!-- 탭 네비게이션 -->
     <nav class="tab-navigation" :class="{ sticky: isTabSticky }" ref="tabNav">
       <div class="tab-container">
-        <button v-for="tab in tabs" :key="tab.id" :class="['tab-button', { active: currentTab === tab.id }]" @click="currentTab = tab.id">
+        <router-link
+          v-for="tab in tabs"
+          :key="tab.route"
+          :to="{
+            name: tab.route,
+            params: {
+              group_id: route.params.group_id,
+              group_movie_id: route.params.group_movie_id,
+            },
+          }"
+          class="tab-button"
+          :class="{ active: route.name === tab.route }"
+        >
           {{ tab.name }}
-        </button>
+        </router-link>
       </div>
     </nav>
 
     <!-- 탭 컨텐츠 -->
     <main v-if="movie" class="main-content">
-      <!-- 타임라인 탭 -->
-      <Timeline :currentTab="currentTab" :timelineData="movie.timeline" />
-
-      <!-- 한줄평 탭 -->
-      <OneLineReview :currentTab="currentTab" :oneLineReviewData="movie.review" />
-
-      <!-- 게시글 탭 -->
-      <Article :currentTab="currentTab" :articlesData="movie.article" @update:articles-images="updateArticlesImages" />
-
-      <!-- 갤러리 탭 -->
-      <Gallery :currentTab="currentTab" :galleryData="movie.article_img" />
+      <router-view
+        :timeline-data="movie.timeline"
+        :one-line-review-data="movie.review"
+        :articles-data="movie.article"
+        :gallery-data="movie.article_img"
+        @update:articles-images="updateArticlesImages"
+      />
     </main>
 
     <!-- 채팅 패널 -->
-    <div class="chat-panel" :class="{ expanded: isChatExpanded }">
+    <!-- <div class="chat-panel" :class="{ expanded: isChatExpanded }">
       <div class="chat-header" @click="toggleChat">
         <span>채팅</span>
         <span class="toggle-icon">{{ isChatExpanded ? "▼" : "▲" }}</span>
@@ -73,26 +81,25 @@
           <button @click="sendMessage">전송</button>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script setup>
 import axios from "axios";
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import ArticleModal from "@/components/ArticleModal.vue";
 import Timeline from "@/components/GroupWatchedMovie/Timeline.vue";
 import OneLineReview from "@/components/GroupWatchedMovie/OneLineReview.vue";
-import Gallery from "@/components/GroupWatchedMovie/Gallery.vue";
 import Article from "@/components/GroupWatchedMovie/Article.vue";
+import Gallery from "@/components/GroupWatchedMovie/Gallery.vue";
 
 const route = useRoute();
 const heroSection = ref(null);
 const tabNav = ref(null);
 const isTabSticky = ref(false);
-const currentTab = ref("timeline");
 const isChatExpanded = ref(false);
 const newMessage = ref("");
 const store = useCounterStore();
@@ -102,10 +109,10 @@ const currentUserId = ref("user1");
 
 // 탭 정의
 const tabs = [
-  { id: "timeline", name: "타임라인" },
-  { id: "reviews", name: "한줄평" },
-  { id: "article", name: "게시글" },
-  { id: "gallery", name: "갤러리" },
+  { route: "MovieTimeline", name: "타임라인" },
+  { route: "MovieReviews", name: "한줄평" },
+  { route: "MovieArticles", name: "게시글" },
+  { route: "MovieGallery", name: "갤러리" },
 ];
 
 const updateArticlesImages = (newImages) => {
@@ -116,16 +123,6 @@ const updateArticlesImages = (newImages) => {
     article_img: [...movie.value.article_img, ...newImages],
   };
 };
-
-// 스크롤 이벤트 핸들러
-// const handleScroll = () => {
-//   if (!heroSection.value || !tabNav.value) return;
-
-//   const heroHeight = heroSection.value.offsetHeight;
-//   const scrollPosition = window.scrollY;
-
-//   isTabSticky.value = scrollPosition > heroHeight - tabNav.value.offsetHeight;
-// };
 
 // 채팅 기능
 const toggleChat = () => {
@@ -145,7 +142,6 @@ const sendMessage = () => {
 
   newMessage.value = "";
 
-  // 스크롤을 최신 메시지로 이동
   setTimeout(() => {
     const chatMessagesEl = document.querySelector(".messages-container");
     if (chatMessagesEl) {
@@ -171,25 +167,19 @@ const getGroupWatchedMovie = () => {
     });
 };
 
-// 컴포넌트 라이프사이클 훅
 onMounted(() => {
   getGroupWatchedMovie();
-  // window.addEventListener("scroll", handleScroll);
 });
-
-// onUnmounted(() => {
-//   window.removeEventListener("scroll", handleScroll);
-// });
 </script>
 
 <style scoped>
+/* 기존 스타일 유지 */
 .page-container {
   min-height: 100vh;
   background-color: #ffffff;
   color: #333333;
 }
 
-/* 헤더 스타일 */
 .header-actions {
   position: fixed;
   top: 2rem;
@@ -217,7 +207,6 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* 히어로 섹션 스타일 */
 .hero-section {
   position: relative;
   height: 100vh;
@@ -290,7 +279,7 @@ onMounted(() => {
   color: rgba(0, 0, 0, 0.3);
 }
 
-/* 탭 네비게이션 스타일 */
+/* 탭 네비게이션 스타일 업데이트 */
 .tab-navigation {
   background: #ffffff;
   padding: 1rem 0;
@@ -317,6 +306,7 @@ onMounted(() => {
   gap: 2rem;
 }
 
+/* router-link 스타일링 */
 .tab-button {
   background: none;
   border: none;
@@ -325,6 +315,8 @@ onMounted(() => {
   padding: 0.5rem 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  text-decoration: none; /* 밑줄 제거 */
+  display: inline-block;
 }
 
 .tab-button.active {
@@ -332,14 +324,13 @@ onMounted(() => {
   border-bottom: 2px solid #3a3a3a;
 }
 
-/* 메인 컨텐츠 스타일 */
+/* 나머지 스타일 유지 */
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 5%;
 }
 
-/* 채팅 패널 스타일 */
 .chat-panel {
   position: fixed;
   bottom: 0;
@@ -464,7 +455,6 @@ onMounted(() => {
   background: #2471a3;
 }
 
-/* 스크롤바 스타일링 */
 .messages-container::-webkit-scrollbar {
   width: 6px;
 }
@@ -482,7 +472,6 @@ onMounted(() => {
   background: #a1a1a1;
 }
 
-/* 반응형 스타일 */
 @media (max-width: 1024px) {
   .movie-info {
     flex-direction: column;

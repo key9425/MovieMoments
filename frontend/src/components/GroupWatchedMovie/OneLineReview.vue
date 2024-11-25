@@ -1,5 +1,5 @@
 <template>
-  <section v-if="currentTab === 'reviews'" class="reviews-section">
+  <section class="reviews-section">
     <!-- 리뷰 작성 폼 -->
     <div class="review-input-form">
       <form @submit.prevent="submitReview" class="input-group">
@@ -8,8 +8,8 @@
         <button type="submit" class="add-review-btn" :disabled="isSubmitting || !newReview.trim()">등록</button>
       </form>
     </div>
+
     <!-- 리뷰 목록 -->
-    <!-- 받아오는 거 보고 변수명 바꾸기 -->
     <div class="review-card" v-for="review in reviews" :key="review.id">
       <div class="review-header">
         <div class="user-info">
@@ -35,20 +35,15 @@ import { useCounterStore } from "@/stores/counter";
 import axios from "axios";
 import { useRoute } from "vue-router";
 
-const props = defineProps({
-  currentTab: {
-    type: String,
-    required: true,
-  },
-  oneLineReviewData: {
-    default: () => [], // 기본값으로 빈 배열 설정
-  },
-});
 const store = useCounterStore();
 const route = useRoute();
 
-// 기존에 작성한 리뷰데이터 받아오기
-const reviews = ref([...props.oneLineReviewData]);
+// 리뷰 데이터 초기화
+const reviews = ref([]);
+const newReview = ref("");
+const isSubmitting = ref(false);
+
+// 리뷰 데이터 가져오기
 const getReview = () => {
   axios({
     method: "get",
@@ -58,11 +53,11 @@ const getReview = () => {
     },
   })
     .then((response) => {
-      console.log("onMount 응답 결과 : ");
-      console.log("review response", response);
-      reviews.value = response.data.review.sort((a, b) => {
-        return new Date(b.created_at) - new Date(a.created_at);
-      });
+      if (response.data.review) {
+        reviews.value = response.data.review.sort((a, b) => {
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
+      }
     })
     .catch((error) => {
       console.log(error);
@@ -70,11 +65,7 @@ const getReview = () => {
     });
 };
 
-// 새로 작성한 리뷰 제출 요청
-const newReview = ref("");
-
-const isSubmitting = ref(false);
-
+// 새로운 리뷰 제출
 const submitReview = () => {
   if (!newReview.value.trim()) return;
 
@@ -91,11 +82,9 @@ const submitReview = () => {
     },
   })
     .then((response) => {
-      console.log("post response", response.data);
-      // reviews.value.push(response.data); // 서버에서 받은 전체 리뷰 목록으로 업데이트
       reviews.value = [response.data, ...reviews.value];
-      newReview.value = ""; // 입력창 초기화
-      isSubmitting.value = false; // 제출 상태 해제
+      newReview.value = "";
+      isSubmitting.value = false;
     })
     .catch((error) => {
       console.log(error);
@@ -103,11 +92,12 @@ const submitReview = () => {
     });
 };
 
+// 컴포넌트 마운트 시 리뷰 데이터 가져오기
 onMounted(() => {
   getReview();
 });
 
-// 날짜 포맷
+// 날짜 포맷팅
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -116,7 +106,7 @@ const formatDate = (date) => {
   });
 };
 
-// 리뷰 삭제 함수 추가
+// 리뷰 삭제
 const deleteReview = (reviewId) => {
   if (!confirm("이 리뷰를 삭제하시겠습니까?")) return;
 
@@ -128,7 +118,6 @@ const deleteReview = (reviewId) => {
     },
   })
     .then(() => {
-      // 성공적으로 삭제되면 목록에서 제거
       reviews.value = reviews.value.filter((review) => review.id !== reviewId);
     })
     .catch((error) => {
@@ -137,7 +126,6 @@ const deleteReview = (reviewId) => {
     });
 };
 </script>
-
 <style scoped>
 /* 리뷰 섹션 스타일 */
 .reviews-section {

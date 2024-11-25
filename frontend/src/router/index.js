@@ -8,6 +8,10 @@ import ProfileView from "@/views/ProfileView.vue";
 import GroupDetailView from "@/views/GroupDetailView.vue";
 import GroupWatchedMovie from "@/views/GroupWatchedMovie.vue";
 import ArticleCreate from "@/components/ArticleModal.vue";
+import Timeline from "@/components/GroupWatchedMovie/Timeline.vue";
+import OneLineReview from "@/components/GroupWatchedMovie/OneLineReview.vue";
+import Article from "@/components/GroupWatchedMovie/Article.vue";
+import Gallery from "@/components/GroupWatchedMovie/Gallery.vue";
 import { useCounterStore } from "@/stores/counter";
 import { storeToRefs } from "pinia";
 
@@ -56,6 +60,28 @@ const router = createRouter({
       path: "/group/:group_id/:group_movie_id",
       name: "GroupWatchedMovie",
       component: GroupWatchedMovie,
+      children: [
+        {
+          path: "",
+          name: "MovieTimeline",
+          component: Timeline,
+        },
+        {
+          path: "reviews",
+          name: "MovieReviews",
+          component: OneLineReview,
+        },
+        {
+          path: "articles",
+          name: "MovieArticles",
+          component: Article,
+        },
+        {
+          path: "gallery",
+          name: "MovieGallery",
+          component: Gallery,
+        },
+      ],
     },
     {
       path: "/article/create/:group_movie_id",
