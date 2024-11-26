@@ -57,7 +57,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted } from "vue";
 import axios from "axios";
 import { useRoute, useRouter } from "vue-router";
@@ -65,9 +65,14 @@ import { useCounterStore } from "@/stores/counter";
 import MovieWatchCard from "@/components/MovieWatchCard.vue";
 import GroupMovieCreateModal from "@/components/GroupMovieCreateModal.vue";
 
-// 그룹 나가기 관련
+const router = useRouter();
+const store = useCounterStore();
+const route = useRoute();
+const groupData = ref(null);
+const isModalOpen = ref(false);
 const showConfirmModal = ref(false);
 
+// 그룹 나가기 관련
 const showLeaveConfirm = () => {
   showConfirmModal.value = true;
 };
@@ -92,70 +97,45 @@ const leaveGroup = () => {
     });
 };
 
-export default {
-  name: "GroupDetail",
-  components: {
-    MovieWatchCard,
-    GroupMovieCreateModal,
-  },
-  setup() {
-    const router = useRouter();
-    const store = useCounterStore();
-    const route = useRoute();
-    const groupData = ref(null);
-    const isModalOpen = ref(false); // 모달 상태 관리
-
-    // 모달 열기
-    const openModal = () => {
-      isModalOpen.value = true;
-      document.body.style.overflow = "hidden";
-    };
-
-    // 모달 닫기
-    const closeModal = () => {
-      isModalOpen.value = false;
-      document.body.style.overflow = "auto";
-    };
-
-    // 영화 생성 완료 후 처리
-    const onGroupMovieCreated = () => {
-      closeModal();
-      getGroupData(); // 그룹 데이터 새로고침
-    };
-
-    const getGroupData = () => {
-      const groupID = route.params.group_id;
-      axios({
-        method: "get",
-        url: `${store.API_URL}/api/v1/groups/${groupID}/`,
-        headers: {
-          Authorization: `Token ${store.token}`,
-        },
-      })
-        .then((response) => {
-          console.log("response = ", response);
-          groupData.value = response.data;
-        })
-        .catch((error) => {
-          console.error("그룹 상세 데이터 가져오기 실패:", error);
-        });
-    };
-
-    onMounted(() => {
-      getGroupData();
-    });
-
-    return {
-      groupData,
-      route,
-      store,
-      isModalOpen,
-      openModal,
-      closeModal,
-      onGroupMovieCreated,
-    };
-  },
+// 모달 열기
+const openModal = () => {
+  isModalOpen.value = true;
+  document.body.style.overflow = "hidden";
 };
+
+// 모달 닫기
+const closeModal = () => {
+  isModalOpen.value = false;
+  document.body.style.overflow = "auto";
+};
+
+// 영화 생성 완료 후 처리
+const onGroupMovieCreated = () => {
+  closeModal();
+  getGroupData(); // 그룹 데이터 새로고침
+};
+
+const getGroupData = () => {
+  const groupID = route.params.group_id;
+  axios({
+    method: "get",
+    url: `${store.API_URL}/api/v1/groups/${groupID}/`,
+    headers: {
+      Authorization: `Token ${store.token}`,
+    },
+  })
+    .then((response) => {
+      console.log("response = ", response);
+      groupData.value = response.data;
+    })
+    .catch((error) => {
+      console.error("그룹 상세 데이터 가져오기 실패:", error);
+    });
+};
+
+onMounted(() => {
+  getGroupData();
+});
 </script>
 
 <style scoped>
