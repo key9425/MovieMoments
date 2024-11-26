@@ -60,6 +60,15 @@ const router = createRouter({
       path: "/group/:group_id/:group_movie_id",
       name: "GroupWatchedMovie",
       component: GroupWatchedMovie,
+      redirect: (to) => {
+        return {
+          name: "MovieTimeline", // 기본으로 보여줄 탭
+          params: {
+            group_id: to.params.group_id,
+            group_movie_id: to.params.group_movie_id,
+          },
+        };
+      },
       children: [
         {
           path: "",
