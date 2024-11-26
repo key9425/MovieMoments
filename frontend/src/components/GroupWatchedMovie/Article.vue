@@ -5,7 +5,7 @@
       <h3 class="form-title">게시글 작성</h3>
       <form @submit.prevent="submitArticle" class="article-form">
         <div class="input-area">
-          <textarea v-model="content" placeholder="영화에 대한 이야기를 공유해주세요..." class="content-input" :maxlength="2000"></textarea>
+          <textarea v-model="content" placeholder="특별한 순간을 기록해보세요." class="content-input" :maxlength="2000"></textarea>
           <div class="char-count" :class="{ 'near-limit': content.length > 1800 }">{{ content.length }}/2000</div>
         </div>
 
