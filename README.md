@@ -3,7 +3,7 @@
 
 ## 1. 프로젝트 소개
 ### 프로젝트 내용
-- 가입한 회원을 대상을 대상으로 한 영화 추천, 정보 제공 서비스
+- 가입한 회원을 대상으로 한 영화 추천, 정보 제공 서비스
 - 영화메이트(그룹)들과 함께 본 영화의 추억을 기록하는 서비스
 
 ### 기술 스택 & Tools
@@ -24,7 +24,12 @@
 </div>
 
 - Tools
-피그마, 노션, Gitlab, dbdiagram.io
+<div align="center">
+<img src="https://img.shields.io/badge/figma-3756AB?style=for-the-badge&logo=figma&logoColor=white"> 
+<img src="https://img.shields.io/badge/notion-3796AB?style=for-the-badge&logo=notion&logoColor=white"> 
+<img src="https://img.shields.io/badge/GitLab-234245?style=for-the-badge&logo=GitLab&logoColor=white"> 
+</div>
+
 
 ### 개발 기간
 - 2024.11.18 ~ 2024.11.27 (10일)
@@ -37,32 +42,22 @@
 - 김은영 (BACKEND)
 
 
-## 2. 모델 설계 (dbdiagram.io)
-
-- User
-- Group
-- Movie
-- 
-
-
-
-
-## 3. 주요 기능
+## 2. 주요 기능
 ### (메인) 그룹 영화 기록 서비스
 
 ### 로그인, 로그아웃, 회원가입
 - django-rest-auth 라이브러리 활용
-- user 커스텀 (name, profile_img 필드 추가)
+- user 모델 커스텀 (name, profile_img 필드 추가)
 - 비로그인 유저는 기능이 제한되어 로그인, 회원가입 페이지 외 접근 제한
+- 로그아웃 시 로그인 페이지로 이동
 
 ### 영화 데이터 (최소 50개 이상)	
-- TMDB API를 통해 영화 데이터 정보 DB 저장
+- TMDB API를 통해 영화 데이터 정보 Movie 모델 DB 저장
 - 영화 리스트 요청 후 id를 통해 상세 정보 재요청하여 상세 정보 저장
 
 ### 영화 목록 조회	
 - 추천 영화 
-  : TMDB API로부터 받아 저장한 50개 이상의 데이터로부터 랜덤으로 추천
-  - 해당 DB는 사용자의 기록 서비스 이용에 따라 데이터 증가로 더 다양한 추천 가능
+  : TMDB API로부터 받아 저장한 50개 이상의 데이터로부터 랜덤으로 최대 10개 추천
 - 박스오피스
   : TMDB API 요청
 - 현재상영작
@@ -80,37 +75,184 @@
 - 그룹을 만들어 함께 본 영화를 기록
 - 타임라인 : 함께 본 날의 하루를 기록, 그룹에 속한 사람이라면 누구나 삭제 가능
 - 한줄평 : 간단한 메모, 감상평, 명대사 등을 기록
-- 게시글을 통해 사진 첨부 가능, 댓글 기록
+- 게시글 : 사진 첨부, 토글을 사용하여 각 게시글의 댓글 기록
+  - ArticleImage 모델 설계로 Article 모델과 N:1관계를 통해 1개의 게시글마다 여러 장의 사진 첨부 가능
 - 갤러리 : 게시글에 첨부한 사진 모아보기
+  - ArticleImage 모델을 GroupMovie와도 N:1 관계 설정으로 사진 모아보기 가능
 
 ### 찜하기(좋아요)
 - 영화 상세 페이지를 통해 좋아요 기능 구현
-- User 모델과의 관계를 위해 LikeMovie 모델 설계하여 M:N 관계 설정 (Movie 모델에 저장하여도 되었으나 데이터 용량 고려)
+- User 모델과의 관계를 위해 LikeMovie 모델 설계하여 M:N 관계 설정 
+  - Movie 모델에 저장하여도 되었으나 데이터 용량 고려, 프로필에서 찜한 영화 목록 조회를 위해 title, poster_path 필드 추가
 
 ### 프로필 조회
-- 사용자 정보 조회, 수정, 삭제 
+- 사용자 정보 조회, 수정, 삭제
 - 작성한 게시글 수, 팔로잉 수, 팔로워 수
 - 최근 작성한 글
-- 짬한 영화
+- 찜한 영화
 
 ### 팔로우
 - User 모델에서 자신과 M:N 관계 설정
 - 대칭적 관계가 아니므로  `symmetrical=False` 속성 설정
-- 팔로우 상태 확인을 위해 DB에서 포함 여부를 확인하여 응답을 boolean으로 제공 -> 반응형 변수로 상태 변환 용이
+- 팔로우 상태 확인을 위해 DB에서 포함 여부를 확인하여 응답을 boolean으로 제공 -> 반응성 시스템이 변경을 감지하고 즉시 화면을 갱신
 
 ### 영화 추천 알고리즘
+- 추천 영화 
+  : TMDB API로부터 받아 저장한 50개 이상의 데이터로부터 랜덤으로 최대 10개 추천
+  - 사용자가 그룹에서 본 영화를 기록하면 해당 영화 정보가 Movie DB로 저장
+  - 해당 DB는 사용자의 기록 서비스 이용에 따라 데이터 증가로 더 다양한 추천 가능
+
+### 검색 서비스
+- 사용자 검색 : email, name 중 부분일치하는 사용자를 검색하여 출력
+- 그룹 검색 : 그룹명 검색을 통해 출력, 카테고리 설정을 통해 필터 기능
+- 영화 검색 : TMDB API 요청
+
+### AI
+- 기능 : 영화 추천, 영화 정보 제공
+- 사용 모델 : GPT-4o min
+- 장르와 분위기 기반 추천
+- 비슷한 영화 기반 추천
+- 영화 이름 정보 제공
 
 
-### AI (추천 / 검색 서비스)
 
+## 3. 모델 설계 (ERD, dbdiagram.io)
+![alt text](image.png)
+```// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
 
+Table User {
+  id integer [primary key]
+  username varchar [unique]
+  password varchar
+  email varchar [unique]
+  name varchar
+  profile_img image
+  follow integer
+  created_at datetime
+  updated_at datetime
+}
 
+Table LikeMovie {
+  id integer [primary key]
+  movie_id integer
+  title varchar
+  poster_path varchar
+}
+
+Table like {
+  id integer [primary key]
+  movie_id integer
+  user_id integer
+}
+
+Table Group {
+  id integer [primary key]
+  group_name varchar
+  description varchar
+  category varchar
+  group_img image
+  created_at datetime
+  updated_at datetime
+}
+
+Table GroupMember {
+  id integer [primary key]
+  user_id integer
+  group_id integer
+}
+
+Table Movie {
+  movie_id integer [primary key]
+  title varchar
+  original_title varchar
+  release_date date
+  overview text
+  poster_path varchar
+  backdrop_path varchar
+  vote_count float
+  runtime integer
+  genres json
+  production_countries json
+  director varchar
+  cast json
+  trailer varchar
+}
+
+Table GroupMovie {
+  id integer [primary key]
+  group_id integer
+  movie_id integer
+  watched_date date
+  created_at datetime
+}
+
+Table Timeline {
+ id integer [primary key]
+ group_movie_id integer  
+ time time
+ title varchar
+ created_at datetime
+}
+
+Table Review {
+ id integer [primary key]
+ user_id integer  
+ review varchar
+ created_at datetime
+ updated_at datetime
+}
+
+Table Article {
+ id integer [primary key]
+ user_id integer 
+ group_movie_id integer
+ content text
+ created_at datetime
+ updated_at datetime
+}
+
+Table ArticleImage {
+ id integer [primary key]
+ article_id integer
+ group_movie_id integer
+ image image
+}
+
+Table Comment {
+  id integer [primary key]
+  user_id integer
+  article_id integer
+  content text
+  created_at datetime
+  updated_at datetime
+}
+
+Ref: GroupMember.user_id > User.id
+Ref: GroupMember.group_id > Group.id
+Ref: GroupMovie.group_id > Group.id
+Ref: GroupMovie.movie_id > Movie.movie_id
+Ref: like.user_id > User.id
+Ref: Timeline.group_movie_id > GroupMovie.id
+Ref: Article.user_id > User.id 
+Ref: Article.group_movie_id > GroupMovie.id
+Ref: ArticleImage.article_id > Article.id
+Ref: ArticleImage.group_movie_id > GroupMovie.id
+Ref: "User"."id" < "User"."follow"
+Ref: "LikeMovie"."movie_id" < "like"."movie_id"
+Ref: "User"."id" < "Review"."user_id"
+Ref: "Article"."id" < "Comment"."article_id"
+Ref: "User"."id" < "Comment"."id"
+```
 
 ## 4. API 명세서
-## 5. 일정 관리
+- (추후 작성 예정)
+## 5. Vue 컴포넌트 구조
+## 6. 일정 관리 & 업무 분담
+- (추후 작성 예정)
 
 
-## 6. 후기(느낀점, 어려웠던점, 배운점 등)
+## 7. 후기(느낀점, 어려웠던점, 배운점 등)
 ### 이송희 
 ### 김은영
 - ERD Model 설계와 API 명세서의 중요성을 깨달음
@@ -128,5 +270,5 @@
 - 그룹 신청 요청(수락, 거절)
 - 챌린지 서비스
 - 비밀번호 수정
-- 전체 공유 커뮤니티
-- 오픈방
+- 공유를 통한 전체 커뮤니티
+- 나만의 방, 오픈방 (동일 그룹 제한)

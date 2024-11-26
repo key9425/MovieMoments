@@ -180,8 +180,7 @@ def recommended_movies(request):
     all_movies = list(Movie.objects.all())
 
     num_recommendations = min(10, len(all_movies))
-    
-    # 랜덤하게 6개 선택
+
     recommended_movies = random.sample(all_movies, num_recommendations)
 
     movie_data = [{
