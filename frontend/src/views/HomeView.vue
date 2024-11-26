@@ -72,7 +72,7 @@
     <main class="main-content">
       <!-- 그룹 그리드 -->
       <div class="groups-grid">
-        <div v-for="group in filteredGroups" :key="group.id" :id="group.id" class="group-card">
+        <div v-for="group in paginatedGroups" :key="group.id" :id="group.id" class="group-card">
           <RouterLink :to="{ name: 'GroupDetailView', params: { group_id: group.id } }">
             <div class="group-image-container">
               <img :src="'http://127.0.0.1:8000' + group.group_img" :alt="group.group_name" class="group-image" />
@@ -121,6 +121,16 @@
           </RouterLink>
         </div>
       </div>
+      <!-- 페이지네이션 컨트롤 추가 -->
+      <div v-if="totalPages > 1" class="pagination">
+        <button class="pagination-btn" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">이전</button>
+
+        <button v-for="page in totalPages" :key="page" class="pagination-btn" :class="{ active: currentPage === page }" @click="changePage(page)">
+          {{ page }}
+        </button>
+
+        <button class="pagination-btn" :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">다음</button>
+      </div>
     </main>
   </div>
 </template>
@@ -140,6 +150,28 @@ const movieError = ref(null);
 // - 검색 상태 관리
 const groupKeyword = ref("");
 console.log(groupKeyword.value);
+// 페이지네이션 관련 상태 추가
+const currentPage = ref(1);
+const itemsPerPage = 9; // 페이지당 아이템 수
+
+// 현재 페이지에 표시할 그룹들을 계산하는 computed 속성
+const paginatedGroups = computed(() => {
+  const startIndex = (currentPage.value - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  return filteredGroups.value.slice(startIndex, endIndex);
+});
+
+// 전체 페이지 수 계산
+const totalPages = computed(() => {
+  return Math.ceil(filteredGroups.value.length / itemsPerPage);
+});
+
+// 페이지 변경 함수
+// 페이지 변경할 때 스크롤 상단으로 이동 가능
+const changePage = (page) => {
+  currentPage.value = page;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
 
 const categories = [
   { id: "0", name: "전체" },
@@ -623,7 +655,8 @@ onBeforeUnmount(() => {
 /* 그룹 그리드 */
 .groups-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /* grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); */
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
   margin-bottom: 4rem;
 }
@@ -843,6 +876,63 @@ a {
   .carousel-button {
     width: 32px;
     height: 32px;
+  }
+}
+
+/* 페이지네이션 스타일 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 3rem 0 4rem;
+  align-items: center;
+}
+
+.pagination-btn {
+  padding: 0.5rem;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 35px;
+  font-size: 1rem;
+  color: #666666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  color: #dc3545;
+}
+
+.pagination-btn.active {
+  color: #dc3545;
+  font-weight: 700;
+}
+
+.pagination-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+
+
+.pagination-btn:first-child,
+.pagination-btn:last-child {
+  font-weight: 500;
+  min-width: 50px;
+}
+
+@media (max-width: 992px) {
+  .groups-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .groups-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

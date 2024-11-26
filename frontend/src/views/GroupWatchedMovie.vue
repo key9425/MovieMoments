@@ -2,27 +2,32 @@
   <div class="page-container">
     <ArticleModal ref="articleModal" @submit="handleSubmit" :id="route.params.group_movie_id" />
 
-    <!-- 영화 정보 섹션 -->
-    <section class="hero-section" ref="heroSection">
+    <!-- 영화 히어로 섹션 -->
+    <section class="movie-hero position-relative">
       <div v-if="movie" class="backdrop-wrapper">
-        <img :src="`https://image.tmdb.org/t/p/original/${movie.movie.backdrop_path}`" :alt="movie.movie.title" />
+        <img :src="`https://image.tmdb.org/t/p/original/${movie.movie.backdrop_path}`" :alt="movie.movie.title" class="backdrop-image" />
         <div class="backdrop-overlay"></div>
       </div>
 
-      <div v-if="movie" class="movie-info">
-        <!-- 포스터 -->
-        <div class="poster-container">
-          <img :src="`https://image.tmdb.org/t/p/w500/${movie.movie.poster_path}`" :alt="movie.movie.title" class="movie-poster" />
-        </div>
-
-        <div class="movie-details">
-          <h1 class="movie-title">{{ movie.movie.title }}</h1>
-          <div class="movie-meta">
-            <span>{{ new Date(movie.movie.release_date).getFullYear() }}</span>
-            <span class="divider">•</span>
-            <span>{{ movie.movie.runtime }}분</span>
-            <span class="divider">•</span>
-            <span>{{ movie.genres?.map((genre) => genre.name).join(", ") }}</span>
+      <div v-if="movie" class="hero-content container">
+        <div class="row align-items-end">
+          <div class="col-md-3">
+            <img :src="`https://image.tmdb.org/t/p/w500/${movie.movie.poster_path}`" :alt="movie.movie.title" class="poster-image" />
+          </div>
+          <div class="col-md-9">
+            <h1 class="movie-title text-white mb-3">{{ movie.movie.title }}</h1>
+            <div class="movie-meta text-white mb-4">
+              <span>{{ new Date(movie.movie.release_date).getFullYear() }}</span>
+              <span class="meta-divider">•</span>
+              <span>{{ movie.movie.runtime }}분</span>
+              <span>{{ movie.genres?.map((genre) => genre.name).join(", ") }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-4">
+              <div class="rating">
+                <i class="fas fa-star text-warning me-2"></i>
+                <span class="text-white">{{ movie.movie.vote_average?.toFixed(1) }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -91,10 +96,10 @@ import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import ArticleModal from "@/components/ArticleModal.vue";
-import Timeline from "@/components/GroupWatchedMovie/Timeline.vue";
-import OneLineReview from "@/components/GroupWatchedMovie/OneLineReview.vue";
-import Article from "@/components/GroupWatchedMovie/Article.vue";
-import Gallery from "@/components/GroupWatchedMovie/Gallery.vue";
+// import Timeline from "@/components/GroupWatchedMovie/Timeline.vue";
+// import OneLineReview from "@/components/GroupWatchedMovie/OneLineReview.vue";
+// import Article from "@/components/GroupWatchedMovie/Article.vue";
+// import Gallery from "@/components/GroupWatchedMovie/Gallery.vue";
 
 const route = useRoute();
 const heroSection = ref(null);
@@ -107,7 +112,6 @@ const chatMessages = ref([]);
 const movie = ref(null);
 const currentUserId = ref("user1");
 
-// 탭 정의
 const tabs = [
   { route: "MovieTimeline", name: "타임라인" },
   { route: "MovieReviews", name: "한줄평" },
@@ -115,40 +119,40 @@ const tabs = [
   { route: "MovieGallery", name: "갤러리" },
 ];
 
+// 게시글 이미지 업데이트
 const updateArticlesImages = (newImages) => {
   if (!movie.value) return;
-
   movie.value = {
     ...movie.value,
     article_img: [...movie.value.article_img, ...newImages],
   };
 };
 
-// 채팅 기능
-const toggleChat = () => {
-  isChatExpanded.value = !isChatExpanded.value;
-};
+// 채팅기능
+// const toggleChat = () => {
+//   isChatExpanded.value = !isChatExpanded.value;
+// };
 
-const sendMessage = () => {
-  if (!newMessage.value.trim()) return;
+// const sendMessage = () => {
+//   if (!newMessage.value.trim()) return;
 
-  chatMessages.value.push({
-    id: Date.now(),
-    userId: currentUserId.value,
-    userName: "나",
-    content: newMessage.value,
-    time: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
-  });
+//   chatMessages.value.push({
+//     id: Date.now(),
+//     userId: currentUserId.value,
+//     userName: "나",
+//     content: newMessage.value,
+//     time: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
+//   });
 
-  newMessage.value = "";
+//   newMessage.value = "";
 
-  setTimeout(() => {
-    const chatMessagesEl = document.querySelector(".messages-container");
-    if (chatMessagesEl) {
-      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-    }
-  }, 0);
-};
+//   setTimeout(() => {
+//     const chatMessagesEl = document.querySelector(".messages-container");
+//     if (chatMessagesEl) {
+//       chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+//     }
+//   }, 0);
+// };
 
 const getGroupWatchedMovie = () => {
   axios({
@@ -173,43 +177,15 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 */
 .page-container {
   min-height: 100vh;
-  background-color: #ffffff;
-  color: #333333;
+  background-color: #f8f9fa;
 }
 
-.header-actions {
-  position: fixed;
-  top: 2rem;
-  right: 2rem;
-  z-index: 1000;
-}
-
-.create-article-btn {
-  background: rgba(255, 255, 255, 0.9);
-  color: #333333;
-  border: 1px solid #e1e1e1;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  backdrop-filter: blur(10px);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.create-article-btn:hover {
-  background: #f8f9fa;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.hero-section {
+/* 히어로 섹션 스타일 */
+.movie-hero {
+  height: 600px;
   position: relative;
-  height: 100vh;
   overflow: hidden;
 }
 
@@ -221,7 +197,7 @@ onMounted(() => {
   height: 100%;
 }
 
-.backdrop-wrapper img {
+.backdrop-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -233,58 +209,55 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.8) 60%, #ffffff 100%);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.8) 100%);
 }
 
-.movie-info {
+.hero-content {
   position: absolute;
-  bottom: 10%;
+  bottom: 3rem;
   left: 0;
+  right: 0;
+  z-index: 1;
+}
+
+.poster-image {
   width: 100%;
-  padding: 0 5%;
-  display: flex;
-  align-items: flex-end;
-  gap: 2rem;
-}
-
-.poster-container {
-  flex-shrink: 0;
-}
-
-.movie-poster {
-  width: 300px;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.movie-details {
-  flex-grow: 1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .movie-title {
-  font-size: 3.5rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  color: #1a1a1a;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .movie-meta {
   font-size: 1.1rem;
-  color: rgba(0, 0, 0, 0.7);
+  opacity: 0.9;
 }
 
-.divider {
-  margin: 0 0.5rem;
-  color: rgba(0, 0, 0, 0.3);
+.meta-divider {
+  margin: 0 0.8rem;
+  opacity: 0.6;
 }
 
-/* 탭 네비게이션 스타일 업데이트 */
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+}
+
+/* 탭 네비게이션 스타일 */
 .tab-navigation {
   background: #ffffff;
-  padding: 1rem 0;
-  transition: all 0.3s ease;
   border-bottom: 1px solid #e1e1e1;
+  transition: all 0.3s ease;
 }
 
 .tab-navigation.sticky {
@@ -301,36 +274,42 @@ onMounted(() => {
 .tab-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 5%;
+  padding: 0 2rem;
   display: flex;
   gap: 2rem;
 }
 
-/* router-link 스타일링 */
 .tab-button {
-  background: none;
-  border: none;
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 1.1rem;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
+  padding: 1rem 0.5rem;
+  color: #666666;
+  text-decoration: none;
+  font-weight: 500;
+  position: relative;
   transition: all 0.3s ease;
-  text-decoration: none; /* 밑줄 제거 */
-  display: inline-block;
 }
 
 .tab-button.active {
-  color: #3a3a3a;
-  border-bottom: 2px solid #3a3a3a;
+  color: #dc3545;
 }
 
-/* 나머지 스타일 유지 */
+.tab-button.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #dc3545;
+}
+
+/* 메인 컨텐츠 영역 */
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 5%;
+  padding: 2rem;
 }
 
+/* 채팅 패널 스타일 */
 .chat-panel {
   position: fixed;
   bottom: 0;
@@ -354,10 +333,6 @@ onMounted(() => {
   cursor: pointer;
   user-select: none;
   color: #333333;
-}
-
-.toggle-icon {
-  opacity: 0.7;
 }
 
 .chat-content {
@@ -434,12 +409,6 @@ onMounted(() => {
   font-size: 0.9rem;
 }
 
-.chat-input input:focus {
-  outline: none;
-  border-color: #3a3a3a;
-  box-shadow: 0 0 0 2px rgba(41, 128, 185, 0.2);
-}
-
 .chat-input button {
   padding: 0.8rem 1.2rem;
   border-radius: 20px;
@@ -455,48 +424,17 @@ onMounted(() => {
   background: #2471a3;
 }
 
-.messages-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.messages-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.messages-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
-}
-
-@media (max-width: 1024px) {
-  .movie-info {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 0 2rem;
-  }
-
-  .movie-poster {
-    width: 200px;
-  }
-
-  .movie-title {
-    font-size: 2.5rem;
-  }
-
-  .chat-panel {
-    right: 1rem;
-    width: 300px;
-  }
-}
-
+/* 반응형 스타일 */
 @media (max-width: 768px) {
-  .hero-section {
-    height: 70vh;
+  .movie-hero {
+    height: auto;
+    min-height: 400px;
+  }
+
+  .hero-content {
+    position: relative;
+    bottom: 0;
+    padding: 2rem 1rem;
   }
 
   .movie-title {
@@ -505,6 +443,11 @@ onMounted(() => {
 
   .tab-container {
     padding: 0 1rem;
+    gap: 1rem;
+  }
+
+  .poster-image {
+    margin-bottom: 1rem;
   }
 
   .main-content {
@@ -514,16 +457,10 @@ onMounted(() => {
   .chat-panel {
     right: 0;
     width: 100%;
-    background: #ffffff;
   }
 
   .chat-content {
     height: 350px;
-  }
-
-  .create-article-btn {
-    padding: 0.6rem 1rem;
-    font-size: 0.9rem;
   }
 }
 </style>
