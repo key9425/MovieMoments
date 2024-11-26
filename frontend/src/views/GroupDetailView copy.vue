@@ -20,24 +20,7 @@
           </div>
         </div>
       </div>
-
-      <!-- 그룹 나가기 -->
-      <div class="leave-group-section">
-        <button @click="showLeaveConfirm" class="leave-group-btn">그룹 나가기</button>
-      </div>
     </aside>
-
-    <!-- 확인 모달 -->
-    <div v-if="showConfirmModal" class="confirm-modal">
-      <div class="confirm-modal-content">
-        <p>정말로 그룹에서 나가시겠습니까?</p>
-        <p class="warning-text">이 작업은 되돌릴 수 없습니다.</p>
-        <div class="confirm-modal-buttons">
-          <button @click="leaveGroup" class="confirm-btn">삭제</button>
-          <button @click="showConfirmModal = false" class="cancel-btn">취소</button>
-        </div>
-      </div>
-    </div>
 
     <!-- 오른쪽: 영화 그리드 -->
     <main class="main-content">
@@ -64,33 +47,6 @@ import { useRoute, useRouter } from "vue-router";
 import { useCounterStore } from "@/stores/counter";
 import MovieWatchCard from "@/components/MovieWatchCard.vue";
 import GroupMovieCreateModal from "@/components/GroupMovieCreateModal.vue";
-
-// 그룹 나가기 관련
-const showConfirmModal = ref(false);
-
-const showLeaveConfirm = () => {
-  showConfirmModal.value = true;
-};
-
-const leaveGroup = () => {
-  axios({
-    method: "delete",
-    url: `${store.API_URL}/api/v1/groups/${route.params.group_id}/`,
-    headers: {
-      Authorization: `Token ${store.token}`,
-    },
-  })
-    .then(() => {
-      router.push({ name: "HomeView" }); // 그룹 목록 페이지로 이동
-    })
-    .catch((error) => {
-      console.error("그룹 삭제 실패:", error);
-      alert("그룹 삭제에 실패했습니다.");
-    })
-    .finally(() => {
-      showConfirmModal.value = false;
-    });
-};
 
 export default {
   name: "GroupDetail",
@@ -291,88 +247,5 @@ export default {
 a {
   text-decoration: none;
   color: black;
-}
-
-/* 그룹 나가기 섹션 */
-.leave-group-section {
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
-}
-
-.leave-group-btn {
-  width: 100%;
-  padding: 0.8rem;
-  border: 1px solid #ddd;
-  background: white;
-  color: #000000;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.leave-group-btn:hover {
-  background: #dc3545;
-  color: white;
-}
-
-/* 확인 모달 스타일 */
-.confirm-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.confirm-modal-content {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  text-align: center;
-  max-width: 90%;
-  width: 400px;
-}
-
-.confirm-modal-buttons {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-top: 1.5rem;
-}
-
-.confirm-btn,
-.cancel-btn {
-  padding: 0.5rem 1.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.confirm-btn {
-  background: #dc3545;
-  color: white;
-  border: none;
-}
-
-.confirm-btn:hover {
-  background: #c82333;
-}
-
-.cancel-btn {
-  background: white;
-  color: #666;
-  border: 1px solid #ddd;
-}
-
-.cancel-btn:hover {
-  background: #f8f9fa;
 }
 </style>
