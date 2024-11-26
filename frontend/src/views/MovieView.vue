@@ -149,10 +149,12 @@
       </div>
     </section>
   </div>
+  <Chatbot />
 </template>
 
 <script setup>
 import MovieCard from "@/components/MovieCard.vue";
+import Chatbot from "@/components/Chatbot.vue";
 import axios from "axios";
 import { useCounterStore } from "@/stores/counter";
 import { debounce } from "lodash";

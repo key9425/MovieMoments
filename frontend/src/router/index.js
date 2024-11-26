@@ -12,6 +12,7 @@ import Timeline from "@/components/GroupWatchedMovie/Timeline.vue";
 import OneLineReview from "@/components/GroupWatchedMovie/OneLineReview.vue";
 import Article from "@/components/GroupWatchedMovie/Article.vue";
 import Gallery from "@/components/GroupWatchedMovie/Gallery.vue";
+import Chatbot from "@/components/Chatbot.vue";
 import { useCounterStore } from "@/stores/counter";
 import { storeToRefs } from "pinia";
 
