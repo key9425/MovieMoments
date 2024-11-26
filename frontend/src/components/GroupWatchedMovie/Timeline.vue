@@ -87,15 +87,13 @@ const getTimelineEvent = async () => {
   try {
     const response = await axios({
       method: "get",
-      url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/`,
+      url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/timeline/`,
       headers: {
         Authorization: `Token ${store.token}`,
       },
     });
 
-    if (response.data.timeline) {
-      timelineEvents.value = response.data.timeline;
-    }
+    timelineEvents.value = response.data;
   } catch (error) {
     console.error("타임라인 조회 실패:", error);
   }
@@ -120,11 +118,14 @@ const addTimelineEvent = async () => {
       },
     });
 
-    // 새로운 이벤트에 애니메이션 적용을 위한 플래그 추가
-    timelineEvents.value = response.data.map((event) => ({
-      ...event,
-      isNew: event.time === formattedTime && event.title === newEvent.value.title,
-    }));
+    // 새로운 이벤트에 애니메이션 플래그 추가
+    const newTimelineEvent = {
+      ...response.data, // 서버에서 받은 단일 이벤트 데이터
+      isNew: true,
+    };
+
+    // 기존 배열에 새 이벤트를 추가
+    timelineEvents.value = [...timelineEvents.value, newTimelineEvent];
 
     // 입력 폼 초기화
     newEvent.value = {
@@ -152,10 +153,11 @@ const deleteTimelineEvent = async (eventId) => {
   try {
     await axios({
       method: "delete",
-      url: `${store.API_URL}/api/v1/group/movie/timeline/${eventId}/`,
+      url: `${store.API_URL}/api/v1/group/movie/${route.params.group_movie_id}/timeline/`,
       headers: {
         Authorization: `Token ${store.token}`,
       },
+      data: { timeline_id: eventId },
     });
 
     await getTimelineEvent();

@@ -116,10 +116,34 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
 
 # 타임라인 생성
 class TimeLineCreateSerializer(serializers.ModelSerializer):
-    time = serializers.TimeField(format='%H:%M', input_formats=['%H:%M'])
+    time = serializers.TimeField(format='%H:%M')
     class Meta:
         model = TimeLine
         fields = ['id', 'time', 'title']
+
+# 타임라인 조회
+class TimeLineSerializer(serializers.ModelSerializer):
+     # 시간을 "HH:MM" 형식으로 반환
+    time = serializers.TimeField(format='%H:%M')
+    class Meta:
+        model = TimeLine
+        fields = ['id', 'time', 'title','group_movie']
+        read_only_fields = ('group_movie',)
+
+# # 타임라인 생성
+# class TimeLineCreateSerializer(serializers.ModelSerializer):
+#     time = serializers.TimeField(format='%H:%M', input_formats=['%H:%M'])
+#     class Meta:
+#         model = TimeLine
+#         fields = ['id', 'time', 'title']
+
+# # 타임라인 조회
+# class TimeLineSerializer(serializers.ModelSerializer):
+#      # 시간을 "HH:MM" 형식으로 반환
+#     time = serializers.TimeField(format='%H:%M')
+#     class Meta:
+#         model = TimeLine
+#         fields = ['id', 'time', 'title']
 
 class ArticleImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -146,14 +170,6 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ['id', 'review', 'user', 'created_at']
-
-# 타임라인 조회
-class TimeLineSerializer(serializers.ModelSerializer):
-     # 시간을 "HH:MM" 형식으로 반환
-    time = serializers.TimeField(format='%H:%M')
-    class Meta:
-        model = TimeLine
-        fields = ['id', 'time', 'title']
 
 # 그룹 무비 상세페이지 (영화, 게시글(사용자), 타임라인(사용자), 갤러리)-조회
 class GroupMovieDetailSerializer(serializers.ModelSerializer):    

@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <ArticleModal ref="articleModal" @submit="handleSubmit" :id="route.params.group_movie_id" />
+    <ArticleModal ref="articleModal" :id="route.params.group_movie_id" />
 
     <!-- 영화 히어로 섹션 -->
     <section class="movie-hero position-relative">

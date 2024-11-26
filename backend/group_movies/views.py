@@ -71,9 +71,9 @@ def group_list(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-
-@api_view(['GET', 'POST'])
-# @permission_classes([IsAuthenticated])
+# 그룹에서 본 영화
+@api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
 def group_detail(request, group_id):
     group = Group.objects.get(pk=group_id)
     if request.method == 'GET':
@@ -87,6 +87,11 @@ def group_detail(request, group_id):
             movie = Movie.objects.get(pk=request.data.get('movie_id'))
             serializer.save(group=group, movie=movie)  
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # 그룹 탈퇴
+    elif request.method == "DELETE":
+        if group.include_members.filter(id=request.user.id).exists():
+            group.include_members.remove(request.user)
+            return Response({"message": "그룹에서 탈퇴되었습니다."}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -261,12 +266,6 @@ def review(request, review_id):
     review.delete()
     return Response({"message": "리뷰가 삭제되었습니다."}, status=status.HTTP_200_OK)
 
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def timeline(request, timeline_id):
-    timeline = TimeLine.objects.get(id=timeline_id)
-    timeline.delete()
-    return Response({"message": "타임라인이 삭제되었습니다."}, status=status.HTTP_200_OK)
 
 
 # 한줄평 생성
@@ -280,25 +279,29 @@ def review_create(request, group_movie_id):
         review=serializer.save(user=request.user, group_movie=group_movie)
         return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
         
-
-# 타임라인 생성
-@api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-def timeline_create(request, group_movie_id):
-    # 그룹 무비 조회
+############################################################################################
+# 타임라인 조회, 생성, 삭제
+@api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def timeline(request, group_movie_id):
     group_movie = GroupMovie.objects.get(pk=group_movie_id)
-    # 타임라인 생성
-    serializer = TimeLineCreateSerializer(data=request.data)
-    if serializer.is_valid(raise_exception=True):
-        serializer.save(group_movie=group_movie)
-        
-        # # 생성된 타임라인 반환
-        # return Response(TimelineSerializer(timeline).data, status=status.HTTP_201_CREATED)
+    if request.method == "GET":
+        timelines = group_movie.timeline.all()
+        serializer = TimeLineSerializer(timelines, many=True)
+        return Response(serializer.data)
+    elif request.method == "POST":
+        serializer = TimeLineSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save(group_movie=group_movie)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    elif request.method == "DELETE":
+        timeline_id = request.data.get('timeline_id')
+        timeline = TimeLine.objects.get(id=timeline_id)
+        timeline.delete()
+        return Response({"message": "타임라인이 삭제되었습니다."}, status=status.HTTP_200_OK)
 
-        # 해당 그룹 무비의 모든 타임라인 가져오기 및 반환
-        timelines = group_movie.timeline.all()  # related_name 사용
-        return Response(TimeLineSerializer(timelines, many=True).data, status=status.HTTP_201_CREATED)
-    
+
+# 댓글 조회, 생성, 삭제
 @api_view(['GET', 'POST', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def comment(request, article_id):
